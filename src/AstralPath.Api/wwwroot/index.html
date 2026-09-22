@@ -24,7 +24,8 @@ button,input,select { font:inherit; font-family:inherit; }
 .app-rail {
   position:sticky; z-index:20; top:0; display:flex; align-items:center; gap:clamp(12px,2vw,36px);
   min-height:88px; padding:14px clamp(18px,4vw,56px); border-bottom:1px solid var(--rule);
-  background:color-mix(in srgb, var(--canvas) 92%, transparent); backdrop-filter:blur(12px);
+  /* 不用 backdrop-filter：移动端 WebView 滚动会严重掉帧 */
+  background:color-mix(in srgb, var(--canvas) 96%, transparent);
 }
 .rail-brand { display:flex; align-items:center; gap:10px; color:var(--ink); text-decoration:none; }
 .rail-brand .mark { width:40px; height:30px; display:grid; place-items:center; border-radius:10px; background:var(--surface-soft); color:var(--surface-strong); font-weight:800; }
@@ -146,6 +147,42 @@ button,input,select { font:inherit; font-family:inherit; }
 }
 @media (max-width:700px) {
   .workspace-grid, .graph-layout, .home-summary, .quick-actions { grid-template-columns:1fr; }
+  .page { padding:18px 14px 48px; }
+  .page-header { margin-bottom:16px; }
+  .page-header h1 { font-size:26px; }
+  .panel { padding:14px; border-radius:18px; }
+  .home-summary { grid-template-columns:1fr 1fr; gap:8px; }
+  .home-summary strong { font-size:17px; }
+  .quick-actions { grid-template-columns:1fr 1fr; gap:8px; }
+  .quick-actions button { min-height:88px; padding:12px; }
+  .dag-viewport { height:320px; }
+  .material-row { grid-template-columns:1fr; }
+  .task-card .options button { min-height:44px; }
+  .button { min-height:42px; }
+  .debt-table { display:block; overflow-x:auto; white-space:nowrap; }
+  .graph-inspector { max-height:none; }
+
+  /* 顶栏：品牌一行 + 横向可滑导航，避免竖条占满屏 */
+  .app-rail { flex-wrap:wrap; min-height:0; gap:8px; padding:10px 12px 8px; }
+  .rail-brand { flex:1 1 100%; }
+  .rail-brand .mark { width:32px; height:28px; font-size:12px; }
+  .rail-account { flex:0 0 auto; order:2; margin-left:auto; }
+  .rail-account select { max-width:120px; }
+  .rail-nav {
+    order:3; flex:1 1 100%; margin-left:0; margin-top:4px;
+    flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden;
+    -webkit-overflow-scrolling:touch; border-radius:12px; scrollbar-width:none;
+  }
+  .rail-nav::-webkit-scrollbar { display:none; }
+  .rail-nav button { flex:0 0 auto; padding:8px 14px; min-height:40px; white-space:nowrap; }
+}
+
+/* 触控与滚动性能 */
+html, body { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain; }
+.dag-viewport { contain: layout paint; }
+@media (max-width:700px) {
+  .dag-viewport { contain: strict; height:280px; }
 }
 </style>
 </head>
