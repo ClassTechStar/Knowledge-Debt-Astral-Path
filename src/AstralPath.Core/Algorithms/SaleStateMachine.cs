@@ -2,54 +2,55 @@ using AstralPath.Core.Formula;
 
 namespace AstralPath.Core.Algorithms;
 
-public readonly record struct SaleProbe(double Acc, int Conf);
+/// <summary>销账状态。禁止其它模块直接写 cleared。</summary>
+public enum SaleStatus
+{
+    Open,
+    Repairing,
+    Cleared
+}
 
-public sealed record SaleCheckResult(
-    bool Saleable,
-    int Streak,
-    string? Need,
-    IReadOnlyList<string> EvidenceAttemptIds);
+public sealed record SaleAttempt(bool Correct, double Accuracy, int SelfConf);
+
+public sealed record SaleState(SaleStatus Status, int Streak, int Attempts, int WeightedScorePct = 0);
 
 /// <summary>
-/// 销账状态机：cleared ⟺ 连续 2 次 quiz acc≥0.7 ∧ conf≥3。
-/// 仅 progress-svc 可写 cleared（C8）。
+/// sale-v2：加权达标（0.7×acc + 0.3×conf/5 ≥ 0.65），
+/// 且窗口内至少 3 次作答、近期连续 2 次达标才 cleared。
+/// 两题就清账的 v1 行为已废弃。
 /// </summary>
 public static class SaleStateMachine
 {
-    public static SaleCheckResult IsSaleable(IReadOnlyList<SaleProbe> history, IReadOnlyList<string>? attemptIds = null)
+    public static SaleState Create() => new(SaleStatus.Open, 0, 0, 0);
+
+    public static double Weighted(SaleAttempt attempt)
+        => 0.7 * Math.Clamp(attempt.Accuracy, 0, 1)
+           + 0.3 * Math.Clamp(attempt.SelfConf / FormulaConstants.ConfScale, 0, 1);
+
+    public static bool MeetsBar(SaleAttempt attempt)
+        => Weighted(attempt) >= FormulaConstants.SaleBar
+           && attempt.Accuracy >= FormulaConstants.SaleAccMin
+           && attempt.SelfConf >= FormulaConstants.SaleConfMin;
+
+    public static SaleState Transition(SaleState state, SaleAttempt attempt)
     {
-        var streak = 0;
-        var evidence = new List<string>();
-        for (var i = history.Count - 1; i >= 0; i--)
+        if (state.Status == SaleStatus.Cleared) return state;
+
+        var attempts = state.Attempts + 1;
+        var streak = MeetsBar(attempt) ? state.Streak + 1 : 0;
+        var pct = (int)Math.Round(Weighted(attempt) * 100);
+        var status = state.Status;
+
+        if (streak >= FormulaConstants.SaleStreakRequired
+            && attempts >= FormulaConstants.SaleMinAttempts)
         {
-            var ok = history[i].Acc >= FormulaWeights.SaleAccThreshold
-                     && history[i].Conf >= FormulaWeights.SaleConfThreshold;
-            if (!ok) break;
-            streak++;
-            if (attemptIds != null && i < attemptIds.Count)
-                evidence.Insert(0, attemptIds[i]);
+            status = SaleStatus.Cleared;
+        }
+        else if (streak > 0 || attempts > 0)
+        {
+            status = SaleStatus.Repairing;
         }
 
-        if (streak >= FormulaWeights.SaleStreakRequired)
-            return new SaleCheckResult(true, streak, null, evidence);
-
-        var need = $"再完成 {FormulaWeights.SaleStreakRequired - streak} 次达标小测（acc≥0.7 且 conf≥3）";
-        return new SaleCheckResult(false, streak, need, evidence);
+        return new SaleState(status, streak, attempts, pct);
     }
-
-    public static string Transition(string current, string action)
-    {
-        return (current, action) switch
-        {
-            ("open", "plan_active") => "repairing",
-            ("repairing", "sale_pass") => "cleared",
-            ("repairing", "plan_abandoned") => "open",
-            ("open", "admin_drop") => "dropped",
-            ("cleared", _) => "cleared",
-            _ => current
-        };
-    }
-
-    public static bool CanWriteCleared(string service)
-        => string.Equals(service, "progress-svc", StringComparison.OrdinalIgnoreCase);
 }
