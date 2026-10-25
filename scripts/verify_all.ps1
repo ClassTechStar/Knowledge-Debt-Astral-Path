@@ -62,6 +62,9 @@ Step "test-Api"         { dotnet test tests/AstralPath.Api.Tests -c Release }
 Step "test-Eval"        { dotnet test tests/AstralPath.Eval.Tests -c Release }
 # （原 test-MobileCore 已随 Mobile.Offline 归档移除：其 84 个测试跑的是陈旧 Core 分叉，见 attic/）
 
+# 4b) 数字单一事实源（P3-2 收口）：意图/危机词/测试数 ↔ README 标记自动对拍
+Step "metrics-readme"   { python scripts/verify_metrics.py --check }
+
 # 5) 三端 HTML 同源 + C3 XSS 回归哨兵（统一由同步脚本提供）
 Step "monolith-html-sync" { powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-monolith-html.ps1 -Check }
 

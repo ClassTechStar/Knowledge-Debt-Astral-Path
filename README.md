@@ -122,14 +122,15 @@ cross  = 1.0 | 1.15 (transfer_gap)；命中 freq>0 ∧ impact≥0.08
 
 ```text
 AstralPath.Core/          纯函数：公式 / 图 / OCR / 画像 / 销账 / 计划
-AstralPath.Api/           ASP.NET Core（Web 与 Windows 共用）+ wwwroot/index.html
+AstralPath.Api/           ASP.NET Core（Web 与 Windows 共用）
 AstralPath.Desktop/       WebView2 壳
-AstralPath.Native/        Android WebView 壳
+AstralPath.Native/        Android WebView 壳（已上架）
 AstralPath.Monolith/      无微服务 Windows 壳（Setup-2.6.0）
-AstralPath.Mobile.Offline/ Avalonia 11 + SQLite 离线单体
 AstralPath.Persistence/   Postgres（默认）+ memory 回退
-tests/                    Core 114 · Persistence 8 · Desktop 51 · Api 70 · Eval 2 · MobileCore 84
+tests/                    Core 114 · Persistence 8 · Desktop 50 · Api 70 · Eval 2（合计见 §7，由 scripts/verify_metrics.py 自动对拍）
 ```
+
+> 已停用的历史方案（旧 Java 壳、Avalonia 壳、微服务空壳等）统一归档在 `attic/`，不参与构建，见 `attic/README.md`。
 
 持久化默认走 PostgreSQL 加 pgvector（`Persistence:Mode=postgres`），连接串可用 `Persistence__ConnectionString` 覆盖，连不上且 `AllowMemoryFallback=true` 时降级到内存实现。
 
@@ -137,13 +138,14 @@ tests/                    Core 114 · Persistence 8 · Desktop 51 · Api 70 · E
 
 | 套件 | 通过 | 说明 |
 |---|---|---|
-| Core.Tests | 114/114 | score、impact、sale、计划、图谱、走读金样（1e-6）与画像、智能体 v3 回归 |
-| Persistence.Tests | 8/8 | Postgres 与 InMemory 双模式 |
-| Desktop.Tests | 51/51 | Avalonia 原生 UI 绑定与导航 |
-| Api.Tests | 70/70 | 上传、解析、诊断、计划、agent 与 P0/P1 回归 |
-| Eval.Tests | 2/2 | 合成数据回归 |
-| MobileCore.Tests | 84/84 | 图谱构图、布局、学习路径与 OCR 全流程 |
-| 合计 | 329/329 | 零回归 |
+| Core.Tests | <!-- metrics:tests-Core -->114<!-- /metrics:tests-Core -->/114 | score、impact、sale、计划、图谱、走读金样（1e-6）与画像、智能体 v3 回归 |
+| Persistence.Tests | <!-- metrics:tests-Persistence -->8<!-- /metrics:tests-Persistence -->/8 | Postgres 与 InMemory 双模式 |
+| Desktop.Tests | <!-- metrics:tests-Desktop -->50<!-- /metrics:tests-Desktop -->/50 | Avalonia 原生 UI 绑定与导航 |
+| Api.Tests | <!-- metrics:tests-Api -->70<!-- /metrics:tests-Api -->/70 | 上传、解析、诊断、计划、agent 与 P0/P1 回归 |
+| Eval.Tests | <!-- metrics:tests-Eval -->2<!-- /metrics:tests-Eval -->/2 | 合成数据回归 |
+| 合计 | <!-- metrics:tests-Total -->244<!-- /metrics:tests-Total -->/244 | 零回归（原 MobileCore 84 例跑在陈旧 Core 分叉上，已随档移除） |
+
+表中数字由 `scripts/verify_metrics.py` 从代码与登记表自动对拍（`<!-- metrics:* -->` 标记），漂移即 CI 红。
 
 一键验收：
 
@@ -151,7 +153,7 @@ tests/                    Core 114 · Persistence 8 · Desktop 51 · Api 70 · E
 pwsh -NoProfile -File scripts\verify_all.ps1     # 17 步 ALL GREEN
 ```
 
-脚本覆盖常量对齐、意图表六方对拍（26 意图）、公式跨语言对拍、前端脚本语法、XSS 黄金用例（14 例）、共享内核双跑等价、生成区一致性（5 区）、状态分片黄金用例（10 例）、零空 catch（181 个 .cs 文件）、命名规范扫描与三端 HTML 同源。
+脚本覆盖常量对齐、意图表六方对拍（<!-- metrics:agent-intents -->26<!-- /metrics:agent-intents --> 意图，危机词 <!-- metrics:crisis-words -->11<!-- /metrics:crisis-words --> 个）、公式跨语言对拍、前端脚本语法、XSS 黄金用例（14 例）、共享内核双跑等价、生成区一致性（5 区）、状态分片黄金用例（10 例）、零空 catch（151 个 .cs 文件）、命名规范扫描与三端 HTML 同源。
 
 持续集成在 `.github/workflows/ci.yml`，每次 push 与 PR 自动跑构建、测试与上述门禁，另有覆盖率报告作业。首次启用时 CI 红了三处，均已修复：OcrHost 的 tessdata 兜底路径缺存在性检查、Windows runner 控制台 cp1252 导致中文输出崩溃、生成块比对未归一换行。
 
