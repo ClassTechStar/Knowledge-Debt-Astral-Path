@@ -1,12 +1,10 @@
 # 知债：星穹学途（Knowledge Debt: Astral Path）
 
-上多门课的时候，卡住你的往往不是「这一章没听懂」，而是前面某门课的概念没打好，欠下的这笔账越滚越大。我们管它叫知识债。
+跨课程的知识债诊断与修复智能体。用确定性公式找出你欠了哪门课的先修债，用约束满足生成能做完的还债计划，由受约束智能体陪着销账，教育伦理的红线由代码守。
 
-这个项目做的事其实就四步：把你欠的先修概念找出来，排一张 14 天内做得完的补课表，陪着你练，练熟了把这条债销掉。分数、影响分、销账这些数字都是本地公式算的，大模型不许改。作为学生作业和竞赛作品，它也能提醒别人：AI 不该随便给学生下判断，这条线得由代码来守。
-
-> 2026 iCAN AI / DuMate 竞赛作品，版本 2.6.0（contract-v2.2.0-algo-v2），支持 Windows 10/11 与 Android 8.0 以上。
+> 2026 iCAN AI / DuMate 竞赛实现，版本 2.6.0（contract-v2.2.0-algo-v2），支持 Windows 10/11 与 Android 8.0 以上。
 >
-> 名字的事说清楚：全称「知债：星穹学途（Knowledge Debt: Astral Path）」，中文简称「知债：星穹学途」，代码标识 AstralPath。以前用过「知债图 / ZhiZhaiTu」，已经废弃，不要再用。
+> 名称规范：全称「知债：星穹学途（Knowledge Debt: Astral Path）」，中文简称「知债：星穹学途」，代码标识 AstralPath。
 
 ---
 
@@ -28,31 +26,31 @@
 
 ## 1. 产品简介
 
-拿会计举例：借贷记账法听不懂，多半是「会计等式」没打牢。系统能顺着教材的先修关系把这种债找出来，按影响大小排序，再生成一张补得完的课表。
+多门课交叉学习时，卡住你的往往不是「这一章没听懂」，而是前面某门课的先修概念没打好。这就是知识债。
 
 | 步骤 | 说明 | 类比 |
 |---|---|---|
-| 诊断 | 找出「会计等式到借贷记账法」这类断掉的先修边 | 体检找病灶 |
-| 计划 | 14 天补课表，每天不超过 40 分钟，按 0/2/6 天间隔复习 | 开药方 |
-| 练习 | 做真题，自己报信心（1 到 5 分），系统按你的状态挑题 | 吃药复查 |
-| 销账 | 连续 2 次达标且累计作答不少于 3 次，这条债就算结清 | 痊愈出院 |
+| 诊断 | 找出「会计等式到借贷记账法」这类红边 | 体检找病灶 |
+| 计划 | 14 天补课表，每日不超过 40 分钟，按 0/2/6 天间隔复习 | 开药方 |
+| 练习 | 真题加信心校准，按状态自适应选题 | 吃药复查 |
+| 销账 | 连续 2 次达标且累计作答不少于 3 次即结清 | 痊愈出院 |
 
-Web、Windows、Android 三个端用的是同一套页面和同一套设计，功能没有差别。单文件版完全离线，数据只留在你自己的机器上。
+三端 UI 同源，Web、Windows 与 Android 共用同一套设计令牌与业务语义。无微服务单体版可以完全离线运行，数据只落在本机。
 
 ## 2. 交付物
 
 | 产物 | 路径 | 说明 |
 |---|---|---|
-| Web 单体版 | `deploy/monolith-web/index.html` | 一个 HTML，浏览器直接打开就能用，功能完整 |
-| 自包含单文件 | `deploy/monolith-web/astralpath-monolith.html` | 约 31 MB，OCR 和 ONNX 运行时都塞进去了，断网可用 |
-| Windows 安装包 | `release/AstralPath-Monolith-Setup-2.6.0.exe` | WebView2 壳加载同一份 HTML，本机装过一遍 |
-| Windows 便携版 | `release/AstralPath-Portable-2.6.0/`（及同名 zip） | 解压即用，.NET 10 自带运行时 |
+| Web 单体版 | `deploy/monolith-web/index.html` | 620,566 字节，浏览器直接打开，全部功能可用 |
+| 自包含单文件 | `deploy/monolith-web/astralpath-monolith.html` | 32,991,982 字节，OCR 与 ONNX 运行时全栈内联，零外部资源 |
+| Windows 安装包 | `release/AstralPath-Monolith-Setup-2.6.0.exe` | WebView2 壳加载同一份 HTML，本机安装验收通过 |
+| Windows 便携版 | `release/AstralPath-Portable-2.6.0/`（及同名 zip） | 免安装解压即用，.NET 10 自包含 |
 | Android APK | `release/AstralPath-Android-2.6.0-Store.apk` | WebView 同构加离线核心，versionCode 36，商店签名 |
 | 题库 | `eval/question_bank.json` | 100 题，覆盖 34 个知识点，难度 1:21 / 2:51 / 3:28 |
-| 图包 | `graph-packs/astralpath-v2/graph_pack.json` | 34 节点 74 边（先修 50 条 + 跨课迁移 24 条），无环，横跨三门课 |
+| 图包 | `graph-packs/astralpath-v2/graph_pack.json` | 34 节点 74 边，先修 50 条加迁移缺口 24 条，无环，涉及三门课 |
 | 教材思维导图 | `kg-deep-test/*.mindmap.{json,md}` | 13 本教材 6,720 页，2,519 节点 2,662 边 |
 | 工具链 | `tools/*.py` | OCR、章节、构图、思维导图全链路 |
-| 架构决策 | `docs/adr/` | ADR-0002：单文件零外部依赖与构建期常量注入 |
+| 架构决策 | `docs/adr/` | ADR-0002 单文件零外部依赖与构建期常量注入 |
 
 ## 3. 快速开始
 
@@ -67,11 +65,11 @@ release\AstralPath-Monolith-Setup-2.6.0.exe
 # 或者解压 release\AstralPath-Portable-2.6.0.zip 后运行 AstralPath.Monolith.exe
 ```
 
-起点、藏书阁、识网、知债、今日、智能体、画像、账户这些页面的计算全在本机完成，数据存在浏览器里，可以导出 JSON 带走。
+起点、藏书阁、识网、知债、今日、智能体、画像、账户各页的计算都在本机完成，数据存 localStorage，可以导出 JSON。
 
 ### 3.2 Android
 
-安装 `release/AstralPath-Android-2.6.0-Store.apk`。没电脑、没 adb 也能离线用核心功能。
+安装 `release/AstralPath-Android-2.6.0-Store.apk`，商店签名。没有电脑、没有 adb 也能离线使用核心功能。
 
 ### 3.3 源码构建
 
@@ -84,7 +82,7 @@ dotnet test tests/AstralPath.Api.Tests -c Release
 dotnet test tests/AstralPath.Eval.Tests -c Release
 ```
 
-注意 `dotnet test` 一次只能接一个项目，所以这里是分开跑的。
+`dotnet test` 一次只能接一个项目。
 
 ## 4. 功能模块
 
@@ -92,21 +90,21 @@ dotnet test tests/AstralPath.Eval.Tests -c Release
 |---|---|
 | 起点 | 总览、快捷入口、资料数与开放债边统计 |
 | 藏书阁 | PDF 与文本本机解析，转章节、关键词并出题；扫描版走离线 OCR |
-| 识网 | 知识图谱（TextRank、PMI、依赖句式），看瓶颈与关键路径，分层布局 |
-| 知债 | 找出影响分最高的红边，能试算「如果补上会怎样」，生成 14 天计划 |
-| 今日 | 每天不超过 3 项任务，做题、报信心（1 至 5）、判分 |
-| 智能体 | 听懂你想干什么，危机词命中立刻转人工，敏感词脱敏，读的是真实学情 |
-| 试卷作业 | 拍照、截图、粘贴图片或导入文件，识别后自动结构化并生成知识点层级图谱 |
-| 画像 | 信心校准（Brier）、学习风格五轴、k-匿名，可随时关闭 |
+| 识网 | 知识图谱 DAG（TextRank、PMI、依赖句式），瓶颈与关键路径，分层布局 |
+| 知债 | impact-v2 红边、What-if 模拟、14 天计划（K1 至 K5 合约） |
+| 今日 | 每天不超过 3 项任务，真题、信心 1 至 5、判分 |
+| 智能体 | 意图路由、危机转人工、敏感词脱敏、读真实学情 |
+| 试卷作业 | 拍照、截图、图片粘贴、文件导入，识别后自动结构化并生成知识点层级图谱 |
+| 画像 | Brier 信心校准、风格五轴、k-匿名、opt-out |
 | 教师 | 只读学情视图，需学生授权，含薄弱热点、红边清单与近七日趋势 |
-| 账户 | 登录、授权、导出与重置 |
+| 账户 | 登录、consent、导出与重置 |
 
 ## 5. 核心公式
 
 ```text
 score = min( 0.50·know + 0.30·retention + 0.20·prereqSupport , 0.55+0.45·min(prereq) )
 know   = 0.85·Beta(成功,失败) + 0.15·(conf/5)
-retention = exp(-age/S);  S = 2.5·(1+0.45·streak) · (1+0.25·ln(1+reps))
+retention = exp(-age/S);  S = 2.5·(1+0.45·streak)·(1+0.25·ln(1+reps))
 
 impact = 0.55 · σ((sf-0.55)·8) · σ((0.50-st)·8) · w · cross · (1+0.12·ln(1+下游)) · (1+0.08·ln(1+freq))
 cross  = 1.0 | 1.15 (transfer_gap)；命中 freq>0 ∧ impact≥0.08
@@ -114,7 +112,7 @@ cross  = 1.0 | 1.15 (transfer_gap)；命中 freq>0 ∧ impact≥0.08
 销账 ⇔ 近期连续 2 次达标 ∧ 累计 ≥3 次；Weighted=0.7·acc+0.3·(conf/5)≥0.65
 ```
 
-代码在 `src/AstralPath.Core/`，全是纯函数，和金标准结果逐位比对（误差 1e-6 以内）。这几个数字只能由公式算出来，LLM 不许改写；`cleared` 只有 `SaleStateMachine` 能写。
+实现位于 `src/AstralPath.Core/`，纯函数，1e-6 金样对拍。这几个数字只能由公式算出，LLM 不得改写；`cleared` 只能由 `SaleStateMachine` 写入。
 
 ## 6. 系统架构
 
@@ -128,32 +126,32 @@ AstralPath.Persistence/   Postgres（默认）+ memory 回退
 tests/                    Core 114 · Persistence 8 · Desktop 50 · Api 70 · Eval 2（合计见 §7，由 scripts/verify_metrics.py 自动对拍）
 ```
 
-以前做过的旧方案（Java 壳、Avalonia 壳、微服务空壳等）都收在 `attic/`，不参与构建，想看可以翻 `attic/README.md`。
+> 已停用的历史方案（旧 Java 壳、Avalonia 壳、微服务空壳等）统一归档在 `attic/`，不参与构建，见 `attic/README.md`。
 
-持久化默认走 PostgreSQL 加 pgvector（`Persistence:Mode=postgres`），连接串可用 `Persistence__ConnectionString` 覆盖；连不上且 `AllowMemoryFallback=true` 时降级到内存实现，不会挡着你用。
+持久化默认走 PostgreSQL 加 pgvector（`Persistence:Mode=postgres`），连接串可用 `Persistence__ConnectionString` 覆盖，连不上且 `AllowMemoryFallback=true` 时降级到内存实现。
 
 ## 7. 测试与门禁
 
 | 套件 | 通过 | 说明 |
 |---|---|---|
-| Core.Tests | <!-- metrics:tests-Core -->114<!-- /metrics:tests-Core -->/114 | score、impact、sale、计划、图谱、金标准对拍（1e-6）与画像、智能体 v3 回归 |
+| Core.Tests | <!-- metrics:tests-Core -->114<!-- /metrics:tests-Core -->/114 | score、impact、sale、计划、图谱、走读金样（1e-6）与画像、智能体 v3 回归 |
 | Persistence.Tests | <!-- metrics:tests-Persistence -->8<!-- /metrics:tests-Persistence -->/8 | Postgres 与 InMemory 双模式 |
 | Desktop.Tests | <!-- metrics:tests-Desktop -->50<!-- /metrics:tests-Desktop -->/50 | Avalonia 原生 UI 绑定与导航 |
 | Api.Tests | <!-- metrics:tests-Api -->70<!-- /metrics:tests-Api -->/70 | 上传、解析、诊断、计划、agent 与 P0/P1 回归 |
 | Eval.Tests | <!-- metrics:tests-Eval -->2<!-- /metrics:tests-Eval -->/2 | 合成数据回归 |
-| 合计 | <!-- metrics:tests-Total -->244<!-- /metrics:tests-Total -->/244 | 零回归（原 MobileCore 84 例跑的是过时的 Core 分叉，已随档移除） |
+| 合计 | <!-- metrics:tests-Total -->244<!-- /metrics:tests-Total -->/244 | 零回归（原 MobileCore 84 例跑在陈旧 Core 分叉上，已随档移除） |
 
-表里的数字由 `scripts/verify_metrics.py` 从代码和登记表自动核对（`<!-- metrics:* -->` 标记），对不上 CI 会失败，不用人盯。
+表中数字由 `scripts/verify_metrics.py` 从代码与登记表自动对拍（`<!-- metrics:* -->` 标记），漂移即 CI 红。
 
 一键验收：
 
 ```powershell
-pwsh -NoProfile -File scripts\verify_all.ps1     # 31 步全部通过
+pwsh -NoProfile -File scripts\verify_all.ps1     # 31 步 ALL GREEN
 ```
 
-这个脚本会依次查：常量是否对齐、公式常量生成区（`K` 由 `FormulaConstants.cs` 生成）、意图表多方核对（<!-- metrics:agent-intents -->26<!-- /metrics:agent-intents --> 个意图，危机词 <!-- metrics:crisis-words -->11<!-- /metrics:crisis-words --> 个）、公式跨语言对拍、前端脚本语法、XSS 用例（14 例）、共享内核行为等价、生成区一致性（9 区）、状态分片用例（10 例）、试卷/教材文本/智能体路由/计划调度用例（29 例）、空 catch（151 个 .cs 文件里不允许有）、命名规范、三端 HTML 是否一致、图谱性能预算、覆盖率阈值，以及 `dotnet format` 和 eslint。
+脚本覆盖常量对齐、公式常量生成区（`K` 由 `FormulaConstants.cs` 注入）、意图表六方对拍（<!-- metrics:agent-intents -->26<!-- /metrics:agent-intents --> 意图，危机词 <!-- metrics:crisis-words -->11<!-- /metrics:crisis-words --> 个）、公式跨语言对拍、前端脚本语法、XSS 黄金用例（14 例）、共享内核双跑等价、生成区一致性（9 区）、状态分片黄金用例（10 例）、试卷/教材文本/智能体路由/计划调度黄金用例（29 例）、零空 catch（151 个 .cs 文件）、命名规范扫描、三端 HTML 同源、图谱性能预算、覆盖率阈值与 `dotnet format` / eslint 风格门禁。
 
-持续集成在 `.github/workflows/ci.yml`，push 和 PR 都会跑构建、测试和上面这些检查；覆盖率是硬指标（行 ≥50%、分支 ≥40%，不到就红）。另外有两个独立作业：Android 打包验证、Playwright 浏览器冒烟。CI 刚搭起来时红过三处，都修了：OcrHost 的 tessdata 兜底路径没查存在性、Windows runner 控制台默认 cp1252 导致中文输出崩掉、生成块比对没归一换行。
+持续集成在 `.github/workflows/ci.yml`，每次 push 与 PR 自动跑构建、测试与上述门禁；覆盖率已是硬门禁（行 ≥50% / 分支 ≥40%，低于阈值即红），另有两个独立作业：Android 打包验证与 Playwright 浏览器冒烟。首次启用时 CI 红了三处，均已修复：OcrHost 的 tessdata 兜底路径缺存在性检查、Windows runner 控制台 cp1252 导致中文输出崩溃、生成块比对未归一换行。
 
 ## 8. 开发者指南
 
@@ -175,45 +173,45 @@ dotnet publish src/AstralPath.Monolith -c Release -r win-x64 --self-contained -o
 & "C:\Program Files\Inno Setup 7\ISCC.exe" src/AstralPath.Monolith/setup-monolith.iss
 ```
 
-NuGet 报 `path1=null` 的话，把 `PROGRAMDATA`、`PROGRAMFILES(X86)`、`ALLUSERSPROFILE` 三个环境变量补齐，再设 `CheckEolWorkloads=false`。
+NuGet 报 `path1=null` 时，补齐 `PROGRAMDATA`、`PROGRAMFILES(X86)`、`ALLUSERSPROFILE` 三个环境变量，并设 `CheckEolWorkloads=false`。
 
-前端共享代码只在 `shared/` 里维护一份，页面里的副本由 `python scripts/gen_frontend_regions.py` 刷进 `deploy/monolith-web/index.html` 的生成区，`--check` 用在 CI 里。改完生成区记得跑 `scripts/sync-monolith-html.ps1` 同步三端镜像，并把 `scripts/build-single.py` 里的 `EXPECTED_MD5` 重算一遍（小写）。
+前端共享代码的单一来源在 `shared/`，页面内联副本由 `python scripts/gen_frontend_regions.py` 刷进 `deploy/monolith-web/index.html` 的生成区，`--check` 是 CI 门禁。改完生成区要跑 `scripts/sync-monolith-html.ps1` 同步三端镜像，并重打 `scripts/build-single.py` 里的 `EXPECTED_MD5`（必须小写）。
 
-单文件构建还需要 `deploy/monolith-web/ort-runtime/` 下的 `ort.min.js` 和 `ort-wasm-simd-threaded.wasm`（走 LFS），构建时会内联进产物，所以产物里没有任何外部 `src`/`href`。调试信息都收在 `?debug=1` 的隐藏面板里，平时界面上看不到工程术语。
+单文件构建额外依赖 `deploy/monolith-web/ort-runtime/` 下的 `ort.min.js` 与 `ort-wasm-simd-threaded.wasm`（LFS 管理），构建脚本会把它们内联进产物，产物内不再出现任何外部 `src`/`href`。页面调试信息统一收在 `?debug=1` 隐藏面板，默认界面不显示工程术语。
 
-前端检查用 `npm ci` 后 `npm run lint`（eslint）；C# 侧用 `dotnet format whitespace AstralPath.slnx --verify-no-changes`。
+前端门禁：`npm ci` 后 `npm run lint`（eslint），C# 侧 `dotnet format whitespace AstralPath.slnx --verify-no-changes`。
 
 ## 9. 四人分工
 
 | 角色 | 负责 |
 |---|---|
 | P1 | 文案、禁词、危机词、隐私、演示脚本 |
-| P2 | 公式、Core、API、金标准用例 |
-| P3 | 图包、题库、金标准用例、工具链、验收脚本 |
+| P2 | 公式、Core、API、金样 |
+| P3 | 图包、题库、金样、工具链、验收脚本 |
 | P4 | 单文件 UI、安卓壳、Windows 安装包 |
 
-分工边界和交接方式在团队内部维护；仓库里只留能跑的代码和门禁，一次性文档不进仓库。
+分工边界与交接方式由团队内部维护；仓库只保留可执行代码与门禁，不再附带一次性文档。
 
 ## 10. 演示账号与伦理
 
-演示账号 `demo@astralpath.local` / `demo123456`，另有 `demo-student-a`。
+演示账号是 `demo@astralpath.local` / `demo123456`，另有 `demo-student-a`。
 
-三条红线：数字只能由公式算出来，AI 不许改分；不发明先修边；`cleared` 只由状态机写入。
+有三条红线：数字只能算出来，AI 不许改分；不发明先修边；`cleared` 只由状态机写入。
 
-隐私方面：教师侧做 k-匿名，样本少于 3 人一律不显示；危机域和敏感域不进画像；用户随时可以 opt-out。危机词命中时只做安抚和转人工，不评价学生。
+隐私上，教师侧做 k-匿名，样本少于 3 人一律抑制；危机域与敏感域不进画像；用户随时可以 opt-out。危机词命中时只做安抚与转人工，不评价学生。
 
 ## 11. 变更记录
 
 | 版本 | 日期 | 要点 |
 |---|---|---|
-| 2.6.0 第三轮工程整改 | 2026-10-25 至 26 | 单文件不再依赖外部 CDN（ORT 运行时内联）；公式常量改成从 C# 生成；覆盖率变成硬指标；图谱性能预算、`dotnet format` 和 eslint 进 CI；教材文本、智能体路由、计划调度搬进 `shared/` 并补了用例；首页工程信息收进 `?debug=1` 面板 |
-| 2.6.0 | 2026-10-17 | 版本号统一（前端、C# 程序集、gradle、iss、文档）；双端安装包发到 GitHub Release v2.6.0；打包链加了签名环境自动加载与 tessdata 自动保障，打包基本不用管 |
-| 2.6.0 第一轮工程整改 | 2026-10-18 | 搭 CI 与静态检查（脚本解析检查、XSS 用例、禁止空 catch）；前端共享代码收进 `shared/`；意图表从三方核对扩到六方，26 个意图一致 |
-| 2.6.0 第二轮工程整改 | 2026-10-18 至 19 | 密钥信封 v2（轮换与吊销）；本地状态分五片存，旧数据自动迁移并留备份；意图路由器从 479 行减到 281 行；加运行期诊断与 `/health/ready`；前端构建合并成一键 |
-| 2.6.0 纯前端同步 | 2026-10-19 | 主仓库的前端改动反向同步到纯前端源目录，两边 `index.html` 与单文件产物逐字节一致 |
-| 2.6.0 CI 修复 | 2026-10-19 | 修 OcrHost tessdata 兜底存在性检查、Windows runner 强制 Python UTF-8、生成块比对归一换行 |
+| 2.6.0 工程化阶段三 | 2026-10-25 至 26 | 单文件产物零外部依赖（ORT 运行时内联）；公式常量改由 C# 源生成；覆盖率转为硬门禁；图谱性能预算、`dotnet format` 与 eslint 入 CI；教材文本、智能体路由与计划调度分别下沉 `shared/` 并建黄金用例；首页工程信息收进 `?debug=1` 调试面板 |
+| 2.6.0 | 2026-10-17 | 版本号全量统一（前端、C# 程序集、gradle、iss、微服务 tag、文档口径）；双端安装包经 GitHub Release v2.6.0 发布；构建链加签名环境自动加载与 tessdata 自动保障，双端打包可零人工干预自愈 |
+| 2.6.0 工程化阶段一 | 2026-10-18 | CI 流水线与静态门禁（脚本解析级检查、跨站脚本黄金用例、零空 catch）；前端共享代码收敛到 `shared/` 单一来源；编排意图对拍由三方扩到六方，26 意图一致 |
+| 2.6.0 工程化阶段二 | 2026-10-18 至 19 | 密钥信封 v2（轮换与吊销）；本地状态五分片存储，旧数据自动迁移留底；意图路由器 479 行拆到 281 行；运行期诊断环形缓冲与 `/health/ready`；前端构建合并，生成区加一键构建 |
+| 2.6.0 纯前端同步 | 2026-10-19 | 主仓库前端改造反向移植到纯前端源目录，两树的 `index.html` 与自包含单文件产物逐字节一致 |
+| 2.6.0 CI 修复 | 2026-10-19 | 修 OcrHost tessdata 兜底存在性检查、Windows runner 强制 Python UTF-8、生成块比对归一换行，CI 恢复全绿 |
 | 2.5.0 | 2026-10-10 至 15 | AI 计划官与债务解读，K1 至 K5 合约引擎；试卷作业错题直拍识别与多格式导入；教师只读学情视图与作业单互传；内置演示密钥；思维链流式呈现与垫题秒出 |
-| 2.2.0 | 2026-09-25 至 28 | RapidOCR 接入生产，三端抽样验收 12 本 PDF 通过，算法 v3 与画像、智能体 v3 落地，修了一批审计问题，测试 235 项 |
+| 2.2.0 | 2026-09-25 至 28 | RapidOCR 生产管线接入，三端 MLP 抽样验收 12 本 PDF 通过，算法 v3 与画像、智能体 v3 落地，审计修复与重构落地，测试 235 项全绿 |
 | 2.0.0-algo-v2 | 2026-09-24 | score-v2、impact-v2、sale-v2，图谱 v2，OCR v2，画像 v2，100 题库与 34 节点 74 边图包，Postgres 默认持久化，Avalonia 原生 UI，无微服务单体版 |
 | 1.4.x 至 1.5.0 | 2026-09 | 智能体接真实学情，启动预热，上传分片，WebView 同构壳，商店签名 |
 
