@@ -67,8 +67,12 @@ src/AstralPath.Android/keystore.properties
 src/AstralPath.Android/build-manual/
 src/AstralPath.Android/.gradle/
 src/AstralPath.Android/local.properties
-# 中间输出与测试截图；APK 本体保留在 dist/ 作为交付物
-src/AstralPath.Android/dist/*.idsig
+# 中间输出与测试截图；交付物只保留在 release/，各项目 dist/ 一律不入库
+src/*/dist/*.idsig
+src/*/dist/*.apk
+src/*/dist/*.exe
+src/*/dist/*.zip
+deploy/win-install/dist/
 src/AstralPath.Android/dist/*.png
 src/AstralPath.Android/dist/*.xml
 src/AstralPath.Android/dist/test-shots/

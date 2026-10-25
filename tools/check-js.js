@@ -2,10 +2,10 @@
  * check-js.js —— 前端 JS 语法门禁（方案 P1）
  * ===========================================================
  * 覆盖两类目标：
- *   ① 独立 .js 文件（shared/、tools/、scripts/、deploy/monolith-web/、deploy/mobile-app/）
+ *   ① 独立 .js 文件（shared/、tools/、scripts/、deploy/monolith-web/）
  *   ② HTML 内联 <script>…</script> 块（不含 <script src=…>）
  *      —— deploy/monolith-web/index.html（单一事实源）、.cloudflare/pages/index.html、
- *         src/AstralPath.Api/wwwroot/index.html、materials/**\/index.html
+ *         materials/**\/index.html
  * 只做**解析**不执行：用 vm.Script 编译，等价于 node --check，无副作用。
  *
  * 用法：node tools/check-js.js             # 全量
@@ -55,7 +55,7 @@ function rel(p) {
 }
 
 function collectJsFiles() {
-  const roots = ["shared", "tools", "scripts", "deploy/monolith-web", "deploy/mobile-app", "src/AstralPath.Api/wwwroot"]
+  const roots = ["shared", "tools", "scripts", "deploy/monolith-web"]
     .map((r) => path.join(ROOT, r))
     .filter((p) => fs.existsSync(p));
   const files = [];
@@ -73,7 +73,6 @@ function collectJsFiles() {
 const HTML_TARGETS = [
   "deploy/monolith-web/index.html",
   ".cloudflare/pages/index.html",
-  "src/AstralPath.Api/wwwroot/index.html",
   "src/AstralPath.Monolith/Resources/index.html",
   "src/AstralPath.Native/app/src/main/assets/www/index.html",
 ];

@@ -60,8 +60,7 @@ Step "test-Persistence" { dotnet test tests/AstralPath.Persistence.Tests -c Rele
 Step "test-Desktop"     { dotnet test tests/AstralPath.Desktop.Tests -c Release }
 Step "test-Api"         { dotnet test tests/AstralPath.Api.Tests -c Release }
 Step "test-Eval"        { dotnet test tests/AstralPath.Eval.Tests -c Release }
-# 图谱 / OCR 算法回归（离线 Core 已改为链接主 Core 源码，漂移不可能再发生）
-Step "test-MobileCore"  { dotnet test src/AstralPath.Mobile.Offline/AstralPath.Mobile.Tests -c Release }
+# （原 test-MobileCore 已随 Mobile.Offline 归档移除：其 84 个测试跑的是陈旧 Core 分叉，见 attic/）
 
 # 5) 三端 HTML 同源 + C3 XSS 回归哨兵（统一由同步脚本提供）
 Step "monolith-html-sync" { powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-monolith-html.ps1 -Check }

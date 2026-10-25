@@ -8,7 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
-using AstralPath.Mobile.Views;
+
 using Xunit;
 
 namespace AstralPath.Desktop.Tests;
@@ -76,41 +76,8 @@ public sealed class TodayViewResponsiveTests
         window.Close();
     }
 
-    [AvaloniaFact]
-    public void 移动端外壳渲染出五个底部Tab且内容区有页面()
-    {
-        AppSettings.Current.Reset();
-        var (shell, _) = Composition.CreateShell(touchTarget: 48);
-
-        var mobileShell = new MobileShell { DataContext = shell, Width = MobileWidth, Height = MobileHeight };
-        var window = new Window { Content = mobileShell, Width = MobileWidth, Height = MobileHeight };
-        window.Show();
-        Dispatcher.UIThread.RunJobs();
-        window.UpdateLayout();
-
-        Assert.Equal(5, shell.MobileTabs.Count);
-        Assert.Equal(
-            new[] { AppPage.Today, AppPage.Practice, AppPage.DebtList, AppPage.Progress, AppPage.Profile },
-            shell.MobileTabs.Select(t => t.Page).ToArray());
-
-        // 移动端触达下限 48px（Mobile/App.axaml 声明）
-        Assert.Equal(48, AppSettings.Current.TouchTarget);
-
-        var tabButtons = mobileShell.GetVisualDescendants().OfType<Button>()
-            .Where(b => shell.MobileTabs.Any(t => t.Label == b.Content?.ToString()
-                                                  || b.GetVisualDescendants().OfType<TextBlock>()
-                                                      .Any(tb => tb.Text == t.Label)))
-            .ToList();
-        Assert.Equal(5, tabButtons.Count);
-        Assert.All(tabButtons, b => Assert.True(b.Bounds.Height >= 48 - 0.5,
-            $"移动端 Tab 高度 {b.Bounds.Height} 小于 48px 下限"));
-
-        // 启动页必须是今日
-        Assert.Equal(AppPage.Today, shell.CurrentPage);
-        Assert.IsType<TodayViewModel>(shell.Current);
-
-        window.Close();
-    }
+    // （原「移动端外壳渲染出五个底部Tab」用例随 AstralPath.Mobile 归档移除——
+    //   它断言的是未发布的 Avalonia 移动壳 MobileShell；见 attic/README.md）
 
     [AvaloniaFact]
     public void 今日页包含预算胶囊与免责声明且无评价性措辞()
