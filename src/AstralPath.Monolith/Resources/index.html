@@ -176,7 +176,7 @@ window.APDiag=(function(){
 <div class="wrap">
 <header class="rail">
   <div class="mark">债</div>
-  <div class="brand"><strong>知债：星穹学途</strong><small>Knowledge Debt: Astral Path · 单体版 2.6.0（无微服务）</small></div>
+  <div class="brand"><strong>知债：星穹学途</strong><small>Knowledge Debt: Astral Path · 离线完整版 2.6.0 · 数据只存本机</small></div>
   <nav class="pills" id="nav">
     <button class="on" data-p="home">起点</button><button data-p="materials">藏书阁</button>
     <button data-p="graph">识网</button><button data-p="papers">试卷作业</button><button data-p="debt">知债</button>
@@ -186,7 +186,7 @@ window.APDiag=(function(){
   <div class="row" style="align-items:center">
     <button class="btn quiet" id="btnHelp" title="新手引导与术语词典" style="padding:4px 10px;min-height:30px;font-weight:700">？</button>
     <div class="avatar" id="userAv">访</div>
-    <div><strong style="font-size:13px" id="userName">王小明（有债）</strong><div style="font-size:11px;color:var(--muted)" id="mode">单体 · 本机数据</div></div>
+    <div><strong style="font-size:13px" id="userName">王小明（有债）</strong><div style="font-size:11px;color:var(--muted)" id="mode">本机数据 · 无需联网</div></div>
   </div>
 </header>
 <main id="p-home">
@@ -206,7 +206,7 @@ window.APDiag=(function(){
   </div>
   <div class="panel"><h2>当前教材</h2><div id="homeBook" class="hint">尚未选择教材</div></div>
   <div class="panel"><h2>系统状态</h2><div class="row" style="margin:6px 0"><span class="badge" id="netBadge">本机模式</span><button class="btn" id="btnClearOcrCache">清理OCR缓存</button><button class="btn" id="btnUploadCache">上传缓存说明</button></div>
-    <div class="status ok">score-v2 / impact-v2 / sale-v2 · 解析→构图→识网 本机闭环 · 数据存 localStorage · <span class="badge">单体就绪</span></div>
+    <div class="status ok">解析 → 构图 → 识网 → 今日任务，全部在这台设备上完成，不上传任何数据 · <span class="badge">离线就绪</span></div>
   </div>
 </main>
 <main id="p-materials" hidden>
@@ -278,7 +278,7 @@ window.APDiag=(function(){
       <div id="chTree" style="max-height:220px;overflow:auto;border:1px solid var(--rule);border-radius:8px;padding:8px"></div>
       <div id="chBody" style="margin-top:10px;padding:10px;background:var(--soft);border-radius:8px;font-size:13px;line-height:1.6;max-height:180px;overflow:auto">选择左侧章节后显示正文</div>
       <h2 style="margin-top:14px">节点检视</h2>
-<div id="nodeInfo" class="hint">点击 DAG 节点。</div>
+<div id="nodeInfo" class="hint">点击图中节点查看详情。</div>
       <h2 style="margin-top:14px">图谱导出 <span class="tag">v3-四态</span></h2>
       <div class="row" style="gap:6px;flex-wrap:wrap" id="kgTabs">
         <button class="btn" data-kg="triples">三元组</button>
@@ -354,7 +354,7 @@ window.APDiag=(function(){
     <div class="field"><label>前置掌握 score_p <span id="vSp">0.30</span></label><input class="slider" type="range" id="wSp" min="0" max="100" value="30" /></div>
     <div class="field"><label>目标掌握 score_c <span id="vSc">0.25</span></label><input class="slider" type="range" id="wSc" min="0" max="100" value="25" /></div>
     <div class="field"><label>错题频次 freq <span id="vFq">5</span></label><input class="slider" type="range" id="wFq" min="0" max="20" value="5" /></div>
-    <div class="status" id="whatOut">拖动滑杆查看 impact（公式 impact-v2）</div>
+    <div class="status" id="whatOut">拖动滑杆，看它对这条债边的影响（本地公式实时计算）</div>
   </div>
   <div class="panel"><h2>修复计划 <span class="tag" id="planSrcTag">—</span></h2>
     <div class="field"><label>补充要求（可选）</label><input id="planAsk" placeholder="例如：每天不超过30分钟 / 先重点补某门课" /></div>
@@ -375,7 +375,7 @@ window.APDiag=(function(){
       <button class="btn quiet" id="btnHwImport">📥 导入作业单</button>
       <input type="file" id="hwFile" accept=".json,application/json" hidden />
       <button class="btn" id="btnShuffle">换一批题</button>
-      <button class="btn quiet" id="btnDay">Demo +1 天</button>
+      <button class="btn quiet" id="btnDay" title="用于演示间隔复习的进度推进">快进一天</button>
     </div>
   </div>
   <div class="panel">
@@ -397,7 +397,7 @@ window.APDiag=(function(){
   </div>
   <div class="grid2">
     <section class="panel">
-      <h2>对话 <button class="btn quiet" id="btnChatClear" style="float:right;font-size:11px;padding:2px 10px;min-height:24px">清空对话</button></h2><p class="hint">sessionId: local-monolith · 本机工具白名单 · 历史保存在本机</p>
+      <h2>对话 <button class="btn quiet" id="btnChatClear" style="float:right;font-size:11px;padding:2px 10px;min-height:24px">清空对话</button></h2><p class="hint">对话与历史仅保存在本机 · 回答前经过工具白名单校验</p>
       <div class="chat" id="chat"></div>
       <div class="row" style="margin-top:12px">
         <input class="chatin" id="agentIn" placeholder="例如：我的会计等式总是搞不清，怎么办？" />
@@ -411,13 +411,13 @@ window.APDiag=(function(){
         <button class="btn quiet" data-q="销账条件是什么">销账检查</button>
         <button class="btn quiet" data-q="今日任务">今日任务</button>
       </div>
-      <div class="status ok" id="agentSt">ok · ready</div>
+      <div class="status ok" id="agentSt">智能体就绪</div>
       <div class="status" id="agentTrace">路由轨迹将显示在此</div>
     </section>
-    <aside class="panel"><h2>工具清单</h2><p class="hint">本机白名单（无微服务）</p>
+    <aside class="panel"><h2>工具清单</h2><p class="hint">全部在本机执行，联网仅用于可选的云端讲解</p>
       <ul class="clean">
-        <li>诊断红边（impact-v2）</li><li>14 天计划（间隔三遍）</li><li>今日任务</li>
-        <li>识网摘要 / 章节检索</li><li>销账检查（sale-v2）</li><li>What-if 模拟</li><li>资料解析引导</li>
+        <li>知识债红边诊断</li><li>14 天计划（间隔三遍）</li><li>今日任务</li>
+        <li>识网摘要 / 章节检索</li><li>销账条件检查</li><li>What-if 模拟</li><li>资料解析引导</li>
       </ul>
       <h2 style="margin-top:16px">云端大脑 <span class="tag">小米 MiMo</span></h2>
       <div class="field"><label>API Key（sk-…，AES-GCM 加密存储）</label><input id="mimoKey" type="password" placeholder="粘贴你的 MiMo API Key" autocomplete="off" /></div>
@@ -439,7 +439,7 @@ window.APDiag=(function(){
   <div class="panel"><h2>错题本 <span class="tag">按频次聚合</span></h2><div id="wrongBook"></div></div>
 <div class="panel"><h2>风格五轴</h2><div id="styleList"></div>
     <p class="hint">Brier 越低越准 · Steady=状态稳 · Independent=少提示</p></div>
-  <div class="panel"><h2>智能体合约对照 <span class="tag">golden/score.json</span></h2><div class="status" id="goldenLine">作答后自动计算</div></div>
+  <div class="panel"><h2>公式与智能体一致性 <span class="tag">本地校验</span></h2><div class="status" id="goldenLine">作答后自动计算</div></div>
   <div class="panel"><button class="btn" id="btnOpt">关闭个性化画像（opt-out）</button><div class="status" id="optLine">个性化开启中</div></div>
 </main>
 <main id="p-teacher" hidden>
@@ -5886,7 +5886,7 @@ function renderGraph() {
   });
 
   const dag = $('dag');
-  const _ni0 = $('nodeInfo'); if (_ni0) _ni0.innerHTML = '<span class="hint">点击 DAG 节点查看详情，可一键排入今日或问智能体。</span>'; // P1-3：切书清残留
+  const _ni0 = $('nodeInfo'); if (_ni0) _ni0.innerHTML = '<span class="hint">点击图中节点查看详情，可一键排入今日或问智能体。</span>'; // P1-3：切书清残留
   let nodes = activeNodes(), edges = activeEdges();
   // P2-3：多书叠加对比——勾选其他教材并入当前视图（其余书节点加书名前缀、章节降为术语以免干扰章节环）
   const mergeSel = window.__mergeSel = (window.__mergeSel || {});
@@ -7482,7 +7482,7 @@ function renderProfile(){
 $("optLine").textContent=S.optOut?"已关闭个性化画像":"个性化开启中";
   // 智能体合约：score.json 掌握度 golden 公式与画像对照（sev=1-acc 近似）
   const gs=goldenScore(acc,1-Math.min(1,acc*0.7),logs.length?logs.slice(-1)[0].conf:3);
-  const gl=$("goldenLine");if(gl)gl.innerHTML='<div class="hint">掌握度合约（golden/score.json）：100×(0.6·recent_acc + 0.3·sev_norm + 0.1·conf/5) = <b>'+gs+'</b>（acc='+acc.toFixed(2)+'，sev_norm='+(1-(1-Math.min(1,acc*0.7))).toFixed(2)+'，conf 取最近一次）</div>';
+  const gl=$("goldenLine");if(gl)gl.innerHTML='<div class="hint">掌握度公式（与本地公式同源）：100×(0.6·recent_acc + 0.3·sev_norm + 0.1·conf/5) = <b>'+gs+'</b>（acc='+acc.toFixed(2)+'，sev_norm='+(1-(1-Math.min(1,acc*0.7))).toFixed(2)+'，conf 取最近一次）</div>';
   // P2-5：错题本（按知识点聚合错答 + 一键重练，与销账/今日联动）
   const wb=$("wrongBook");
   if(wb){
@@ -8343,3 +8343,32 @@ window.__TINY_INTENTS__={"vocab": ["知识债", "债边", "诊断", "红边", "�
 
 </script>
 </body>
+<script>
+/* ── 调试面板：仅当 URL 带 ?debug=1 时显示（工程排查用，默认对学生不可见）── */
+(function () {
+  try {
+    if (!/[?&]debug=1\b/.test(location.search)) return;
+    var box = document.createElement('div');
+    box.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:99999;max-width:420px;max-height:60vh;overflow:auto;background:#101418;color:#cde3f4;font:11px/1.7 Consolas,monospace;padding:10px 14px;border:1px solid #2c3a4a;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.45);text-align:left';
+    function line(k, v) { var d = document.createElement('div'); var b = document.createElement('b'); b.textContent = k + '：'; d.appendChild(b); d.appendChild(document.createTextNode(v)); box.appendChild(d); }
+    var h = document.createElement('div'); h.textContent = 'AstralPath 调试面板'; h.style.cssText = 'font-weight:700;color:#8fd3ff;margin-bottom:4px'; box.appendChild(h);
+    line('版本', '单体 2.6.0 · 公式 score-v2 / impact-v2 / sale-v2');
+    line('模式', 'sessionId local-monolith · ' + (navigator.onLine ? '在线' : '离线'));
+    if (typeof INTENTS !== 'undefined') line('意图表', INTENTS.length + ' 项');
+    if (typeof CRISIS !== 'undefined') line('危机词', CRISIS.length + ' 个 → 转人工');
+    try {
+      var keys = [], total = 0;
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf('astralpath') === 0) { var n = (localStorage.getItem(k) || '').length; keys.push(k + '(' + (n / 1024).toFixed(1) + 'KB)'); total += n; }
+      }
+      line('存储分片', keys.length ? keys.join(' · ') : '（空）');
+      line('本机存储合计', (total / 1024).toFixed(1) + ' KB（localStorage 轻状态，正文在 IndexedDB）');
+    } catch (e) { line('存储分片', '读取失败：' + e.message); }
+    var btn = document.createElement('button'); btn.textContent = '关闭'; btn.style.cssText = 'margin-top:6px;padding:2px 12px;cursor:pointer';
+    btn.onclick = function () { box.remove(); };
+    box.appendChild(btn);
+    document.body.appendChild(box);
+  } catch (e) {}
+})();
+</script>
