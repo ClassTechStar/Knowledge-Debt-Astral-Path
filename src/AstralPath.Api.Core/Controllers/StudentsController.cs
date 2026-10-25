@@ -1,9 +1,7 @@
-using Microsoft.AspNetCore.Mvc;
 using AstralPath.Contracts;
 using AstralPath.Core.Algorithms;
 using AstralPath.Core.Formula;
 using AstralPath.Core.Narrative;
-using AstralPath.Core.Planner;
 using AstralPath.Infrastructure;
 
 namespace AstralPath.Api.Controllers;

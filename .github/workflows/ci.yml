@@ -60,6 +60,9 @@ jobs:
           node-version: "20"
           cache: npm
 
+      - name: npm ci
+        run: npm ci --no-audit --no-fund
+
       # ① 全解决方案构建（Release）
       - name: dotnet build
         run: dotnet build AstralPath.slnx -c Release
@@ -76,6 +79,10 @@ jobs:
       # ③ 常量对齐：JS 的 K ↔ C# 的 FormulaConstants
       - name: verify constants
         run: python scripts/verify_constants.py
+
+      # ③b 公式常量生成区：K 由 C# 源生成，禁止两侧手工同步（P2-10）
+      - name: verify formula constants generated
+        run: python scripts/gen_formula_constants.py --check
 
       # ④ 意图表五方对拍（json / 主 HTML / C# 登记表 / C# 运行时词表 / p2 副本）
       - name: verify agent intents
@@ -113,9 +120,22 @@ jobs:
           python scripts/verify_graph_quality.py --check
           python scripts/repair_kg_titles.py --check
 
+      # ⑧d-2 图谱性能预算（P2-10）：确定性语料跑分章→构图，量级退化即红
+      - name: verify kg performance
+        run: python scripts/bench_kg.py --check
+
       # ⑧e 试卷结构化黄金用例 + 单文件内联 JS 棘轮（P2-8）
       - name: verify exam golden
         run: node scripts/exam_runner.js
+
+      - name: verify kg-text golden
+        run: node scripts/kg_text_runner.js
+
+      - name: verify agent-router golden
+        run: node scripts/agent_router_runner.js
+
+      - name: verify plan-scheduler golden
+        run: node scripts/plan_scheduler_runner.js
 
       - name: verify inline js budget
         run: python scripts/verify_inline_js.py --check
@@ -128,17 +148,23 @@ jobs:
       - name: naming consistency
         run: python scripts/naming_consistency.py --check
 
+      # ⑧f 代码风格门禁（P2-10）：C# dotnet format + 前端 eslint
+      - name: dotnet format
+        run: dotnet format whitespace AstralPath.slnx --verify-no-changes --no-restore
+
+      - name: eslint
+        run: npx --no-install eslint .
+
       # ⑨ 一键验收全家桶（三端 HTML 同源 + C3 XSS 回归哨兵 + 剩余测试）
       - name: verify_all
         shell: pwsh
         run: pwsh -NoProfile -File scripts/verify_all.ps1
 
-  # 阶段二起升级为硬门禁；现阶段仅产出报告，不阻断合并（方案 P1：先告警后门禁）
+  # 覆盖率硬门禁（P2-10）：低于行/分支阈值即判红，不再 report-only
   coverage:
-    name: coverage report
+    name: coverage gate
     runs-on: windows-latest
     timeout-minutes: 30
-    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v4
@@ -152,6 +178,9 @@ jobs:
           -c Release
           --collect:"XPlat Code Coverage"
           --results-directory ./artifacts/coverage
+
+      - name: verify coverage threshold
+        run: python scripts/verify_coverage.py --check
 
       - name: upload coverage
         uses: actions/upload-artifact@v4

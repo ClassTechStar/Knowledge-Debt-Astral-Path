@@ -1,6 +1,3 @@
-using AstralPath.Core.Extensions;
-using AstralPath.Persistence;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace AstralPath.Persistence.Tests;

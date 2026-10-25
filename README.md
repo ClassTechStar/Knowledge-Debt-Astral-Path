@@ -41,8 +41,8 @@
 
 | 产物 | 路径 | 说明 |
 |---|---|---|
-| Web 单体版 | `deploy/monolith-web/index.html` | 599,264 字节，浏览器直接打开，全部功能可用 |
-| 自包含单文件 | `deploy/monolith-web/astralpath-monolith.html` | 18,187,662 字节，OCR 全栈内联，零外部资源 |
+| Web 单体版 | `deploy/monolith-web/index.html` | 620,566 字节，浏览器直接打开，全部功能可用 |
+| 自包含单文件 | `deploy/monolith-web/astralpath-monolith.html` | 32,991,982 字节，OCR 与 ONNX 运行时全栈内联，零外部资源 |
 | Windows 安装包 | `release/AstralPath-Monolith-Setup-2.6.0.exe` | WebView2 壳加载同一份 HTML，本机安装验收通过 |
 | Windows 便携版 | `release/AstralPath-Portable-2.6.0/`（及同名 zip） | 免安装解压即用，.NET 10 自包含 |
 | Android APK | `release/AstralPath-Android-2.6.0-Store.apk` | WebView 同构加离线核心，versionCode 36，商店签名 |
@@ -55,6 +55,7 @@
 | 分工详细附录 | `docs/附录-四人分工详细矩阵(RACI-模块-风险)-v2.1.0.md` | RACI、模块治理与风险应急 |
 | 四人提示词 | `docs/vibe-prompts/提示词-P{1,2,3,4}-*.md` | v3，可直接粘贴给 AI 开发助手 |
 | 阶段改造报告 | `docs/T20_阶段一安全网改造报告.md`、`docs/T21_阶段二加固与减熵改造报告.md` | 两阶段工程化改造的完整记录 |
+| 架构决策 | `docs/adr/` | ADR-0001 打包路线、ADR-0002 单文件零外部依赖与构建期常量注入 |
 
 ## 3. 快速开始
 
@@ -150,12 +151,12 @@ tests/                    Core 114 · Persistence 8 · Desktop 50 · Api 70 · E
 一键验收：
 
 ```powershell
-pwsh -NoProfile -File scripts\verify_all.ps1     # 17 步 ALL GREEN
+pwsh -NoProfile -File scripts\verify_all.ps1     # 31 步 ALL GREEN
 ```
 
-脚本覆盖常量对齐、意图表六方对拍（<!-- metrics:agent-intents -->26<!-- /metrics:agent-intents --> 意图，危机词 <!-- metrics:crisis-words -->11<!-- /metrics:crisis-words --> 个）、公式跨语言对拍、前端脚本语法、XSS 黄金用例（14 例）、共享内核双跑等价、生成区一致性（5 区）、状态分片黄金用例（10 例）、零空 catch（151 个 .cs 文件）、命名规范扫描与三端 HTML 同源。
+脚本覆盖常量对齐、公式常量生成区（`K` 由 `FormulaConstants.cs` 注入）、意图表六方对拍（<!-- metrics:agent-intents -->26<!-- /metrics:agent-intents --> 意图，危机词 <!-- metrics:crisis-words -->11<!-- /metrics:crisis-words --> 个）、公式跨语言对拍、前端脚本语法、XSS 黄金用例（14 例）、共享内核双跑等价、生成区一致性（9 区）、状态分片黄金用例（10 例）、试卷/教材文本/智能体路由/计划调度黄金用例（29 例）、零空 catch（151 个 .cs 文件）、命名规范扫描、三端 HTML 同源、图谱性能预算、覆盖率阈值与 `dotnet format` / eslint 风格门禁。
 
-持续集成在 `.github/workflows/ci.yml`，每次 push 与 PR 自动跑构建、测试与上述门禁，另有覆盖率报告作业。首次启用时 CI 红了三处，均已修复：OcrHost 的 tessdata 兜底路径缺存在性检查、Windows runner 控制台 cp1252 导致中文输出崩溃、生成块比对未归一换行。
+持续集成在 `.github/workflows/ci.yml`，每次 push 与 PR 自动跑构建、测试与上述门禁；覆盖率已是硬门禁（行 ≥50% / 分支 ≥40%，低于阈值即红），另有两个独立作业：Android 打包验证与 Playwright 浏览器冒烟。首次启用时 CI 红了三处，均已修复：OcrHost 的 tessdata 兜底路径缺存在性检查、Windows runner 控制台 cp1252 导致中文输出崩溃、生成块比对未归一换行。
 
 ## 8. 开发者指南
 
@@ -180,6 +181,10 @@ dotnet publish src/AstralPath.Monolith -c Release -r win-x64 --self-contained -o
 NuGet 报 `path1=null` 时，补齐 `PROGRAMDATA`、`PROGRAMFILES(X86)`、`ALLUSERSPROFILE` 三个环境变量，并设 `CheckEolWorkloads=false`。
 
 前端共享代码的单一来源在 `shared/`，页面内联副本由 `python scripts/gen_frontend_regions.py` 刷进 `deploy/monolith-web/index.html` 的生成区，`--check` 是 CI 门禁。改完生成区要跑 `scripts/sync-monolith-html.ps1` 同步三端镜像，并重打 `scripts/build-single.py` 里的 `EXPECTED_MD5`（必须小写）。
+
+单文件构建额外依赖 `deploy/monolith-web/ort-runtime/` 下的 `ort.min.js` 与 `ort-wasm-simd-threaded.wasm`（LFS 管理），构建脚本会把它们内联进产物，产物内不再出现任何外部 `src`/`href`。页面调试信息统一收在 `?debug=1` 隐藏面板，默认界面不显示工程术语。
+
+前端门禁：`npm ci` 后 `npm run lint`（eslint），C# 侧 `dotnet format whitespace AstralPath.slnx --verify-no-changes`。
 
 ## 9. 四人提示词与分工
 
@@ -206,6 +211,7 @@ NuGet 报 `path1=null` 时，补齐 `PROGRAMDATA`、`PROGRAMFILES(X86)`、`ALLUS
 
 | 版本 | 日期 | 要点 |
 |---|---|---|
+| 2.6.0 工程化阶段三 | 2026-10-25 | 单文件产物零外部依赖（ORT 运行时内联）；公式常量改由 C# 源生成；覆盖率转为硬门禁；图谱性能预算、`dotnet format` 与 eslint 入 CI；教材文本/章节/关键词下沉 `shared/kg-text.js` 并建黄金用例；首页工程信息收进 `?debug=1` 调试面板 |
 | 2.6.0 | 2026-10-17 | 版本号全量统一（前端、C# 程序集、gradle、iss、微服务 tag、文档口径）；双端安装包经 GitHub Release v2.6.0 发布；构建链加签名环境自动加载与 tessdata 自动保障，双端打包可零人工干预自愈 |
 | 2.6.0 工程化阶段一 | 2026-10-18 | CI 流水线与静态门禁（脚本解析级检查、跨站脚本黄金用例、零空 catch）；前端共享代码收敛到 `shared/` 单一来源；编排意图对拍由三方扩到六方，26 意图一致 |
 | 2.6.0 工程化阶段二 | 2026-10-18 至 19 | 密钥信封 v2（轮换与吊销）；本地状态五分片存储，旧数据自动迁移留底；意图路由器 479 行拆到 281 行；运行期诊断环形缓冲与 `/health/ready`；前端构建合并，生成区加一键构建 |

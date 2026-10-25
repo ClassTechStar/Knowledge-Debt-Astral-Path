@@ -5,9 +5,11 @@
   "description": "知债：星穹学途 门禁与冒烟工具链（CI 用，不属于应用运行时依赖）",
   "scripts": {
     "test:smoke": "playwright test",
-    "check:js": "node tools/check-js.js"
+    "check:js": "node tools/check-js.js",
+    "lint": "eslint ."
   },
   "devDependencies": {
-    "@playwright/test": "^1.49.0"
+    "@playwright/test": "^1.49.0",
+    "eslint": "^9.39.5"
   }
 }

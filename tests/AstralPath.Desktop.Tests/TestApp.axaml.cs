@@ -1,7 +1,4 @@
-using AstralPath.Shared.Services;
-using AstralPath.Shared.ViewModels;
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 

@@ -38,7 +38,7 @@ function t10InflateRaw(bytes){
 function t10Decode(u8){
   if(!u8)return "";
   if(u8.length>=2&&u8[0]===0xFF&&u8[1]===0xFE){try{return new TextDecoder("utf-16le").decode(u8);}catch(e){}}
-  try{return new TextDecoder("utf-8",{fatal:false}).decode(u8);}catch(e){return latin1(u8);}
+  try{return new TextDecoder("utf-8",{fatal:false}).decode(u8);}catch(e){try{return new TextDecoder("latin1").decode(u8);}catch(e2){return "";}}
 }
 
 function t10Ent(s){

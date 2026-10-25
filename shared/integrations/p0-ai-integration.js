@@ -372,7 +372,7 @@
     if (!ns.length) return;
     var kp = (window._q && window._q.kp) || ns.slice().sort(function (a, c) { return scoreOf(a.id) - scoreOf(c.id); })[0].id;
     var node = ns.find(function (n) { return n.id === kp; }) || ns[0];
-    var box = $("quizBox");
+    box = $("quizBox");
     if (box) box.innerHTML = '<div class="status">🤖 AI 正在基于《' + esc(String(b.name || "").slice(0, 20)) + '》全文内容命题…</div>';
     aiGenQuestion(b, node, {
       onDelta: function (acc, info) {

@@ -1,7 +1,6 @@
-using System.Net.Http.Headers;
-using AstralPath.Core.Diagnostics;
 using System.Text;
 using System.Text.Json;
+using AstralPath.Core.Diagnostics;
 
 namespace AstralPath.Core.Agent;
 
@@ -199,7 +198,8 @@ public sealed class MimoClient
 
     private static void SafeDelta(Action<string, bool> onDelta, string text, bool thinking)
     {
-        try { onDelta(text, thinking); } catch (Exception ex)
+        try { onDelta(text, thinking); }
+        catch (Exception ex)
         {
             Diag.Recover(ex, "MimoClient");
         }

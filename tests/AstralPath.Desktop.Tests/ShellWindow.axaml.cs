@@ -1,5 +1,4 @@
 using AstralPath.Shared.ViewModels;
-using Avalonia;
 using Avalonia.Controls;
 
 namespace AstralPath.Desktop.Tests;

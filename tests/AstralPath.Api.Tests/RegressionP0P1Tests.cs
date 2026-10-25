@@ -1,8 +1,8 @@
 using System.Net;
-using AstralPath.Core.Diagnostics;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using AstralPath.Core.Diagnostics;
 using AstralPath.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -171,7 +171,8 @@ public class RegressionP0P1Tests : IClassFixture<WebApplicationFactory<Program>>
         }
         finally
         {
-            try { Directory.Delete(dir, recursive: true); } catch (Exception ex)
+            try { Directory.Delete(dir, recursive: true); }
+            catch (Exception ex)
             {
                 Diag.Recover(ex, "RegressionP0P1Tests");
             }
@@ -219,7 +220,8 @@ public class RegressionP0P1Tests : IClassFixture<WebApplicationFactory<Program>>
         }
         finally
         {
-            try { Directory.Delete(dir, recursive: true); } catch (Exception ex)
+            try { Directory.Delete(dir, recursive: true); }
+            catch (Exception ex)
             {
                 Diag.Recover(ex, "RegressionP0P1Tests");
             }
@@ -297,7 +299,8 @@ public class RegressionP0P1Tests : IClassFixture<WebApplicationFactory<Program>>
         }
         finally
         {
-            try { Directory.Delete(dir, recursive: true); } catch (Exception ex)
+            try { Directory.Delete(dir, recursive: true); }
+            catch (Exception ex)
             {
                 Diag.Recover(ex, "RegressionP0P1Tests");
             }

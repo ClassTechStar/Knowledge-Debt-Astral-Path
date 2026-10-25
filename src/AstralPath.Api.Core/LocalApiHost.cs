@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Builder;
 using AstralPath.Core.Diagnostics;
 
 namespace AstralPath.Api;

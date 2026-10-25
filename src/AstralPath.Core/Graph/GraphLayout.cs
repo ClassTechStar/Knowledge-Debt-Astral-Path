@@ -154,14 +154,14 @@ public static class GraphLayout
         var crossings = 0;
         var list = edges.Where(e => e.From != e.To).ToList();
         for (var i = 0; i < list.Count; i++)
-        for (var j = i + 1; j < list.Count; j++)
-        {
-            if (!pos.TryGetValue(list[i].From, out var a1)) continue;
-            if (!pos.TryGetValue(list[i].To, out var a2)) continue;
-            if (!pos.TryGetValue(list[j].From, out var b1)) continue;
-            if (!pos.TryGetValue(list[j].To, out var b2)) continue;
-            if (SegmentsIntersect(a1, a2, b1, b2)) crossings++;
-        }
+            for (var j = i + 1; j < list.Count; j++)
+            {
+                if (!pos.TryGetValue(list[i].From, out var a1)) continue;
+                if (!pos.TryGetValue(list[i].To, out var a2)) continue;
+                if (!pos.TryGetValue(list[j].From, out var b1)) continue;
+                if (!pos.TryGetValue(list[j].To, out var b2)) continue;
+                if (SegmentsIntersect(a1, a2, b1, b2)) crossings++;
+            }
         return crossings;
     }
 

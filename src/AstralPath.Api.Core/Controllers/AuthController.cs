@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
 using AstralPath.Contracts;
 using AstralPath.Infrastructure;
 

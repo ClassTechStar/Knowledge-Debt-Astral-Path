@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using AstralPath.Core.Formula;
 
 namespace AstralPath.Core.Extensions;

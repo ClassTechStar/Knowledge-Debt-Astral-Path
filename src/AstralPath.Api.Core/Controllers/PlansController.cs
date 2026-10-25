@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
 using AstralPath.Contracts;
 using AstralPath.Core.Formula;
 using AstralPath.Core.Planner;
@@ -85,11 +84,11 @@ public sealed class PlansController : ControllerBase
                 var days = schedule.Days.ToList();
                 var covered = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var day in days)
-                foreach (var item in day.Items)
-                {
-                    if (item.DebtRef.Count >= 2)
-                        covered.Add($"{item.DebtRef[0]}->{item.DebtRef[1]}");
-                }
+                    foreach (var item in day.Items)
+                    {
+                        if (item.DebtRef.Count >= 2)
+                            covered.Add($"{item.DebtRef[0]}->{item.DebtRef[1]}");
+                    }
 
                 var extra = new List<PlanItemInput>();
                 foreach (var (fromKp, toKp) in coverageDebts)

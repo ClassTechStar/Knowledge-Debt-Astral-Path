@@ -181,14 +181,14 @@ public static class GraphInference
         var set = new HashSet<string>(list, StringComparer.Ordinal);
 
         foreach (var rx in new[] { SequentialRe, FoundationRe, DependsOnRe })
-        foreach (Match m in rx.Matches(text))
-        {
-            if (!m.Groups.TryGetValue("a", out var ga) || !m.Groups.TryGetValue("b", out var gb)) continue;
-            var a = MatchConcept(ga.Value.Trim(), list, set);
-            var b = MatchConcept(gb.Value.Trim(), list, set);
-            if (a is null || b is null || string.Equals(a, b, StringComparison.Ordinal)) continue;
-            yield return (a, b);
-        }
+            foreach (Match m in rx.Matches(text))
+            {
+                if (!m.Groups.TryGetValue("a", out var ga) || !m.Groups.TryGetValue("b", out var gb)) continue;
+                var a = MatchConcept(ga.Value.Trim(), list, set);
+                var b = MatchConcept(gb.Value.Trim(), list, set);
+                if (a is null || b is null || string.Equals(a, b, StringComparison.Ordinal)) continue;
+                yield return (a, b);
+            }
     }
 
     // ── 4. 一键构图 ─────────────────────────────────────

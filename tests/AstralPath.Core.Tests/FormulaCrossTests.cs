@@ -1,6 +1,5 @@
 using System.Text.Json;
 using AstralPath.Core.Algorithms;
-using AstralPath.Core.Models;
 using Xunit;
 
 namespace AstralPath.Core.Tests;

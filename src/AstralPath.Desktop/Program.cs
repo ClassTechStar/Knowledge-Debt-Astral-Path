@@ -189,7 +189,8 @@ public sealed class MainForm : Form
         {
             _status.Text = "启动失败：" + ex.Message;
             _retry.Visible = true;
-            try { await File.AppendAllTextAsync(_logPath, $"[{DateTime.Now:O}] desktop:{ex}\n"); } catch (Exception logEx)
+            try { await File.AppendAllTextAsync(_logPath, $"[{DateTime.Now:O}] desktop:{ex}\n"); }
+            catch (Exception logEx)
             {
                 System.Diagnostics.Debug.WriteLine("[diag] " + logEx);
             }
@@ -234,7 +235,8 @@ public sealed class MainForm : Form
         try
         {
             using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
-            try { await http.PostAsync(baseUrl.TrimEnd('/') + "/api/services/warmup", null); } catch (Exception ex)
+            try { await http.PostAsync(baseUrl.TrimEnd('/') + "/api/services/warmup", null); }
+            catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("[diag] " + ex);
             }

@@ -1,15 +1,11 @@
-using Microsoft.AspNetCore.Builder;
-using AstralPath.Core.Diagnostics;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using AstralPath.Contracts;
+using AstralPath.Core.Diagnostics;
 using AstralPath.Infrastructure;
 using AstralPath.Persistence;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.FileProviders;
 
 namespace AstralPath.Api;
 

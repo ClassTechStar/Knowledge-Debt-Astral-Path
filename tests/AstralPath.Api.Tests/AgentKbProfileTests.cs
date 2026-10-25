@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
 namespace AstralPath.Api.Tests;
@@ -157,8 +157,12 @@ public class AgentKbProfileTests : IClassFixture<WebApplicationFactory<Program>>
         var client = Client();
         var create = await client.PostAsJsonAsync("/v1/kb/documents", new
         {
-            title = "我的私有笔记", ownerUserId = "demo-student-a", visibility = "private",
-            courseCode = "LINALG", text = "私有内容", tags = new[] { "笔记" }
+            title = "我的私有笔记",
+            ownerUserId = "demo-student-a",
+            visibility = "private",
+            courseCode = "LINALG",
+            text = "私有内容",
+            tags = new[] { "笔记" }
         });
         var docId = (await Data(create)).GetProperty("id").GetString()!;
 
@@ -175,8 +179,12 @@ public class AgentKbProfileTests : IClassFixture<WebApplicationFactory<Program>>
         var client = Client();
         var create = await client.PostAsJsonAsync("/v1/kb/documents", new
         {
-            title = "授权可见资料", ownerUserId = "demo-student-a", visibility = "consented",
-            courseCode = "LINALG", text = "教师可见内容", tags = new[] { "授权" }
+            title = "授权可见资料",
+            ownerUserId = "demo-student-a",
+            visibility = "consented",
+            courseCode = "LINALG",
+            text = "教师可见内容",
+            tags = new[] { "授权" }
         });
         var docId = (await Data(create)).GetProperty("id").GetString()!;
 
@@ -207,8 +215,12 @@ public class AgentKbProfileTests : IClassFixture<WebApplicationFactory<Program>>
         var client = Client();
         await client.PostAsJsonAsync("/v1/kb/documents", new
         {
-            title = "检索用例私有文档", ownerUserId = "demo-student-a", visibility = "private",
-            courseCode = "LINALG", text = "独特的检索关键词 ZZQ检索 只应被所有者命中", tags = new[] { "检索" }
+            title = "检索用例私有文档",
+            ownerUserId = "demo-student-a",
+            visibility = "private",
+            courseCode = "LINALG",
+            text = "独特的检索关键词 ZZQ检索 只应被所有者命中",
+            tags = new[] { "检索" }
         });
 
         var mine = await client.PostAsJsonAsync("/v1/kb/search",
@@ -230,7 +242,9 @@ public class AgentKbProfileTests : IClassFixture<WebApplicationFactory<Program>>
 
         var bad = await client.PostAsJsonAsync("/v1/kb/documents", new
         {
-            title = "非法可见性", ownerUserId = "demo-student-a", visibility = "secret"
+            title = "非法可见性",
+            ownerUserId = "demo-student-a",
+            visibility = "secret"
         });
         Assert.Equal(HttpStatusCode.UnprocessableEntity, bad.StatusCode);
     }

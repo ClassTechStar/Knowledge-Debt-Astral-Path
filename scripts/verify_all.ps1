@@ -33,6 +33,11 @@ function Step($name, $cmd) {
 # 1) 常量对齐：JS 的 K 对象 ↔ C# 的 FormulaConstants.cs
 Step "constants-K-vs-FormulaConstants" { python scripts/verify_constants.py }
 
+# 1b) 公式常量生成区：index.html 的 K 必须由 C# 源生成，禁止两侧手工同步（P2-10）
+if (Test-Path scripts/gen_formula_constants.py) {
+    Step "formula-constants-generated" { python scripts/gen_formula_constants.py --check }
+}
+
 # 1b) 智能体意图登记表三方对拍：tools/agent-intents.json ↔ index.html ↔ AgentRouter.cs
 if (Test-Path scripts/verify_agent_intents.py) {
     Step "agent-intents-three-way" { python scripts/verify_agent_intents.py }
@@ -55,12 +60,18 @@ if (Test-Path scripts/verify_bank.py) {
 }
 
 # 4) .NET 测试（逐个项目，dotnet test 一次只能接一个）
-Step "test-Core"        { dotnet test tests/AstralPath.Core.Tests -c Release }
+#    Core 顺带采集覆盖率，供后面的阈值门禁使用（P2-10）
+Step "test-Core"        { dotnet test tests/AstralPath.Core.Tests -c Release --collect:"XPlat Code Coverage" --results-directory ./artifacts/coverage }
 Step "test-Persistence" { dotnet test tests/AstralPath.Persistence.Tests -c Release }
 Step "test-Desktop"     { dotnet test tests/AstralPath.Desktop.Tests -c Release }
 Step "test-Api"         { dotnet test tests/AstralPath.Api.Tests -c Release }
 Step "test-Eval"        { dotnet test tests/AstralPath.Eval.Tests -c Release }
 # （原 test-MobileCore 已随 Mobile.Offline 归档移除：其 84 个测试跑的是陈旧 Core 分叉，见 attic/）
+
+# 4a) 覆盖率阈值门禁（P2-10）：低于行/分支阈值即判红
+if (Test-Path scripts/verify_coverage.py) {
+    Step "coverage-gate" { python scripts/verify_coverage.py }
+}
 
 # 4b) 数字单一事实源（P3-2 收口）：意图/危机词/测试数 ↔ README 标记自动对拍
 Step "metrics-readme"   { python scripts/verify_metrics.py --check }
@@ -69,6 +80,11 @@ Step "metrics-readme"   { python scripts/verify_metrics.py --check }
 if (Test-Path scripts/verify_graph_quality.py) {
     Step "graph-quality" { python scripts/verify_graph_quality.py --check }
     Step "kg-titles-clean" { python scripts/repair_kg_titles.py --check }
+}
+
+# 4d) 图谱性能预算（P2-10）：确定性语料跑分章→构图，量级退化即判红
+if (Test-Path scripts/bench_kg.py) {
+    Step "kg-perf" { python scripts/bench_kg.py --check }
 }
 
 # 5) 三端 HTML 同源 + C3 XSS 回归哨兵（统一由同步脚本提供）
@@ -100,14 +116,31 @@ if (Test-Path scripts/gen_frontend_regions.py) {
 # 6d-3) state 分片存储：黄金用例 + 页面接入校验（方案 P6）
 if (Test-Path scripts/verify_store.py) {
     Step "store-shards" { python scripts/verify_store.py }
+}
+
 # 6f) 试卷结构化黄金用例（P2-8 首个下沉边界：shared/exam.js）
 if (Test-Path scripts/exam_runner.js) {
     Step "exam-golden" { node scripts/exam_runner.js }
 }
+
+# 6h) 教材文本/章节/关键词黄金用例（P2-8 第二个下沉边界：shared/kg-text.js）
+if (Test-Path scripts/kg_text_runner.js) {
+    Step "kg-text-golden" { node scripts/kg_text_runner.js }
+}
+
+# 6i) 智能体规则路由黄金用例（P2-8 第三边界：shared/agent-router.js）
+if (Test-Path scripts/agent_router_runner.js) {
+    Step "agent-router-golden" { node scripts/agent_router_runner.js }
+}
+
+# 6j) 计划调度与 K1–K5 合约黄金用例（P2-8 第四边界：shared/plan-scheduler.js）
+if (Test-Path scripts/plan_scheduler_runner.js) {
+    Step "plan-scheduler-golden" { node scripts/plan_scheduler_runner.js }
+}
+
 # 6g) 单文件内联 JS 规模棘轮（P2-8：手写行数与页面副本数）
 if (Test-Path scripts/verify_inline_js.py) {
     Step "inline-js" { python scripts/verify_inline_js.py --check }
-}
 }
 
 # 6e) 空 catch 门禁（方案 P13）：每个 catch 必须有记录或降级动作
@@ -119,6 +152,14 @@ if (Test-Path scripts/verify_no_empty_catch.py) {
 #    "禁止再使用旧名…"这类声明句不会误报 —— 勿再用朴素 Select-String 重复实现）
 if (Test-Path scripts/naming_consistency.py) {
     Step "naming" { python scripts/naming_consistency.py --check }
+}
+
+# 8) 代码风格门禁（P2-10）：C# 走 dotnet format 的空白/换行检查，前端走 eslint
+Step "dotnet-format" { dotnet format whitespace AstralPath.slnx --verify-no-changes --no-restore }
+if (Test-Path node_modules/eslint) {
+    Step "eslint" { npx --no-install eslint . }
+} else {
+    Write-Host "[SKIP] 未安装 eslint（npm ci 后可用）" -ForegroundColor Yellow
 }
 
 # 结论

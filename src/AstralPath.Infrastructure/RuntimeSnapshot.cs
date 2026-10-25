@@ -1,11 +1,11 @@
 using System.Security.Cryptography;
-using AstralPath.Core.Diagnostics;
 using System.Text;
 using System.Text.Json;
-using Microsoft.Data.Sqlite;
+using AstralPath.Core.Algorithms;
+using AstralPath.Core.Diagnostics;
 using AstralPath.Core.Graph;
 using AstralPath.Core.Models;
-using AstralPath.Core.Algorithms;
+using Microsoft.Data.Sqlite;
 
 namespace AstralPath.Infrastructure;
 
@@ -205,7 +205,8 @@ public sealed class RuntimeSnapshotStore : IDisposable
                     _conn ??= OpenConnection();
                     WriteSnapshotLocked(legacy.SavedAt, legacy.PackId, legacyJson);
                     _lastHash = HashOf(legacyJson);
-                    try { File.Move(_legacyFile, _legacyFile + ".migrated", overwrite: true); } catch (Exception ex)
+                    try { File.Move(_legacyFile, _legacyFile + ".migrated", overwrite: true); }
+                    catch (Exception ex)
                     {
                         Diag.Recover(ex, "RuntimeSnapshot");
                     }
@@ -349,7 +350,8 @@ public sealed class RuntimeSnapshotStore : IDisposable
             _timer = null;
             _sweep?.Dispose();
             _sweep = null;
-            try { _conn?.Dispose(); } catch (Exception ex)
+            try { _conn?.Dispose(); }
+            catch (Exception ex)
             {
                 Diag.Recover(ex, "RuntimeSnapshot");
             }

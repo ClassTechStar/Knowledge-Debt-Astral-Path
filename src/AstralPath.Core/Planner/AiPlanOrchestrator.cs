@@ -1,7 +1,6 @@
 using System.Text.Json;
-using AstralPath.Core.Diagnostics;
-using System.Text.RegularExpressions;
 using AstralPath.Core.Agent;
+using AstralPath.Core.Diagnostics;
 
 namespace AstralPath.Core.Planner;
 
@@ -219,9 +218,12 @@ public sealed class AiPlanOrchestrator
                 var it = items[i];
                 if (string.IsNullOrWhiteSpace(it.Why))
                 {
-                    it = it with { Why = it.FromKpName != null
+                    it = it with
+                    {
+                        Why = it.FromKpName != null
                         ? "从「" + it.FromKpName + "」先垫一步，再检验「" + it.KpName + "」"
-                        : "巩固「" + it.KpName + "」（按教材顺序）" };
+                        : "巩固「" + it.KpName + "」（按教材顺序）"
+                    };
                 }
                 else if (it.FromKpName != null && !it.Why.Contains(it.FromKpName, StringComparison.Ordinal))
                 {

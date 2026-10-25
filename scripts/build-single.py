@@ -50,6 +50,9 @@ CORE_LSTM = os.path.join(OCR_DIR, "tesseract-core-lstm.wasm.js")
 CHI_SIM = os.path.join(OCR_DIR, "chi_sim.traineddata")
 ENG = os.path.join(OCR_DIR, "eng.traineddata")
 OUT = os.path.join(ROOT, "deploy", "monolith-web", "astralpath-monolith.html")
+ORT_DIR = os.path.join(ROOT, "deploy", "monolith-web", "ort-runtime")
+ORT_JS = os.path.join(ORT_DIR, "ort.min.js")
+ORT_WASM = os.path.join(ORT_DIR, "ort-wasm-simd-threaded.wasm")
 
 # 门禁：基座 index.html 漂移检测。2026-10-12 T11（UX 反馈落地）、2026-10-13 T12（内置演示密钥 AES-256-GCM 密文内嵌）、T13（并发闸/冷却分类/推理兜底/出题预算修复）、T14（AI 随时可用且迅速：思维链流式、垫题秒出+自动替换、命题进度流式、重复重试、冷却 30→8s、建议生成中占位）改动后重打基线。
 # 同日 T10.1 修复 matchExamKps 同题重复命中（重复知识点只计一次）后再次重打基线。
@@ -59,7 +62,12 @@ OUT = os.path.join(ROOT, "deploy", "monolith-web", "astralpath-monolith.html")
 # 2026-10-18 T20（方案 P4）：XSS 收口——renderTrend 的 SVG 文本节点 d.label 与
 # 学情报告 rowsTrend 表格首列改走 esc()（原为裸插，虽当前取值是日期串不可利用，
 # 但属未收口直插面），基座字节变化故重打基线。
-EXPECTED_MD5 = "413614faeb69d43943744ee07f5bd663"
+# 2026-10-25 P0-2/P2-10：首页系统状态卡片移入 ?debug=1 调试面板、清理残留工程黑话，
+# 公式常量改为 C# 生成区（K 由 FormulaConstants.cs 注入），教材文本/章节/关键词
+# 下沉 shared/kg-text.js（页面只留兼容层），基座字节变化故重打基线。
+# 2026-10-26 P2-8：智能体路由与计划调度下沉 shared/agent-router.js、shared/plan-scheduler.js，
+# 页面仅保留 ctx 注入的兼容层，基座字节再次变化。
+EXPECTED_MD5 = "dc356639c74693cb609ea30a4e83caf1"
 
 # 唯一放行的外部 CDN 引用（页面内有 onerror 哨兵，缺失时自动降级）
 ALLOWED_EXTERNAL_PREFIX = "https://cdn.jsdelivr.net/npm/onnxruntime-web"
@@ -226,6 +234,36 @@ def main():
         print("[警告] 未找到 workerSrc 行（pdf.js 将尝试相对加载）")
         r4 = r3
 
+    # 3b) ONNX 运行时内联（P2-9）：单文件版不再依赖 jsdelivr。
+    #     源文件仍保留 CDN script 标签（带 onerror 哨兵），单文件版替换为内联脚本 +
+    #     wasm base64 桥，运行期由 ortInlinePaths() 解出 blob URL 喂给 ORT。
+    ort_inlined = False
+    if "--no-onnx-inline" not in sys.argv:
+        ort_tag = re.search(
+            r'<script src="https://cdn\.jsdelivr\.net/npm/onnxruntime-web[^"]*"[^>]*></script>', r4)
+        if ort_tag and os.path.exists(ORT_JS) and os.path.exists(ORT_WASM):
+            ort_js = read(ORT_JS).replace("</script", "<\\/script")
+            with open(ORT_WASM, "rb") as f:
+                ort_wasm_b64 = base64.b64encode(f.read()).decode("ascii")
+            inline = (
+                '<script>/* ONNX 运行时内联（单文件版零外部依赖，失败即回退同构 JS 前向）*/\n'
+                + ort_js
+                + '\n</script>\n'
+                '<script>window.__AP_ORT_INLINE__={wasm:{"'
+                + os.path.basename(ORT_WASM)
+                + '":"'
+                + ort_wasm_b64
+                + '"}};</script>'
+            )
+            r4 = r4[:ort_tag.start()] + inline + r4[ort_tag.end():]
+            ort_inlined = True
+        elif not ort_tag:
+            print("[警告] 未找到 onnxruntime-web CDN 标签，跳过 ONNX 内联")
+        else:
+            print("[警告] 缺少 deploy/monolith-web/ort-runtime/ 下的运行时文件，跳过 ONNX 内联")
+    else:
+        print("[OK] 已按 --no-onnx-inline 保留 CDN 引用")
+
     # 4) 收尾清理：确保无残留外部 src/link（onnxruntime-web CDN 除外：带 onerror 降级哨兵）
     externals = []
     for tag in re.finditer(r'<(?:script|link)\b[^>]*?(?:src|href)="([^"]+)"', r4):
@@ -245,7 +283,12 @@ def main():
     size = os.path.getsize(OUT)
     print(f"[OK] {OUT}")
     print(f"[OK] 大小 {size:,} 字节 ({size/1024/1024:.1f} MB)")
-    print(f"[OK] 外部资源引用: 仅 onnxruntime-web CDN（onerror 降级）")
+    if ort_inlined:
+        print("[OK] 外部资源引用: 0 处（ONNX 运行时已内联）")
+        print(f"[OK] ONNX 内联: ort.min.js({len(ort_js):,}B) + "
+              f"{os.path.basename(ORT_WASM)}({len(ort_wasm_b64):,}B base64)")
+    else:
+        print("[OK] 外部资源引用: 仅 onnxruntime-web CDN（onerror 降级）")
     print(f"[OK] OCR 内联: worker({len(worker_b64):,}B) core×2({len(core_simd_b64)+len(core_lstm_b64):,}B) "
           f"traineddata.gz({len(chi_b64)+len(eng_b64):,}B) 均 base64 就绪")
     print(f"[OK] 基座 index.html md5 {md5} 保持逐字节一致")

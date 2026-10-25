@@ -26,7 +26,8 @@ SOURCE = ROOT / "deploy" / "monolith-web" / "index.html"
 REPORT = ROOT / "eval" / "inline-js-report.md"
 
 # 棘轮上限：只许下调。目标 3,000。
-CEILING = 7600
+# 2026-10-25：kg-text 下沉后 7309；10-26 智能体路由 + 计划调度下沉后 7072，上限随之下调。
+CEILING = 7100
 TARGET = 3000
 MAX_COPIES = 3
 

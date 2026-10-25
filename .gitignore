@@ -114,3 +114,6 @@ src/AstralPath.Monolith/publish/
 node_modules/
 test-results/
 playwright-report/
+
+# 本地门禁中间产物（覆盖率原始 XML 等；报告在 eval/ 入库）
+artifacts/

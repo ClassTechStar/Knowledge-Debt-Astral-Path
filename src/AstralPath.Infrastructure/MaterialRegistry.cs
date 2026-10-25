@@ -1,6 +1,5 @@
 using AstralPath.Contracts;
 using AstralPath.Core.Diagnostics;
-using System.Text.Json;
 
 namespace AstralPath.Infrastructure;
 

@@ -1,6 +1,6 @@
 using System.Diagnostics;
-using AstralPath.Core.Diagnostics;
 using System.Text.Json;
+using AstralPath.Core.Diagnostics;
 
 namespace AstralPath.Infrastructure;
 
@@ -164,7 +164,8 @@ public static class OcrHost
             try { await proc.WaitForExitAsync(cts.Token); }
             catch (OperationCanceledException)
             {
-                try { proc.Kill(entireProcessTree: true); } catch (Exception ex)
+                try { proc.Kill(entireProcessTree: true); }
+                catch (Exception ex)
                 {
                     Diag.Recover(ex, "OcrHost");
                 }
@@ -183,11 +184,13 @@ public static class OcrHost
         }
         finally
         {
-            try { if (File.Exists(tmp)) File.Delete(tmp); } catch (Exception ex)
+            try { if (File.Exists(tmp)) File.Delete(tmp); }
+            catch (Exception ex)
             {
                 Diag.Recover(ex, "OcrHost");
             }
-            try { if (File.Exists(outFile)) File.Delete(outFile); } catch (Exception ex)
+            try { if (File.Exists(outFile)) File.Delete(outFile); }
+            catch (Exception ex)
             {
                 Diag.Recover(ex, "OcrHost");
             }
@@ -211,7 +214,8 @@ public static class OcrHost
         var n = 0;
         foreach (var f in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))
         {
-            try { File.Delete(f); n++; } catch (Exception ex)
+            try { File.Delete(f); n++; }
+            catch (Exception ex)
             {
                 Diag.Recover(ex, "OcrHost");
             }

@@ -112,7 +112,7 @@ public static class UserProfiler
         double Volatility,        // 原始翻转率（契约保留）
         double Pace,              // 绝对速度（契约保留）
         double Persistence,       // 每组平均次数（契约保留）
-        // ↓ v3 新增
+                                  // ↓ v3 新增
         double ExcessVolatility,  // 相对随机基线的超额波动，>1 才是真抖
         double RepeatRate,        // (总数−去重数)/总数，真重复率
         double PaceAdjusted,      // 难度归一后的速度

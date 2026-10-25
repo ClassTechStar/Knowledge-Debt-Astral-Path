@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace AstralPath.Core.Parsing;
@@ -175,19 +174,19 @@ public static class DocParsers
         switch (ext)
         {
             case ".docx":
-            {
-                var entries = ZipReader.Read(bytes);
-                return entries.ContainsKey("word/document.xml")
-                    ? ParseDocx(entries)
-                    : throw new InvalidDataException("ZIP 容器不是受支持的 Office/EPUB 格式");
-            }
+                {
+                    var entries = ZipReader.Read(bytes);
+                    return entries.ContainsKey("word/document.xml")
+                        ? ParseDocx(entries)
+                        : throw new InvalidDataException("ZIP 容器不是受支持的 Office/EPUB 格式");
+                }
             case ".pptx":
-            {
-                var entries = ZipReader.Read(bytes);
-                return entries.Keys.Any(n => Regex.IsMatch(n, "^ppt/slides/slide\\d+\\.xml$"))
-                    ? ParsePptx(entries)
-                    : throw new InvalidDataException("ZIP 容器不是受支持的 Office/EPUB 格式");
-            }
+                {
+                    var entries = ZipReader.Read(bytes);
+                    return entries.Keys.Any(n => Regex.IsMatch(n, "^ppt/slides/slide\\d+\\.xml$"))
+                        ? ParsePptx(entries)
+                        : throw new InvalidDataException("ZIP 容器不是受支持的 Office/EPUB 格式");
+                }
             case ".epub":
                 return ParseEpub(ZipReader.Read(bytes));
             case ".doc":

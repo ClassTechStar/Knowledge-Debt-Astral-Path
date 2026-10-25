@@ -1,6 +1,6 @@
 using System.Text.Json;
-using AstralPath.Core.Diagnostics;
 using AstralPath.Contracts;
+using AstralPath.Core.Diagnostics;
 using AstralPath.Graph;
 
 namespace AstralPath.Infrastructure;
@@ -66,7 +66,8 @@ public static class MaterialPipeline
 
         // P3-15：优先仓库内 tools/ocr-venv（跟随工作目录/部署目录/脚本目录），失效的用户级硬编码路径已移除
         string? scriptDir = null;
-        try { scriptDir = Path.GetDirectoryName(ResolveOcrScript()); } catch (Exception ex)
+        try { scriptDir = Path.GetDirectoryName(ResolveOcrScript()); }
+        catch (Exception ex)
         {
             Diag.Recover(ex, "MaterialPipeline");
         }
@@ -103,7 +104,8 @@ public static class MaterialPipeline
         var env = Environment.GetEnvironmentVariable("TESSDATA_PREFIX");
         if (!string.IsNullOrWhiteSpace(env) && Directory.Exists(env)) return env;
         string? scriptDir = null;
-        try { scriptDir = Path.GetDirectoryName(ResolveOcrScript()); } catch (Exception ex)
+        try { scriptDir = Path.GetDirectoryName(ResolveOcrScript()); }
+        catch (Exception ex)
         {
             Diag.Recover(ex, "MaterialPipeline");
         }
@@ -203,7 +205,8 @@ public static class MaterialPipeline
             }
             catch (OperationCanceledException)
             {
-                try { proc.Kill(entireProcessTree: true); } catch (Exception ex)
+                try { proc.Kill(entireProcessTree: true); }
+                catch (Exception ex)
                 {
                     Diag.Recover(ex, "MaterialPipeline");
                 }
@@ -221,7 +224,8 @@ public static class MaterialPipeline
         }
         finally
         {
-            try { if (File.Exists(outFile)) File.Delete(outFile); } catch (Exception ex)
+            try { if (File.Exists(outFile)) File.Delete(outFile); }
+            catch (Exception ex)
             {
                 Diag.Recover(ex, "MaterialPipeline");
             }

@@ -1,7 +1,6 @@
 using AstralPath.Shared.Services;
 using Avalonia;
 using Avalonia.Headless;
-using Avalonia.Headless.XUnit;
 
 [assembly: AvaloniaTestApplication(typeof(AstralPath.Desktop.Tests.TestAppBuilder))]
 

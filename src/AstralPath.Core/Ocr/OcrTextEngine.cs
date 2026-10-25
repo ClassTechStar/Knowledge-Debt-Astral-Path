@@ -356,13 +356,13 @@ public static class OcrTextEngine
         }
         // 补上其它路中达标但首路缺失的行
         foreach (var lines in lists.Skip(1))
-        foreach (var line in lines)
-        {
-            if (!Keep(line)) continue;
-            var k = VoteKey(line);
-            if (!emitted.Add(k)) continue;
-            order.Add(Best(line));
-        }
+            foreach (var line in lines)
+            {
+                if (!Keep(line)) continue;
+                var k = VoteKey(line);
+                if (!emitted.Add(k)) continue;
+                order.Add(Best(line));
+            }
         return string.Join("\n", order);
     }
 

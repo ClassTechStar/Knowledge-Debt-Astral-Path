@@ -118,10 +118,10 @@ public sealed class CsrGraph
         var first = Neighbors(node);
         var set = new HashSet<int>();
         foreach (var n in first)
-        foreach (var m in Neighbors(n))
-        {
-            if (m != node) set.Add(m);
-        }
+            foreach (var m in Neighbors(n))
+            {
+                if (m != node) set.Add(m);
+            }
         return set.ToList();
     }
 

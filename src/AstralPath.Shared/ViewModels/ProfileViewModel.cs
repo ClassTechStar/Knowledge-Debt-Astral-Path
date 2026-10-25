@@ -1,9 +1,7 @@
 using System.Collections.ObjectModel;
-using AstralPath.Contracts;
 using AstralPath.Shared.Navigation;
 using AstralPath.Shared.Services;
 using Avalonia;
-using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 

@@ -208,7 +208,10 @@ public static class ExamKgBuilder
         foreach (var n in nodes) titles[n.Id] = n.Title;
         var label = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["prerequisite"] = "先修于", ["related"] = "同题共现", ["attach"] = "归属", ["tested"] = "考查"
+            ["prerequisite"] = "先修于",
+            ["related"] = "同题共现",
+            ["attach"] = "归属",
+            ["tested"] = "考查"
         };
         return edges.Select(e => new ExamTriple(
             titles.GetValueOrDefault(e.From, e.From),

@@ -1,7 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
-using AstralPath.Core.Diagnostics;
 using System.Text.Json;
 using AstralPath.Contracts;
+using AstralPath.Core.Diagnostics;
 using AstralPath.Infrastructure;
 
 namespace AstralPath.Api.Controllers;
@@ -69,7 +68,8 @@ public sealed class MaterialsController : ControllerBase
                 var target = Path.Combine(newDir, Path.GetFileName(f));
                 // 注意：控制器继承自 ControllerBase，裸写 File 会解析到 File(...) 方法而非 System.IO.File
                 if (System.IO.File.Exists(target)) continue;
-                try { System.IO.File.Copy(f, target); } catch (Exception ex)
+                try { System.IO.File.Copy(f, target); }
+                catch (Exception ex)
                 {
                     Diag.Recover(ex, "MaterialsController");
                 }
@@ -781,13 +781,25 @@ public sealed class MaterialsController : ControllerBase
             materialName = bundle.MaterialName,
             chapters = bundle.Chapters.Select(c => new
             {
-                c.Id, c.Title, c.Kind, c.Level, c.ParentId, c.ChapterNum, c.CharCount,
+                c.Id,
+                c.Title,
+                c.Kind,
+                c.Level,
+                c.ParentId,
+                c.ChapterNum,
+                c.CharCount,
                 questionCount = c.Questions.Count,
                 preview = c.Content.Length > 80 ? c.Content[..80] + "…" : c.Content
             }),
             sections = bundle.Sections.Select(s => new
             {
-                s.Id, s.Title, s.Kind, s.Level, s.ParentId, s.ChapterNum, s.CharCount,
+                s.Id,
+                s.Title,
+                s.Kind,
+                s.Level,
+                s.ParentId,
+                s.ChapterNum,
+                s.CharCount,
                 questionCount = s.Questions.Count,
                 preview = s.Content.Length > 60 ? s.Content[..60] + "…" : s.Content
             }),
@@ -810,8 +822,14 @@ public sealed class MaterialsController : ControllerBase
         {
             materialId = id,
             materialName = bundle.MaterialName,
-            item.Id, item.Title, item.Kind, item.Level, item.ParentId, item.ChapterNum,
-            item.CharCount, item.Content,
+            item.Id,
+            item.Title,
+            item.Kind,
+            item.Level,
+            item.ParentId,
+            item.ChapterNum,
+            item.CharCount,
+            item.Content,
             questions = item.Questions
         });
     }

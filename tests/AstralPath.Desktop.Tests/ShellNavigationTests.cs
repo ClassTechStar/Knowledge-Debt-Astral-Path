@@ -1,4 +1,3 @@
-using AstralPath.Contracts;
 using AstralPath.Shared;
 using AstralPath.Shared.Navigation;
 using AstralPath.Shared.Services;
@@ -6,7 +5,6 @@ using AstralPath.Shared.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 using Xunit;
 
 namespace AstralPath.Desktop.Tests;

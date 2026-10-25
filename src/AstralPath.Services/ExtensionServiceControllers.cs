@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using AstralPath.Contracts;
 using AstralPath.Core.Extensions;
 using AstralPath.Infrastructure;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AstralPath.Services;
 
@@ -64,9 +64,13 @@ public sealed class DiffusionController : ExtensionServiceControllerBase
             var result = ConceptDiffusion.Run(input);
             return HttpResults.Success(new
             {
-                algoVersion = result.AlgoVersion, alpha = result.Alpha, depth = result.Depth,
-                nodeCount = result.NodeCount, truncationBound = result.TruncationBound,
-                gains = result.Gains, repairRanking = result.RepairRanking.Take(10).ToList(),
+                algoVersion = result.AlgoVersion,
+                alpha = result.Alpha,
+                depth = result.Depth,
+                nodeCount = result.NodeCount,
+                truncationBound = result.TruncationBound,
+                gains = result.Gains,
+                repairRanking = result.RepairRanking.Take(10).ToList(),
                 impactPrediction = ConceptDiffusion.PredictImpact(input, result)
             });
         });
@@ -150,8 +154,13 @@ public sealed class PeerCohortController : ControllerBase
         var result = PeerCohort.Run(new CohortInput(k, members));
         return HttpResults.Success(new
         {
-            k, sampleCount = result.SampleCount, suppressed = result.Suppressed,
-            p25 = result.P25, p50 = result.P50, p75 = result.P75, note = result.Note,
+            k,
+            sampleCount = result.SampleCount,
+            suppressed = result.Suppressed,
+            p25 = result.P25,
+            p50 = result.P50,
+            p75 = result.P75,
+            note = result.Note,
             ethics = "仅聚合；不输出个体、不排名、不做能力定性。"
         });
     }
@@ -190,7 +199,9 @@ public sealed class StudyGroupController : ControllerBase
         var result = StudyGroup.Match(members, Prop(el, "size", out var sv) && sv.ValueKind == JsonValueKind.Number ? sv.GetInt32() : 4);
         return HttpResults.Success(new
         {
-            groups = result.Groups, groupCount = result.Groups.Count, note = result.Note,
+            groups = result.Groups,
+            groupCount = result.Groups.Count,
+            note = result.Note,
             ethics = "仅用聚合标签互补成组；不使用分数明文与排名。"
         });
     }
@@ -349,9 +360,14 @@ public sealed class KnowledgeForecastController : ExtensionServiceControllerBase
             var r = KnowledgeForecast.Forecast(new ForecastInput(current, velocity, Int(el, "daysAhead", 14), openImpact));
             return HttpResults.Success(new
             {
-                studentId, daysAhead = Int(el, "daysAhead", 14),
-                expectedScore = r.ExpectedScore, lowerBound = r.LowerBound, upperBound = r.UpperBound,
-                band = r.Band, suppressed = r.Suppressed, note = r.Note,
+                studentId,
+                daysAhead = Int(el, "daysAhead", 14),
+                expectedScore = r.ExpectedScore,
+                lowerBound = r.LowerBound,
+                upperBound = r.UpperBound,
+                band = r.Band,
+                suppressed = r.Suppressed,
+                note = r.Note,
                 ethics = "仅区间与建议；不输出不及格概率，不作为处分或评价依据。"
             });
         });

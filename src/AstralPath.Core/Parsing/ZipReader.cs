@@ -1,6 +1,6 @@
 using System.IO.Compression;
-using AstralPath.Core.Diagnostics;
 using System.Text;
+using AstralPath.Core.Diagnostics;
 
 namespace AstralPath.Core.Parsing;
 
@@ -45,7 +45,8 @@ public static class ZipReader
         if (bytes is null || bytes.Length == 0) return "";
         if (bytes.Length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE)
         {
-            try { return Encoding.Unicode.GetString(bytes, 2, bytes.Length - 2); } catch (Exception ex)
+            try { return Encoding.Unicode.GetString(bytes, 2, bytes.Length - 2); }
+            catch (Exception ex)
             {
                 Diag.Recover(ex, "ZipReader");
             }
