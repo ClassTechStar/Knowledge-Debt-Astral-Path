@@ -44,6 +44,17 @@ test("三条流冒烟：教材解析、练习出题、修复计划，且无运�
   await expect(page.locator("#planBox")).not.toBeEmpty({ timeout: 40_000 });
   await expect(page.locator("#planBox")).toContainText(/\S/);
 
+  // ④ 模块接线：shared/exam.js 经 AP 生成区内联后，页面侧仍可按全局名调用
+  const examOk = await page.evaluate(() => {
+    try {
+      const r = APExam.structureExamText("一、单选题\n1. 甲（ ）\nA. 1\nB. 2\n答案：B", "exam");
+      return typeof structureExamText === "function" && r.items.length === 1 && r.items[0].answer === "B";
+    } catch (e) {
+      return false;
+    }
+  });
+  expect(examOk).toBe(true);
+
   // 零运行期错误（APDiag 环形日志）
   const errCount = await page.evaluate(() => window.APDiag.count());
   expect(errCount).toBe(0);

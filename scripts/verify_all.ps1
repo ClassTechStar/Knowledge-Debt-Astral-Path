@@ -100,6 +100,14 @@ if (Test-Path scripts/gen_frontend_regions.py) {
 # 6d-3) state 分片存储：黄金用例 + 页面接入校验（方案 P6）
 if (Test-Path scripts/verify_store.py) {
     Step "store-shards" { python scripts/verify_store.py }
+# 6f) 试卷结构化黄金用例（P2-8 首个下沉边界：shared/exam.js）
+if (Test-Path scripts/exam_runner.js) {
+    Step "exam-golden" { node scripts/exam_runner.js }
+}
+# 6g) 单文件内联 JS 规模棘轮（P2-8：手写行数与页面副本数）
+if (Test-Path scripts/verify_inline_js.py) {
+    Step "inline-js" { python scripts/verify_inline_js.py --check }
+}
 }
 
 # 6e) 空 catch 门禁（方案 P13）：每个 catch 必须有记录或降级动作

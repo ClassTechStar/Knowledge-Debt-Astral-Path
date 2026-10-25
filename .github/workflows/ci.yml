@@ -113,6 +113,13 @@ jobs:
           python scripts/verify_graph_quality.py --check
           python scripts/repair_kg_titles.py --check
 
+      # ⑧e 试卷结构化黄金用例 + 单文件内联 JS 棘轮（P2-8）
+      - name: verify exam golden
+        run: node scripts/exam_runner.js
+
+      - name: verify inline js budget
+        run: python scripts/verify_inline_js.py --check
+
       # ⑨ 空 catch 门禁：每个 catch 必须有记录或降级动作
       - name: verify no empty catch
         run: python scripts/verify_no_empty_catch.py
