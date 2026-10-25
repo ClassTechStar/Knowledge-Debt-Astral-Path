@@ -109,3 +109,8 @@ src/AstralPath.Monolith/publish/
 !.cloudflare/pages/_headers
 !.cloudflare/pages/_redirects
 .cloudflare/.wrangler/
+
+# Node / Playwright（CI 冒烟用）
+node_modules/
+test-results/
+playwright-report/

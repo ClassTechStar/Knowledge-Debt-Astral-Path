@@ -6,17 +6,10 @@
  "children": [
   {
    "data": {
-    "text": "段落 1",
+    "text": "实例位置",
     "expand": true
    },
    "children": [
-    {
-     "data": {
-      "text": "实例位置",
-      "expand": true
-     },
-     "children": []
-    },
     {
      "data": {
       "text": "资源包",
@@ -56,22 +49,14 @@
   },
   {
    "data": {
-    "text": "段落 2",
+    "text": "Go",
     "expand": true
    },
-   "children": [
-    {
-     "data": {
-      "text": "Go",
-      "expand": true
-     },
-     "children": []
-    }
-   ]
+   "children": []
   },
   {
    "data": {
-    "text": "段落 3",
+    "text": "MySQL",
     "expand": true
    },
    "children": [
@@ -91,13 +76,6 @@
     },
     {
      "data": {
-      "text": "MySQL",
-      "expand": true
-     },
-     "children": []
-    },
-    {
-     "data": {
       "text": "文件",
       "expand": true
      },
@@ -107,39 +85,17 @@
   },
   {
    "data": {
-    "text": "段落 4",
+    "text": "所示",
     "expand": true
    },
    "children": []
   },
   {
    "data": {
-    "text": "段落 5",
+    "text": "语言中",
     "expand": true
    },
    "children": [
-    {
-     "data": {
-      "text": "所示",
-      "expand": true
-     },
-     "children": []
-    }
-   ]
-  },
-  {
-   "data": {
-    "text": "段落 6",
-    "expand": true
-   },
-   "children": [
-    {
-     "data": {
-      "text": "语言中",
-      "expand": true
-     },
-     "children": []
-    },
     {
      "data": {
       "text": "使用",
@@ -151,97 +107,31 @@
   },
   {
    "data": {
-    "text": "段落 7",
+    "text": "例如",
     "expand": true
    },
    "children": []
   },
   {
    "data": {
-    "text": "段落 8",
+    "text": "goroutine",
     "expand": true
    },
    "children": []
   },
   {
    "data": {
-    "text": "段落 9",
+    "text": "如图",
     "expand": true
    },
    "children": []
   },
   {
    "data": {
-    "text": "段落 10",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 11",
+    "text": "单击",
     "expand": true
    },
    "children": [
-    {
-     "data": {
-      "text": "例如",
-      "expand": true
-     },
-     "children": []
-    }
-   ]
-  },
-  {
-   "data": {
-    "text": "段落 12",
-    "expand": true
-   },
-   "children": [
-    {
-     "data": {
-      "text": "goroutine",
-      "expand": true
-     },
-     "children": []
-    }
-   ]
-  },
-  {
-   "data": {
-    "text": "段落 13",
-    "expand": true
-   },
-   "children": [
-    {
-     "data": {
-      "text": "如图",
-      "expand": true
-     },
-     "children": []
-    }
-   ]
-  },
-  {
-   "data": {
-    "text": "段落 14",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 15",
-    "expand": true
-   },
-   "children": [
-    {
-     "data": {
-      "text": "单击",
-      "expand": true
-     },
-     "children": []
-    },
     {
      "data": {
       "text": "按钮",
@@ -253,35 +143,7 @@
   },
   {
    "data": {
-    "text": "段落 16",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 17",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 18",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
     "text": "▲图1.7 “用户许可协议”对话框",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 20",
     "expand": true
    },
    "children": []
@@ -295,44 +157,21 @@
   },
   {
    "data": {
-    "text": "段落 22",
-    "expand": true
-   },
-   "children": [
-    {
-     "data": {
-      "text": "其中",
-      "expand": true
-     },
-     "children": []
-    }
-   ]
-  },
-  {
-   "data": {
-    "text": "段落 23",
-    "expand": true
-   },
-   "children": [
-    {
-     "data": {
-      "text": "变量",
-      "expand": true
-     },
-     "children": []
-    }
-   ]
-  },
-  {
-   "data": {
-    "text": "▲图1.12 选择“属性”命令",
+    "text": "其中",
     "expand": true
    },
    "children": []
   },
   {
    "data": {
-    "text": "段落 25",
+    "text": "变量",
+    "expand": true
+   },
+   "children": []
+  },
+  {
+   "data": {
+    "text": "▲图1.12 选择“属性”命令",
     "expand": true
    },
    "children": []
@@ -346,29 +185,7 @@
   },
   {
    "data": {
-    "text": "段落 27",
-    "expand": true
-   },
-   "children": [
-    {
-     "data": {
-      "text": "GOPATH",
-      "expand": true
-     },
-     "children": []
-    }
-   ]
-  },
-  {
-   "data": {
-    "text": "段落 28",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 29",
+    "text": "GOPATH",
     "expand": true
    },
    "children": []
@@ -382,35 +199,7 @@
   },
   {
    "data": {
-    "text": "段落 31",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 32",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 33",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 34",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 35",
+    "text": "Code",
     "expand": true
    },
    "children": [
@@ -420,29 +209,8 @@
       "expand": true
      },
      "children": []
-    },
-    {
-     "data": {
-      "text": "Code",
-      "expand": true
-     },
-     "children": []
     }
    ]
-  },
-  {
-   "data": {
-    "text": "段落 36",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 37",
-    "expand": true
-   },
-   "children": []
   },
   {
    "data": {

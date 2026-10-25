@@ -6,39 +6,17 @@
  "children": [
   {
    "data": {
-    "text": "段落 1",
+    "text": "in",
     "expand": true
    },
    "children": []
   },
   {
    "data": {
-    "text": "段落 2",
+    "text": "DeZero",
     "expand": true
    },
    "children": [
-    {
-     "data": {
-      "text": "in",
-      "expand": true
-     },
-     "children": []
-    }
-   ]
-  },
-  {
-   "data": {
-    "text": "段落 3",
-    "expand": true
-   },
-   "children": [
-    {
-     "data": {
-      "text": "DeZero",
-      "expand": true
-     },
-     "children": []
-    },
     {
      "data": {
       "text": "步骤",
@@ -64,95 +42,35 @@
   },
   {
    "data": {
-    "text": "段落 4",
+    "text": "函数",
     "expand": true
    },
    "children": []
   },
   {
    "data": {
-    "text": "段落 5",
+    "text": "方法",
     "expand": true
    },
    "children": []
   },
   {
    "data": {
-    "text": "段落 6",
+    "text": "阶段用自然的代码",
     "expand": true
    },
    "children": []
   },
   {
    "data": {
-    "text": "段落 7",
-    "expand": true
-   },
-   "children": [
-    {
-     "data": {
-      "text": "函数",
-      "expand": true
-     },
-     "children": []
-    }
-   ]
-  },
-  {
-   "data": {
-    "text": "段落 8",
+    "text": "dezero",
     "expand": true
    },
    "children": []
   },
   {
    "data": {
-    "text": "段落 9",
-    "expand": true
-   },
-   "children": [
-    {
-     "data": {
-      "text": "方法",
-      "expand": true
-     },
-     "children": []
-    }
-   ]
-  },
-  {
-   "data": {
-    "text": "段落 10",
-    "expand": true
-   },
-   "children": [
-    {
-     "data": {
-      "text": "阶段用自然的代码",
-      "expand": true
-     },
-     "children": []
-    }
-   ]
-  },
-  {
-   "data": {
-    "text": "段落 11",
-    "expand": true
-   },
-   "children": [
-    {
-     "data": {
-      "text": "dezero",
-      "expand": true
-     },
-     "children": []
-    }
-   ]
-  },
-  {
-   "data": {
-    "text": "段落 12",
+    "text": "steps",
     "expand": true
    },
    "children": [
@@ -162,29 +80,15 @@
       "expand": true
      },
      "children": []
-    },
-    {
-     "data": {
-      "text": "steps",
-      "expand": true
-     },
-     "children": []
     }
    ]
   },
   {
    "data": {
-    "text": "段落 13",
+    "text": "Variable",
     "expand": true
    },
    "children": [
-    {
-     "data": {
-      "text": "Variable",
-      "expand": true
-     },
-     "children": []
-    },
     {
      "data": {
       "text": "Function",
@@ -196,17 +100,10 @@
   },
   {
    "data": {
-    "text": "段落 14",
+    "text": "backward",
     "expand": true
    },
    "children": [
-    {
-     "data": {
-      "text": "backward",
-      "expand": true
-     },
-     "children": []
-    },
     {
      "data": {
       "text": "array",
@@ -225,32 +122,17 @@
   },
   {
    "data": {
-    "text": "段落 15",
+    "text": "Add",
     "expand": true
    },
-   "children": [
-    {
-     "data": {
-      "text": "Add",
-      "expand": true
-     },
-     "children": []
-    }
-   ]
+   "children": []
   },
   {
    "data": {
-    "text": "段落 16",
+    "text": "ndarray",
     "expand": true
    },
    "children": [
-    {
-     "data": {
-      "text": "ndarray",
-      "expand": true
-     },
-     "children": []
-    },
     {
      "data": {
       "text": "print",
@@ -269,80 +151,10 @@
   },
   {
    "data": {
-    "text": "段落 17",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 18",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 19",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 20",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 21",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 22",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 23",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 24",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 25",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 26",
+    "text": "class",
     "expand": true
    },
    "children": [
-    {
-     "data": {
-      "text": "class",
-      "expand": true
-     },
-     "children": []
-    },
     {
      "data": {
       "text": "self",
@@ -365,104 +177,6 @@
      "children": []
     }
    ]
-  },
-  {
-   "data": {
-    "text": "段落 27",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 28",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 29",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 30",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 31",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 32",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 33",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 34",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 35",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 36",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 37",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 38",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 39",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 40",
-    "expand": true
-   },
-   "children": []
   },
   {
    "data": {

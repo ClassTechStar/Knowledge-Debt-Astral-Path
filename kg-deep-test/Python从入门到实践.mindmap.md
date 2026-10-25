@@ -1,68 +1,29 @@
 # Python从入门到实践
-  - 段落 1
+  - message
     - print
     - 例如
-    - message
     - name
     - was
-  - 段落 2
-    - Python
+  - Python
     - the
     - 使用
-  - 段落 3
-    - to
+  - to
     - is
-  - 段落 4
+  - hello_world.py
     - VS
     - Code
     - Hello
-    - hello_world.py
-  - 段落 5
-  - 段落 6
-    - for
-  - 段落 7
-    - range
+  - for
+  - range
     - 语句
-  - 段落 8
-    - else
+  - else
     - elif
-  - 段落 9
-    - while
-  - 段落 10
-  - 段落 11
-  - 段落 12
-  - 段落 13
-  - 段落 14
-  - 段落 15
-  - 段落 16
-  - 段落 17
-  - 段落 18
-  - 段落 19
-  - 段落 20
-  - 段落 21
-    - python
-  - 段落 22
-  - 段落 23
+  - while
+  - python
   - E.4　其他部署方法
-  - 段落 25
-    - age
-  - 段落 26
-    - 练习
-  - 段落 27
-  - 段落 28
-  - 段落 29
-  - 段落 30
-  - 段落 31
-  - 段落 32
-  - 段落 33
-  - 段落 34
-  - 段落 35
-  - 段落 36
-    - you
-  - 段落 37
-  - 段落 38
-  - 段落 39
-  - 段落 40
+  - age
+  - 练习
+  - you
   - 核心概念
     - Python
     - the

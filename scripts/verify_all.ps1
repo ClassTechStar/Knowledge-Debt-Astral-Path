@@ -65,6 +65,12 @@ Step "test-Eval"        { dotnet test tests/AstralPath.Eval.Tests -c Release }
 # 4b) 数字单一事实源（P3-2 收口）：意图/危机词/测试数 ↔ README 标记自动对拍
 Step "metrics-readme"   { python scripts/verify_metrics.py --check }
 
+# 4c) 图谱质量门禁（P1-7）：退化标题/空标题/父子同名/节点规模/md 一致性
+if (Test-Path scripts/verify_graph_quality.py) {
+    Step "graph-quality" { python scripts/verify_graph_quality.py --check }
+    Step "kg-titles-clean" { python scripts/repair_kg_titles.py --check }
+}
+
 # 5) 三端 HTML 同源 + C3 XSS 回归哨兵（统一由同步脚本提供）
 Step "monolith-html-sync" { powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-monolith-html.ps1 -Check }
 

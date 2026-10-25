@@ -43,16 +43,22 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
+          # NuGet 缓存：键取全部 csproj 哈希（仓库无 packages.lock.json）
+          cache: nuget
+          cache-dependency-path: "**/*.csproj"
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: npm
 
       # ① 全解决方案构建（Release）
       - name: dotnet build
@@ -101,6 +107,12 @@ jobs:
       - name: verify store shards
         run: python scripts/verify_store.py
 
+      # ⑧d 图谱质量门禁（P1-7）：退化标题 / 空标题 / 父子同名 / 节点规模 / md 一致性
+      - name: verify graph quality
+        run: |
+          python scripts/verify_graph_quality.py --check
+          python scripts/repair_kg_titles.py --check
+
       # ⑨ 空 catch 门禁：每个 catch 必须有记录或降级动作
       - name: verify no empty catch
         run: python scripts/verify_no_empty_catch.py
@@ -140,3 +152,91 @@ jobs:
           name: coverage
           path: ./artifacts/coverage
           if-no-files-found: warn
+
+  # 发布管线零验证的补救：CI 里真跑一次 Android 打包（用 runner 上现生成的临时
+  # 密钥，不接触仓库外的签名环境），失败即阻断，保证发得出去的包首先构建得出来。
+  android:
+    name: android build
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.7.1"
+
+      # 临时签名密钥：口令只在 runner 内有效，产出未签名/临时签名 APK，仅验证构建链路
+      - name: 生成临时签名密钥
+        shell: pwsh
+        run: |
+          $ks = Join-Path $env:RUNNER_TEMP "ci-release.keystore"
+          keytool -genkeypair -v -keystore $ks -storetype PKCS12 `
+            -alias astralpath -keyalg RSA -keysize 2048 -validity 10000 `
+            -storepass ci-store-pass -keypass ci-key-pass `
+            -dname "CN=CI, OU=CI, O=AstralPath, L=CI, S=CI, C=CN" | Out-Null
+          "ASTRALPATH_KEYSTORE=$ks" | Out-File -Append $env:GITHUB_ENV
+          "ASTRALPATH_STORE_PASSWORD=ci-store-pass" | Out-File -Append $env:GITHUB_ENV
+          "ASTRALPATH_KEY_ALIAS=astralpath" | Out-File -Append $env:GITHUB_ENV
+          "ASTRALPATH_KEY_PASSWORD=ci-key-pass" | Out-File -Append $env:GITHUB_ENV
+
+      - name: gradle assembleRelease
+        shell: pwsh
+        run: |
+          Push-Location src/AstralPath.Native
+          try { gradle assembleRelease --console=plain } finally { Pop-Location }
+
+      - name: 校验 APK 产物
+        shell: pwsh
+        run: |
+          $apk = Get-ChildItem -Recurse -Filter "*.apk" src/AstralPath.Native/app/build/outputs/apk |
+                 Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $apk) { throw "未找到 APK 产物" }
+          $size = [math]::Round($apk.Length / 1MB, 1)
+          Write-Host "APK: $($apk.FullName) ($size MB)"
+          & $env:ANDROID_HOME\build-tools\*\aapt2.exe dump badging $apk.FullName |
+            Select-String "package: name=|versionName" | ForEach-Object { Write-Host $_ }
+
+      - name: upload apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-ci-apk
+          path: src/AstralPath.Native/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+
+  # 浏览器冒烟：三条主流程（教材解析 / 练习出题 / 修复计划）+ 零运行期错误。
+  # 外部网络在用例内被阻断，AI 入口走本地规则兜底，不依赖模型可用性。
+  playwright:
+    name: browser smoke
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: npm ci
+        run: npm ci --no-audit --no-fund
+
+      - name: 安装 Chromium
+        run: npx playwright install chromium
+
+      - name: 运行冒烟
+        run: npx playwright test --reporter=list

@@ -232,6 +232,20 @@ def pmi(co: int, a: int, b: int, total: int) -> float:
 
 
 # ───────────────────────── 章节 / 实体 / 构图 ─────────────────────────
+def _para_title(body: str, idx: int) -> str:
+    """兜底分章的标题：取段内 TextRank 最高分词，避免整本书退化成「段落 N」。
+    取不到可用词时退回「第 N 节」——那是结构性编号，不是占位符。"""
+    try:
+        ranks = text_rank(tokenize(body[:20000]))
+        for term in ranks:
+            t = re.sub(r"\s+", " ", term).strip()
+            if 2 <= len(t) <= 30 and not re.match(r"^[=\-–—_*]{2,}$", t):
+                return t[:40]
+    except Exception:
+        pass
+    return f"第 {idx + 1} 节"
+
+
 def extract_chapters(text: str, max_ch=40):
     lines = text.split("\n")
     marks = []
@@ -273,7 +287,7 @@ def extract_chapters(text: str, max_ch=40):
         out = []
         for idx, body in enumerate(paras):
             first = (body.split("\n")[0] or "").strip()
-            title = first if first and len(first) <= 30 else f"段落 {idx+1}"
+            title = first if first and len(first) <= 30 else _para_title(body, idx)
             out.append({"id": f"C{idx+1:02d}", "title": title, "body": body, "order": idx, "level": 1})
         return out[:max_ch]
     chs = []

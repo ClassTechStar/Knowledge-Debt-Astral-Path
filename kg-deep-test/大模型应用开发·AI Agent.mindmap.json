@@ -6,14 +6,7 @@
  "children": [
   {
    "data": {
-    "text": "段落 1",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 2",
+    "text": "Assistants",
     "expand": true
    },
    "children": [
@@ -61,13 +54,6 @@
     },
     {
      "data": {
-      "text": "Assistants",
-      "expand": true
-     },
-     "children": []
-    },
-    {
-     "data": {
       "text": "LangChain",
       "expand": true
      },
@@ -98,22 +84,14 @@
   },
   {
    "data": {
-    "text": "段落 3",
+    "text": "通过",
     "expand": true
    },
-   "children": [
-    {
-     "data": {
-      "text": "通过",
-      "expand": true
-     },
-     "children": []
-    }
-   ]
+   "children": []
   },
   {
    "data": {
-    "text": "段落 4",
+    "text": "AssistantsAPI",
     "expand": true
    },
    "children": [
@@ -140,13 +118,6 @@
     },
     {
      "data": {
-      "text": "AssistantsAPI",
-      "expand": true
-     },
-     "children": []
-    },
-    {
-     "data": {
       "text": "RAG",
       "expand": true
      },
@@ -163,24 +134,10 @@
   },
   {
    "data": {
-    "text": "段落 5",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 6",
+    "text": "ChatGPT",
     "expand": true
    },
    "children": [
-    {
-     "data": {
-      "text": "ChatGPT",
-      "expand": true
-     },
-     "children": []
-    },
     {
      "data": {
       "text": "见图",
@@ -199,7 +156,7 @@
   },
   {
    "data": {
-    "text": "段落 7",
+    "text": "OpenAIAPI",
     "expand": true
    },
    "children": [
@@ -216,246 +173,8 @@
       "expand": true
      },
      "children": []
-    },
-    {
-     "data": {
-      "text": "OpenAIAPI",
-      "expand": true
-     },
-     "children": []
     }
    ]
-  },
-  {
-   "data": {
-    "text": "段落 8",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 9",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 10",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 11",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 12",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 13",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 14",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 15",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 16",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 17",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 18",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 19",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 20",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 21",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 22",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 23",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 24",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 25",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 26",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 27",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 28",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 29",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 30",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 31",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 32",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 33",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 34",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 35",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 36",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 37",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 38",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 39",
-    "expand": true
-   },
-   "children": []
-  },
-  {
-   "data": {
-    "text": "段落 40",
-    "expand": true
-   },
-   "children": []
   },
   {
    "data": {
