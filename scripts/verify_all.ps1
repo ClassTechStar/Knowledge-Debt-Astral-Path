@@ -87,6 +87,11 @@ if (Test-Path scripts/bench_kg.py) {
     Step "kg-perf" { python scripts/bench_kg.py --check }
 }
 
+# 4e) 内容包清单：graph-packs/*/pack.json 与数据一致（规范见 graph-packs/README.md）
+if (Test-Path scripts/verify_pack_manifest.py) {
+    Step "pack-manifest" { python scripts/verify_pack_manifest.py }
+}
+
 # 5) 三端 HTML 同源 + XSS 回归哨兵（统一由同步脚本提供）
 Step "monolith-html-sync" { powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-monolith-html.ps1 -Check }
 
@@ -136,6 +141,14 @@ if (Test-Path scripts/agent_router_runner.js) {
 # 6j) 计划调度与 K1–K5 合约用例（第四个边界：shared/plan-scheduler.js）
 if (Test-Path scripts/plan_scheduler_runner.js) {
     Step "plan-scheduler-golden" { node scripts/plan_scheduler_runner.js }
+}
+
+# 6k) 通知队列与计划运行时用例（shared/notify.js、shared/plan-runtime.js）
+if (Test-Path scripts/notify_runner.js) {
+    Step "notify-golden" { node scripts/notify_runner.js }
+}
+if (Test-Path scripts/plan_runtime_runner.js) {
+    Step "plan-runtime-golden" { node scripts/plan_runtime_runner.js }
 }
 
 # 6g) 单文件内联 JS 规模上限（手写行数与页面副本数）

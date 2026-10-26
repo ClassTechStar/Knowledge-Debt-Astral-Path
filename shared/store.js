@@ -39,6 +39,8 @@
     papers: "ap:papers",
   };
   var BACKUP_PREFIX = "ap:backup:";
+  var SCHEMA_KEY = "ap:schema";
+  var SCHEMA_VERSION = 2; // 分片布局 v2；未来布局变更在此登记迁移器
 
   // 每个分片「拥有」的状态键；未登记的键一律归 meta（保证新增字段不丢）
   var OWNER = {
@@ -169,6 +171,55 @@
     return removed;
   }
 
+  /** 读 schema 标记；v=0 表示无标记（老数据），v=-1 表示标记损坏 */
+  function readSchema(ls) {
+    try {
+      var raw = ls.getItem(SCHEMA_KEY);
+      if (raw == null) return { v: 0, ok: true };
+      var v = JSON.parse(raw);
+      if (typeof v !== "number" || v < 0) return { v: -1, ok: false };
+      return { v: v, ok: true };
+    } catch (e) { return { v: -1, ok: false }; }
+  }
+
+  function writeSchema(ls, v) {
+    try { ls.setItem(SCHEMA_KEY, JSON.stringify(v)); return true; } catch (e) { return false; }
+  }
+
+  /**
+    * 版本协商（每次加载调用，幂等）：
+    * 无标记 → 补写当前版本（老数据首次进入带版本的存储）；
+    * 标记损坏 → 重写标记（分片本体另有 repairIfCorrupt 兜底）；
+    * 版本更新（降级打开）→ 不动数据，返回 downgrade 由调用方提示。
+    * 未来 v3：在 MIGRATORS 登记迁移函数并在此逐级执行。
+    */
+  function ensureSchema(ls) {
+    var s = readSchema(ls);
+    if (s.ok && s.v === SCHEMA_VERSION) return { changed: false };
+    if (s.ok && s.v > SCHEMA_VERSION) return { changed: false, downgrade: true };
+    return { changed: writeSchema(ls, SCHEMA_VERSION), recovered: s.v === -1 };
+  }
+
+  /** 损坏自愈：解析失败的分片先备份原始串再移除，读路径随即退回缺片/默认；返回修复的分片名 */
+  function repairIfCorrupt(ls) {
+    var fixed = [];
+    PARTS.forEach(function (p) {
+      var raw = null;
+      try { raw = ls.getItem(SHARD_KEYS[p]); } catch (e) { raw = null; }
+      if (raw == null) return;
+      var ok = true;
+      try {
+        var v = JSON.parse(raw);
+        if (v === null || typeof v !== "object" || Array.isArray(v)) ok = false;
+      } catch (e) { ok = false; }
+      if (!ok) {
+        backup(ls, raw);
+        try { ls.removeItem(SHARD_KEYS[p]); fixed.push(p); } catch (e) { /* 尽力而为 */ }
+      }
+    });
+    return fixed;
+  }
+
   /** 配额预估（浏览器）；不可用时返回 null */
   function estimate() {
     try {
@@ -195,5 +246,11 @@
     backup: backup,
     dropBackups: dropBackups,
     estimate: estimate,
+    SCHEMA_KEY: SCHEMA_KEY,
+    SCHEMA_VERSION: SCHEMA_VERSION,
+    readSchema: readSchema,
+    writeSchema: writeSchema,
+    ensureSchema: ensureSchema,
+    repairIfCorrupt: repairIfCorrupt,
   };
 });

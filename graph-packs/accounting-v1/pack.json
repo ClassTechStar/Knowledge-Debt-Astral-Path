@@ -1,0 +1,12 @@
+{
+  "packId": "accounting-v1",
+  "name": "会计学课程包",
+  "schemaVersion": 1,
+  "apiVersion": "1.0.0",
+  "courseScope": ["ACCOUNTING"],
+  "publishedAt": "2026-09-19T00:00:00Z",
+  "entries": [
+    { "file": "nodes.json", "kind": "nodes", "count": 36, "idKey": "id" },
+    { "file": "edges.json", "kind": "edges", "count": 51, "fromKey": "from", "toKey": "to" }
+  ]
+}

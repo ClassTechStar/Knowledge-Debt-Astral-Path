@@ -1,0 +1,19 @@
+{
+  "packId": "astralpath-v2",
+  "name": "星穹学途示例图包（会计基础 / Python 入门 / 深度学习概论）",
+  "schemaVersion": 1,
+  "apiVersion": "1.0.0",
+  "courseScope": ["会计基础", "Python 入门", "深度学习概论"],
+  "publishedAt": "2026-09-24T00:00:00Z",
+  "entries": [
+    {
+      "file": "graph_pack.json",
+      "kind": "graph",
+      "nodes": 34,
+      "edges": 74,
+      "nodeKey": "kp_id",
+      "edgeFrom": "from_kp",
+      "edgeTo": "to_kp"
+    }
+  ]
+}

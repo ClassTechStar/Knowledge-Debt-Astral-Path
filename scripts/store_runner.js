@@ -184,5 +184,54 @@ check("ST-10", "dropBackups 只删备份、不碰分片", () => {
   return "removed=" + removed.length;
 });
 
+check("ST-11", "ensureSchema：无标记的老分片补写当前版本", () => {
+  const ls = FakeLS();
+  APStore.write(ls, makeState(1));
+  assert(APStore.readSchema(ls).v === 0, "前置：无 schema 标记");
+  const r = APStore.ensureSchema(ls);
+  assert(r.changed === true, "应补写标记");
+  assert(APStore.readSchema(ls).v === APStore.SCHEMA_VERSION, "版本应等于当前版本");
+  const back = APStore.merge(APStore.read(ls).parts);
+  assert(back && back.day === 3, "补写版本不应动数据");
+  const r2 = APStore.ensureSchema(ls);
+  assert(r2.changed === false && !r2.downgrade, "第二次调用应幂等");
+  return "v=" + APStore.readSchema(ls).v;
+});
+
+check("ST-12", "ensureSchema：更高版本数据按只读降级处理，不覆写", () => {
+  const ls = FakeLS();
+  APStore.write(ls, makeState(1));
+  ls.setItem(APStore.SCHEMA_KEY, "3");
+  const r = APStore.ensureSchema(ls);
+  assert(r.downgrade === true && r.changed === false, "应返回 downgrade 且不写");
+  assert(APStore.readSchema(ls).v === 3, "版本标记不应被降级改写");
+  return "kept v=3";
+});
+
+check("ST-13", "ensureSchema：损坏的版本标记被重写", () => {
+  const ls = FakeLS();
+  APStore.write(ls, makeState(1));
+  ls.setItem(APStore.SCHEMA_KEY, "{oops");
+  const r = APStore.ensureSchema(ls);
+  assert(r.recovered === true && r.changed === true, "应恢复标记");
+  assert(APStore.readSchema(ls).v === APStore.SCHEMA_VERSION, "标记应恢复为当前版本");
+  return "recovered";
+});
+
+check("ST-14", "repairIfCorrupt：损坏分片先备份再移除，其余分片不受影响", () => {
+  const ls = FakeLS();
+  APStore.write(ls, makeState(1));
+  ls.setItem("ap:answers", "{broken json");
+  const fixed = APStore.repairIfCorrupt(ls);
+  eq(fixed, ["answers"], "应修复 answers 分片");
+  const dumps = Object.keys(ls._dump()).filter((k) => k.indexOf("ap:backup:") === 0);
+  assert(dumps.length === 1, "损坏原始串应有备份");
+  const rd = APStore.read(ls);
+  assert(rd.missing.indexOf("answers") >= 0, "answers 应变为缺失");
+  assert(rd.hasShards, "其余分片应保留");
+  assert(APStore.repairIfCorrupt(ls).length === 0, "二次修复应为空");
+  return "fixed=" + fixed.join(",");
+});
+
 const passed = results.filter((r) => r.ok).length;
 process.stdout.write(JSON.stringify({ passed: passed, failed: results.length - passed, results: results }, null, 2));
