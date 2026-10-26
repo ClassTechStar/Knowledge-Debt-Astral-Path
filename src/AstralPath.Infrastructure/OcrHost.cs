@@ -146,7 +146,7 @@ public static class OcrHost
 
             using var proc = Start(python, psi);
             var stdoutTask = proc.StandardOutput.ReadToEndAsync();
-            // P0-2：边读 stderr 边上抛 PROGRESS 行
+            // 边读 stderr 边把 PROGRESS 行往上抛
             var stderrBuilder = new System.Text.StringBuilder();
             var stderrTask = Task.Run(async () =>
             {
@@ -157,7 +157,7 @@ public static class OcrHost
                         onProgress(line);
                 }
             });
-            // P0-5 对齐 MaterialPipeline：超时按模式（full 40min / standard 20min / 其他 3min），
+            // 超时和 MaterialPipeline 对齐，按模式区分（full 40min / standard 20min / 其他 3min），
             // ASTRALPATH_OCR_TIMEOUT_SECONDS 可整体覆盖；扫描书/图文书 standard 全页 OCR 需 >10 分钟
             var timeoutMinutes = ResolveTimeoutMinutes(mode);
             using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(timeoutMinutes));

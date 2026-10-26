@@ -1427,7 +1427,7 @@ CHAR_CONFUSIONS = (
 
 
 def preprocess_image(path: Path) -> Path:
-    """灰度 → 对比度拉伸 → 自适应二值 → 轻去噪。显著提升 tesseract 命中率。"""
+    """灰度 → 对比度拉伸 → 自适应二值 → 轻去噪。能提高 tesseract 的命中率。"""
     try:
         from PIL import Image, ImageOps, ImageFilter
     except Exception:

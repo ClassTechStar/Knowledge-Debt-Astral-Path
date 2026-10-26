@@ -137,7 +137,7 @@ public sealed class CoachProgressController : ControllerBase
             if (request.SelfConf is < 1 or > 5)
                 return HttpResults.Fail(400, ErrorCodes.ValidationError, "selfConf 必须为 1..5");
 
-            // P3-4：长度上限（原实现 10 万字符的 kpId 也会被 201 收下）
+            // 卡一下长度：以前 10 万字符的 kpId 也会被 201 收下
             var tooLong = RequestLimits.FirstViolation(
                 ("studentId", request.StudentId, RequestLimits.Id),
                 ("kpId", request.KpId, RequestLimits.Id),
@@ -146,7 +146,7 @@ public sealed class CoachProgressController : ControllerBase
             if (tooLong is not null)
                 return HttpResults.Fail(400, ErrorCodes.ValidationError, tooLong);
 
-            // P3-5：学生必须已存在，禁止静默创建孤儿数据
+            // 学生必须已存在，不能悄悄建出没人认领的数据
             // （原先对不存在的 studentId 返回 201，会污染学生数与统计口径）
             if (!_store.Students.ContainsKey(request.StudentId))
                 return HttpResults.Fail(404, ErrorCodes.ResourceNotFound,

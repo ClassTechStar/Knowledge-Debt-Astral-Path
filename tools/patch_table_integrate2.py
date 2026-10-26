@@ -12,7 +12,7 @@ print("has extract import", "extract_markdown_tables" in c)
 
 if i >= 0 and "P1-3 表格抽取" not in c:
     insert = (
-        "    # P1-3 表格抽取：识别区转 Markdown\n"
+        "    # 表格抽取：识别区转 Markdown\n"
         "    if extract_markdown_tables is not None and text:\n"
         "        try:\n"
         "            text, tables = extract_markdown_tables(text)\n"

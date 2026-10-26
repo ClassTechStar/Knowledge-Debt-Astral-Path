@@ -386,9 +386,9 @@ public static class OcrTextEngine
             Math.Round(noiseRatio, 4), lines.Length, grade);
     }
 
-    // 9. 一站式
+    // 9. 清洗
     /// <summary>
-    /// 一站式清洗：混淆修复 → 噪声过滤 → 页眉页脚去除 → 断字还原 → 中文断行合并。
+    /// 完整清洗：混淆修复 → 噪声过滤 → 页眉页脚去除 → 断字还原 → 中文断行合并。
     /// </summary>
     public static string Refine(string raw)
     {

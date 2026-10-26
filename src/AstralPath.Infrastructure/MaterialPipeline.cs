@@ -64,7 +64,7 @@ public static class MaterialPipeline
         var env = Environment.GetEnvironmentVariable("ASTRALPATH_OCR_PYTHON");
         if (!string.IsNullOrWhiteSpace(env) && File.Exists(env)) return env;
 
-        // P3-15：优先仓库内 tools/ocr-venv（跟随工作目录/部署目录/脚本目录），失效的用户级硬编码路径已移除
+        // 优先找仓库里的 tools/ocr-venv（工作目录、部署目录、脚本目录挨个试），原来写死的用户级路径已经去掉
         string? scriptDir = null;
         try { scriptDir = Path.GetDirectoryName(ResolveOcrScript()); }
         catch (Exception ex)
@@ -296,7 +296,7 @@ public static class MaterialPipeline
         var ids = nodes.Select(n => n.Id).ToHashSet(StringComparer.Ordinal);
         var cycles = new List<string>();
 
-        // P6-8：重复节点 id 不再抛 ArgumentException（此前 ToDictionary 直抛 → GetGraph 500），
+        // 节点 id 重复时不再抛 ArgumentException（以前 ToDictionary 直接抛，GetGraph 会 500），
         // 计入 issues 并按首个节点去重继续校验
         var dupIds = nodes.GroupBy(n => n.Id, StringComparer.Ordinal)
                           .Where(g => g.Count() > 1).Select(g => g.Key).ToList();
@@ -350,7 +350,7 @@ public static class MaterialPipeline
     /// <summary>导出三元组/属性图/思维导图树（对齐 KnowledgeGraph 与 mind-map）。</summary>
     public static GraphExtras ExportGraphExtras(AutoKnowledgeGraph graph)
     {
-        // P6-8：重复 id 去重后构建（首个获胜），不抛 ArgumentException
+        // 重复 id 先去重再建（保留第一个），不抛 ArgumentException
         var nameOf = graph.Nodes.GroupBy(n => n.Id, StringComparer.Ordinal)
                                 .ToDictionary(g => g.Key, g => g.First().Name, StringComparer.Ordinal);
         var triples = graph.Edges.Select(e => new
@@ -492,7 +492,7 @@ public static class MaterialPipeline
             ? string.Join("; ", nt.EnumerateArray().Select(x => x.GetString()))
             : null;
         var now = DateTime.UtcNow;
-        // P4-4：python 侧异常被 catch 后仍会写出 {ok:false, error}（exit 1）。
+        // python 侧的异常被 catch 后仍会写出 {ok:false, error}（exit 1）。
         // 此前硬编码 "ready" → 空壳图谱伪装解析成功（假成功）。现在如实上报 failed。
         var ok = payload.ValueKind != JsonValueKind.Object
                  || !payload.TryGetProperty("ok", out var okEl)

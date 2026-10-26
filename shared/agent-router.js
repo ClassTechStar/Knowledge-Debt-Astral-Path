@@ -78,7 +78,7 @@
     if (crisis.some(function (c) { return norm.indexOf(baseNormalize(c)) >= 0; }))
       return { id: "crisis.handoff", score: 1, decision: "crisis.handoff", trace: "R0:crisis" };
 
-    // P2-4：负例判定与后端 AgentRouter v3 对齐。
+    // 负例判定和后端 AgentRouter v3 保持一致。
     // 原实现 includes 命中即整句判死 →「好的，帮我生成计划」会被吞成兜底话术（实测复现）。
     // 现要求负例占整句 ≥60% 才算客套话。
     var negHit = negative.map(baseNormalize).filter(function (c) { return c && norm.indexOf(c) >= 0; })
@@ -86,7 +86,7 @@
     if (negHit && norm.length > 0 && negHit.length / norm.length >= 0.6)
       return { id: "meta.help", score: 0, decision: "fallback", trace: "R2.5:negative;ratio=" + (negHit.length / norm.length).toFixed(2) };
 
-    // P4-4 授权前置路由：撤销/关闭类否定表达优先于「授权」锚点，防止"撤销授权"误判为 grant
+    // 撤销、关闭这类否定说法要排在「授权」锚点前面，不然"撤销授权"会被误判成 grant
     var revokeDemo = /(撤销|取消|撤回|关闭|收回).{0,4}(授权|可见)/;
     if (revokeDemo.test(norm))
       return { id: "consent.revoke", score: 0.9, decision: "execute", trace: "R2.6:revoke-deny" };

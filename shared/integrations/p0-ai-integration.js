@@ -142,7 +142,7 @@
               if (j.model) model = j.model;
               var d = (j.choices && j.choices[0] && (j.choices[0].delta || j.choices[0].message)) || {};
               var rp = (typeof d.reasoning_content === "string") ? d.reasoning_content : "";
-              if (rp) { reason += rp; safeDelta(reason, true); } // T14：思维链流式回调
+              if (rp) { reason += rp; safeDelta(reason, true); } // 思维链边收边回
               var piece = (typeof d.content === "string") ? d.content : "";
               if (piece) { out += piece; safeDelta(out, false); }
             } catch (e) {}
@@ -152,10 +152,10 @@
             return reader.read().then(function (rd) {
               if (rd.done) return;
               buf += dec.decode(rd.value, { stream: true });
-              if (buf.indexOf("[DONE]") >= 0) sseDone = true; // P2-1 修复②：[DONE] 可能不带换行尾
+              if (buf.indexOf("[DONE]") >= 0) sseDone = true; // [DONE] 有时不带换行尾
               var nl;
               while ((nl = buf.indexOf("\n")) >= 0) { consumeLine(buf.slice(0, nl)); buf = buf.slice(nl + 1); if (sseDone) break; }
-              return pump(); // P2-1 修复①：[DONE] 后显式终止
+              return pump(); // 读到 [DONE] 就停，别继续往下读
             });
           })().then(function () {
             if (!out.trim() && reason.trim().length >= 4) { out = reason.trim(); safeDelta(out, false); } // T13 推理兜底
@@ -282,7 +282,7 @@
         }
         book.qs = book.qs || [];
         book.qs.push(q);
-        if (book.qs.length > 300) book.qs = book.qs.slice(0, 300); // T15：超限从头截断（保新题）
+        if (book.qs.length > 300) book.qs = book.qs.slice(0, 300); // 超限从头砍掉，保住新题
         return q;
       }).catch(function () { return attempt < 2 ? loop(attempt + 1) : null; });
     })(1);
@@ -318,7 +318,7 @@
       $("quizBox").innerHTML = '<div class="status">🤖 AI 正在基于《' + esc(String(b.name || "").slice(0, 20)) + '》全文内容命题…</div>';
     }
     aiGenQuestion(b, node).then(function (nq) {
-      if (fb) delete fb._pendingAi; // T15：垫题状态标记用后即清
+      if (fb) delete fb._pendingAi; // 垫题的标记用完就清
       if (nq) save(S);
       if (tk !== window.__quizToken) return;
       if (nq) {

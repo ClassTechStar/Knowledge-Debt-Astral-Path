@@ -55,7 +55,7 @@ public sealed class AgentKbProfileController : ControllerBase
             return HttpResults.Fail(400, ErrorCodes.ValidationError, "userId 必填");
         if (!IsValidRole(body.Role))
             return HttpResults.Fail(400, ErrorCodes.ValidationError, $"role 无效：{body.Role}");
-        // P3-4：长度上限（原实现 12MB 的 utterance 也会被收下并写入会话日志）
+        // 卡一下长度：以前 12MB 的 utterance 也会被收下写进会话日志
         var tooLong = RequestLimits.FirstViolation(
             ("userId", body.UserId, RequestLimits.Id),
             ("utterance", body.Utterance, RequestLimits.Body),
@@ -127,7 +127,7 @@ public sealed class AgentKbProfileController : ControllerBase
             return HttpResults.Fail(400, ErrorCodes.ValidationError, "ownerUserId 必填");
         if (body.Visibility is not null && body.Visibility is not ("private" or "consented" or "course" or "public"))
             return HttpResults.Fail(422, ErrorCodes.ValidationError, "visibility 须为 private|consented|course|public");
-        // P3-4：长度上限
+        // 卡一下长度
         var titleTooLong = RequestLimits.FirstViolation(
             ("title", body.Title, RequestLimits.Title),
             ("ownerUserId", body.OwnerUserId, RequestLimits.Id),

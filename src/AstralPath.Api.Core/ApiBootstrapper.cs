@@ -173,7 +173,7 @@ public sealed class ApiBootstrapper
         });
         builder.Services.AddCors(options =>
         {
-            // P2-8：原先 AllowAnyOrigin，实测预检返回 ACAO:* —— 用户浏览器上任意站点都能调用本机 API。
+            // 这里原先写的是 AllowAnyOrigin，预检会返回 ACAO:*，等于浏览器里随便哪个站点都能调本机 API。
             // 现默认只放行「本机回环 + 安卓壳 origin」，可用 Security:CorsOrigins 追加白名单；
             // 需要完全开放时显式设 Security:AllowAnyOrigin=true。
             options.AddPolicy("demo", policy =>

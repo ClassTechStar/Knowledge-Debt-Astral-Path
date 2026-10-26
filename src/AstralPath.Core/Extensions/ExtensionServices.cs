@@ -187,7 +187,7 @@ public static class ExamImpact
 }
 
 // peer-cohort-svc 同辈对照（强伦理）
-// 铁律：k-匿名（默认 k=5）；不产出个体明细；不排名；不做能力定性。
+// k-匿名（默认 k=5）：不产出个体明细、不排名、不给能力下定性。
 public sealed record CohortInput(int K, IReadOnlyList<(string StudentId, double Score)> Members);
 
 public sealed record CohortResult(int SampleCount, bool Suppressed, double? P25, double? P50, double? P75, string? Note);
@@ -220,7 +220,7 @@ public static class PeerCohort
 }
 
 // study-group-svc 学习小组匹配（强伦理）
-// 铁律：只用聚合标签匹配，不用分数明文/排名；规模 3–5 人。
+// 只用聚合标签匹配，不用分数明文和排名；规模 3–5 人。
 public sealed record GroupMemberInput(string StudentId, IReadOnlyList<string> Tags);
 public sealed record GroupResult(IReadOnlyList<IReadOnlyList<string>> Groups, string Note);
 
@@ -264,7 +264,7 @@ public static class StudyGroup
 }
 
 // micro-lesson-svc 微课装配
-// 铁律：不产出数字与结论（禁编造）；只装配资源清单与时长。
+// 不产出数字和结论（禁止编造），只装配资源清单和时长。
 public sealed record MicroLessonInput(string KpId, string KpName, IReadOnlyList<string> Resources, int Minutes);
 
 public sealed record MicroLessonResult(
@@ -322,7 +322,7 @@ public static class LearningVelocity
 }
 
 // spaced-review-svc 间隔重复调度（建议态）
-// 铁律：只产出建议队列，不直接写 mastery / cleared。
+// 只产出建议队列，不直接写 mastery / cleared。
 public sealed record ReviewItem(string KpId, int Lapses, double LastScore, DateTime? LastReviewAt);
 
 public sealed record ReviewPlanItem(string KpId, DateTime DueAt, int IntervalDays, string Reason);
@@ -379,7 +379,7 @@ public static class PrerequisiteSimulator
 }
 
 // knowledge-forecast-svc 学业预警预测（强伦理）
-// 铁律：只输出**区间与建议**，不输出"不及格概率"等可当处分的定性；fail-closed。
+// 只输出**区间与建议**，不输出"不及格概率"这种能当处分用的定性；fail-closed。
 public sealed record ForecastInput(
     double CurrentScore, double SlopePerDay, int DaysAhead, double OpenDebtImpact);
 

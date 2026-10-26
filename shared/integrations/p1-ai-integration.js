@@ -325,7 +325,7 @@
     var cleaned = removeCyclesTopo(nodes, edges);
     book.nodes = nodes;
     book.edges = cleaned.edges;
-    // T15：题池保留 AI 题，仅重建规则题
+    // AI 出的题留着，只重建规则题
     book.qs = keepAiQuestions(book.qs, generateQuestions(book), function (q) { return q.layer; }, 300);
     book.kgAiEnhanced = true;
     return { addedN: addedN, addedE: addedE, cut: (cleaned.cut || 0) };

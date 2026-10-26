@@ -29,7 +29,7 @@ old = '''function setMatStatus(kind,msg){'''
 new = '''function setMatStatus(kind,msg){'''
 # insert helpers before setMatStatus
 helper = '''
-/* P2-4 运行状态 · P3-4/3-5 缓存治理 ── */
+/* 运行状态与缓存清理 */
 function apOnline(){return (typeof navigator!=="undefined"&&navigator.onLine!==false);}
 function refreshNetBadge(){
   const el=$("netBadge");if(!el)return;

@@ -312,7 +312,7 @@ public sealed class MaterialsController : ControllerBase
             return missing;
         }
         var payload = await MaterialPipeline.RunOcrAsync(material.Path, material.OcrMode ?? "standard");
-        // P4-4：ok:false（python 内部异常被 catch 后仍写出 payload）→ 登记 failed 并返回，不生成/入库图谱
+        // python 里出了异常也会照常写出 {ok:false} 的 payload，这种记 failed 直接返回，不生成也不入库
         if (payload.ValueKind == JsonValueKind.Object
             && payload.TryGetProperty("ok", out var okEl)
             && okEl.ValueKind == JsonValueKind.False)
@@ -343,7 +343,7 @@ public sealed class MaterialsController : ControllerBase
                 tasks = TextbookQuestionBank.ToTodayTasks(material.Name.Replace("C_", "C#"), 6);
         }
         MaterialRegistry.UpsertMaterial(doc);
-        // P4-4：空图谱（0 节点 0 边）不入库，避免前端把空壳当成功
+        // 空图谱（0 节点 0 边）不入库，免得前端把空壳当成功
         if (graph.Nodes.Count > 0 || graph.Edges.Count > 0)
         {
             MaterialRegistry.UpsertGraph(graph, tasks);
@@ -483,7 +483,7 @@ public sealed class MaterialsController : ControllerBase
             return HttpResults.Fail(404, ErrorCodes.ResourceNotFound, "学生不存在");
 
         var inputs = new List<(string, string, string, string, double, double, int, int, double)>();
-        // P6-8：稳定哈希播种——string.GetHashCode 进程间随机化（.NET 跨重启不同），
+        // 播种用稳定哈希：string.GetHashCode 每次进程都不一样（.NET 跨重启会变），
         // 同一学生每次重启会得到不同的「知识债」预览；改用 SHA256 派生种子保证可复现。
         var seedBytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(studentId ?? ""));
         var rnd = new Random(BitConverter.ToInt32(seedBytes, 0));
@@ -539,7 +539,7 @@ public sealed class MaterialsController : ControllerBase
 
         var created = new List<string>();
         var skipped = new List<string>();
-        // P3-10：去重必须以**磁盘现状**为唯一权威。
+        // 去重只认磁盘现状，内存里那份可能已经过期。
         // 原先只比对内存注册表：① 重启后注册表为空，去重形同虚设（冒烟反复调用把目录撑到 17GB）；
         // ② 注册表还可能指向其他目录（预热曾硬编码 bin 目录），单看注册表会产生幽灵条目——
         // 磁盘上明明没有文件也报"已存在"，导致永远补不上。

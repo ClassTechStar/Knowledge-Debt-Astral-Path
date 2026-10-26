@@ -21,7 +21,7 @@ if "table_extract" not in c:
         print("no unicodedata anchor")
 
 old = '        result["fullText"] = text  # 供 API 存章节全文'
-new = '''        # P1-3 表格抽取：识别区转 Markdown，元数据入 result["tables"]
+new = '''        # 表格抽取：识别区转 Markdown，元数据放进 result["tables"]
         if extract_markdown_tables is not None and text:
             try:
                 text, tables = extract_markdown_tables(text)
