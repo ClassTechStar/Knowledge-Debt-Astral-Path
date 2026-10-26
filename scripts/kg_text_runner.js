@@ -1,6 +1,5 @@
 /**
- * kg_text_runner.js —— shared/kg-text.js 黄金用例（供 verify_all / CI 调用）
- * ===========================================================
+ * kg_text_runner.js —— shared/kg-text.js 用例（verify_all / CI 调用）
  * 覆盖：大纲抽取（Markdown/第X章）、无标题兜底分章、标题有效性过滤、
  *       TextRank 确定性、加权术语（停用词与目录噪声剔除）。
  * 输出 JSON：{passed, failed, results:[{id,name,ok,detail}]}

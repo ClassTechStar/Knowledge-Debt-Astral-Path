@@ -6,7 +6,7 @@ using Xunit;
 namespace AstralPath.Core.Tests;
 
 /// <summary>
-/// P0 迁移验证：AI 调用层 golden 契约（eval/golden/mimo.json）。
+/// AI 调用层的用例（eval/golden/mimo.json）。
 /// 覆盖 SSE 流式聚合、[DONE] 裸尾/不关流、思维链收集与兜底、非流式兜底、
 /// HTTP 错误、空内容、JSON 容错解析、冷却分类。
 /// </summary>
@@ -128,7 +128,7 @@ public class GoldenMimoTests
     [Fact]
     public async Task MimoClient_ConcurrencyGate_QueuesInsteadOfRejecting()
     {
-        // T13：并发闸 ≤2 路并行 + FIFO 排队；3 路并发全部成功、无相互拒绝
+        // 并发最多 2 路，多余的按先来后到排队；3 路并发要全部成功，不能互相拒掉
         var running = 0; var maxParallel = 0;
         var client = new MimoClient(async (req, ct) =>
         {
@@ -148,7 +148,7 @@ public class GoldenMimoTests
     [Fact]
     public async Task MimoClient_ReasoningFallback_WhenContentEmpty()
     {
-        // T13：正文为空但思维链可用 → 以思维链为正文
+        // 正文为空但思维链有内容 → 拿思维链当正文
         var client = new MimoClient((req, ct) => Task.FromResult(MimoRawResponse.Sse(
             "data: {\"choices\":[{\"delta\":{\"reasoning_content\":\"只有推理\"}}]}\ndata: [DONE]\n")));
         var r = await client.CompleteAsync(Cfg, Msgs);
@@ -171,7 +171,7 @@ public class GoldenMimoTests
         Random.Shared.NextBytes(dek);
         var env = KeyEnvelopeCrypto.Seal("sk-test-123456", dek, "https://api.example.com/v1", "mimo-v2.6-pro");
         Assert.Equal("sk-test-123456", KeyEnvelopeCrypto.Open(env, dek));
-        // 错误 DEK → null（信封作废路径）
+        // DEK 不对就返回 null（信封作废）
         var wrongDek = new byte[32];
         Random.Shared.NextBytes(wrongDek);
         Assert.Null(KeyEnvelopeCrypto.Open(env, wrongDek));
@@ -180,7 +180,7 @@ public class GoldenMimoTests
     [Fact]
     public void DemoKeyProvider_ResolvesWithoutThrowing()
     {
-        // 内置演示密钥：解密成功返回配置，失败返回 null（降级为未配置）——两者皆可，不得抛异常
+        // 内置演示密钥：解密成功就给配置，失败就当没配，都行，但不能抛异常
         var cfg = DemoKeyProvider.Resolve();
         if (cfg != null)
         {
@@ -203,7 +203,7 @@ public class GoldenMimoTests
         Assert.Equal("https://custom.example.com/v1", resolution.Config.Base);
         Assert.False(resolution.CustomEnvelopeInvalid);
 
-        // DEK 丢失 → 信封作废 + 回退内置（可能为 null）
+        // DEK 丢了 → 信封作废并回退内置（内置可能也是空）
         var resolution2 = MimoConfigResolver.Resolve(store, () => null);
         Assert.True(resolution2.CustomEnvelopeInvalid);
         Assert.True(store.Invalidated);

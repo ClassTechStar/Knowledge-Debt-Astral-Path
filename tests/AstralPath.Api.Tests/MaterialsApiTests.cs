@@ -10,7 +10,7 @@ public class MaterialsApiTests : IClassFixture<WebApplicationFactory<Program>>
 
     public MaterialsApiTests(WebApplicationFactory<Program> factory)
     {
-        _client = factory.WithWebHostBuilder(b => b.UseSetting("Security:RequireAuth", "false")).CreateClient(); // 测试明确退出鉴权（生产默认开启）
+        _client = factory.WithWebHostBuilder(b => b.UseSetting("Security:RequireAuth", "false")).CreateClient(); // 测试里关掉鉴权，生产默认是开着的
     }
 
     private static async Task<JsonElement> Data(HttpResponseMessage resp)
@@ -41,7 +41,7 @@ public class MaterialsApiTests : IClassFixture<WebApplicationFactory<Program>>
         var resp = await _client.PostAsync("/v1/materials/seed-samples", null);
         Assert.True(resp.IsSuccessStatusCode);
         var data = await Data(resp);
-        // machine may or may not have sample PDFs; endpoint must still succeed
+        // 机器上不一定有样例 PDF，接口照样要成功
         Assert.True(data.TryGetProperty("seeded", out _));
         Assert.True(data.TryGetProperty("ids", out var ids));
         Assert.Equal(JsonValueKind.Array, ids.ValueKind);

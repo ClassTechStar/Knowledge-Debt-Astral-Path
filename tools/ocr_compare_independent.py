@@ -35,7 +35,7 @@ def norm(s: str) -> str:
     return s
 
 
-# ───────────────────────── A. 独立抽取 ─────────────────────────
+# A. 独立抽取
 def independent_extract_pdf(path: Path, max_ocr_pages: int = 8):
     """PyMuPDF 文本层 + 低文本页 RapidOCR（独立调用，无 TBPU）。"""
     import pymupdf
@@ -102,7 +102,7 @@ def independent_pypdf_chars(path: Path) -> dict:
         return {"ok": False, "err": str(e)[:80]}
 
 
-# ───────────────────────── B. 项目 OCR ─────────────────────────
+# B. 项目 OCR
 def project_extract(path: Path, max_pages=None):
     from ocr_pipeline_umi import extract_document
     doc = extract_document(str(path), mode="mixed", max_pages=max_pages)
@@ -112,7 +112,7 @@ def project_extract(path: Path, max_pages=None):
     return pages, doc.total_chars
 
 
-# ───────────────────────── 对比 ─────────────────────────
+# 对比
 def jaccard(a: str, b: str) -> float:
     sa, sb = set(norm(a).split()), set(norm(b).split())
     if not sa and not sb:

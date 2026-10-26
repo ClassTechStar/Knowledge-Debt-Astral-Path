@@ -11,7 +11,7 @@ namespace AstralPath.Shared.Services;
 /// </summary>
 public sealed partial class OfflineDemoDataSource
 {
-    // ── §44 受约束智能体 ────────────────────────────────────────
+    // §44 受约束智能体
 
     public AgentTurnResult AgentTurn(string userId, string role, string utterance, string? sessionId)
     {
@@ -45,7 +45,7 @@ public sealed partial class OfflineDemoDataSource
             AnchorCount: t.Int("anchorCount"))).ToList();
     }
 
-    // ── §45 知识库 ─────────────────────────────────────────────
+    // §45 知识库
 
     public IReadOnlyList<KbDocRow> ListKbDocuments() => _store.Lock(() =>
     {
@@ -89,7 +89,7 @@ public sealed partial class OfflineDemoDataSource
             OwnerUserId: t.StrAny("OwnerUserId", "ownerUserId") ?? string.Empty);
     }
 
-    // ── §46 用户画像 ───────────────────────────────────────────
+    // §46 用户画像
 
     public ProfileOverviewRow? GetProfile(string studentId, bool teacherSide)
     {

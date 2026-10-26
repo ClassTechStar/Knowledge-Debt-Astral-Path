@@ -14,10 +14,8 @@ using Xunit;
 namespace AstralPath.Desktop.Tests;
 
 /// <summary>
-/// 双端布局与响应式（方案 §12.3 / §12.4 / §13 / 附录 X.1）。
-///
-/// 触达下限：Shared 主题给出桌面下限 44px；移动端由 <c>Mobile/App.axaml</c> 覆盖为 48px。
-/// 本测试在共享下限（44px）上断言，移动端 Tab 另按 48px 单独断言。
+/// 双端布局与响应式断点的用例。
+/// 触达下限按 Shared 主题的 44px 断言；移动端在 <c>Mobile/App.axaml</c> 里覆盖成 48px。
 /// </summary>
 public sealed class TodayViewResponsiveTests
 {
@@ -76,8 +74,8 @@ public sealed class TodayViewResponsiveTests
         window.Close();
     }
 
-    // （原「移动端外壳渲染出五个底部Tab」用例随 AstralPath.Mobile 归档移除——
-    //   它断言的是未发布的 Avalonia 移动壳 MobileShell；见 attic/README.md）
+    // 原来「移动端外壳渲染出五个底部Tab」的用例随 AstralPath.Mobile 一起归档了，
+    // 它断言的是没发布的 Avalonia 移动壳 MobileShell，见 attic/README.md
 
     [AvaloniaFact]
     public void 今日页包含预算胶囊与免责声明且无评价性措辞()
@@ -96,8 +94,8 @@ public sealed class TodayViewResponsiveTests
         Assert.Contains(texts, t => t.Contains("预算", StringComparison.Ordinal));
         Assert.Contains(texts, t => t.Contains("不构成处分依据", StringComparison.Ordinal));
 
-        // 伦理约束：不得出现排名 / 惩罚性措辞。
-        // 注意「处分」一词会出现在必需的免责声明「不构成处分依据」里，故单独排除该句后再检查。
+        // 不能出现排名、惩罚性措辞。
+        // 「处分」只出现在免责声明「不构成处分依据」里，先把那句排除再检查。
         var withoutDisclaimer = texts
             .Where(t => !t.Contains("不构成处分依据", StringComparison.Ordinal))
             .ToList();

@@ -21,12 +21,12 @@ from typing import Callable, List, Optional, Tuple
 import pymupdf  # PyMuPDF
 from PIL import Image
 
-# ========== Umi-OCR mission_doc 常量 ==========
+# Umi-OCR mission_doc 常量
 MinSize = 1080  # 最小渲染分辨率
 
 DocSuf = [".pdf", ".xps", ".epub", ".mobi", ".fb2", ".cbz"]
 
-# ========== Umi-OCR line_preprocessing ==========
+# Umi-OCR line_preprocessing
 angle_threshold = 3
 angle_threshold_rad = math.radians(angle_threshold)
 
@@ -101,7 +101,7 @@ def line_preprocessing(text_blocks):
     return text_blocks
 
 
-# ========== Umi-OCR paragraph_parse ==========
+# Umi-OCR paragraph_parse
 TH = 1.2
 
 
@@ -197,7 +197,7 @@ class ParagraphParse:
             self.set_end(para[-1][2], end)
 
 
-# ========== Umi-OCR GapTree 阅读顺序（核心排序） ==========
+# Umi-OCR GapTree 阅读顺序（核心排序）
 class GapTree:
     """GapTree_Sort_Algorithm — hiroi-sora / Umi-OCR。"""
 
@@ -345,7 +345,7 @@ def gap_tree_sort(text_blocks: list) -> list:
     return GapTree(get_bbox).sort(text_blocks)
 
 
-# ========== P0/P2：公式保留 · 版面检测 · 表格 · 质量分 ==========
+# 公式保留 · 版面检测 · 表格 · 质量分
 _MATH_KEEP = re.compile(
     r"[←-⇿∀-⋿⌀-⏿⁰-₟←-⇿½-×÷≠≤≥±∞∑∏√∫∂∆∇∈∉⊂⊃∪∩∧∨¬⇒⇔α-ωΑ-Ω]"
 )
@@ -452,7 +452,7 @@ def blocks_to_text(text_blocks: list) -> str:
     return text.strip() + "\n"
 
 
-# ========== mission_doc 抽取（mixed / fullPage / textOnly / imageOnly） ==========
+# mission_doc 抽取（mixed / fullPage / textOnly / imageOnly）
 def transform_to_rotation(matrix):
     a, b, c, d, _, _ = matrix
     scale = math.sqrt(a * a + b * b)
@@ -489,7 +489,7 @@ class DocExtract:
     ocr_pages: List[int] = field(default_factory=list)
 
 
-# ========== P1：预处理（灰度/对比度/轻量纠偏） ==========
+# 预处理（灰度/对比度/轻量纠偏）
 def preprocess_image(img: Image.Image) -> Image.Image:
     """对齐 Umi-OCR 预处理：灰度 + 自动对比度；扫描页更清晰。"""
     try:
@@ -640,11 +640,11 @@ def extract_page(page, mode: str = "mixed", pno: int = 1) -> Tuple[str, List[dic
         matrix = pymupdf.Matrix(zoom, zoom) if zoom != 1 else pymupdf.Identity
         pix = page.get_pixmap(matrix=matrix)
         img = Image.open(BytesIO(pix.tobytes("png")))
-        img = preprocess_image(img)  # P1：灰度/对比度
+        img = preprocess_image(img)  # 灰度/对比度
         scale = 1 / zoom
         imgs.append({"img": img, "xy": (0, 0), "scale_w": scale, "scale_h": scale})
     else:
-        # P1 性能：clip=page.rect，避免 INFINITE_RECT 全页扫描越界块
+        # 性能：clip=page.rect，避免 INFINITE_RECT 全页扫描越界块
         p = page.get_text("dict", clip=page.rect)
         for t in p.get("blocks", []):
             if t.get("type") == 1 and mode in ("imageOnly", "mixed"):
@@ -708,7 +708,7 @@ def extract_page(page, mode: str = "mixed", pno: int = 1) -> Tuple[str, List[dic
     q = page_quality(text, blocks)
     stats["quality"] = q
     if q.get("low"):
-        # P2 低分重试：换预处理后再 OCR 一次（仅图页）
+        # 低分重试：换预处理后再 OCR 一次（仅图页）
         if imgs:
             try:
                 imgs2 = [{"img": deskew_if_needed(preprocess_image(it["img"].convert("RGB"))),
@@ -729,7 +729,7 @@ def extract_page(page, mode: str = "mixed", pno: int = 1) -> Tuple[str, List[dic
     return text, blocks, stats
 
 
-# ========== P1：页级缓存 ==========
+# 页级缓存
 _PAGE_CACHE: dict = {}
 _CACHE_DIR = os.environ.get("ASTRALPATH_OCR_CACHE") or os.path.join(
     os.path.expanduser("~"), ".astralpath", "ocr-cache")
@@ -820,7 +820,7 @@ def extract_document(
                 images=stats.get("images", 0),
             )
             out.pages.append(pe)
-            # P1 段落归一：统一「每页一节」
+            # 段落归一：统一「每页一节」
             texts.append(f"\n\n===== PAGE {pno+1} =====\n{text}")
             if chars < 5:
                 out.empty_pages.append(pno + 1)

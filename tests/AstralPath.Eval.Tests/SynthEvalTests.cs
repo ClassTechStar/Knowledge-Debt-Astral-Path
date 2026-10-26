@@ -20,7 +20,7 @@ public class SynthEvalTests
 
         for (var i = 0; i < 30; i++)
         {
-            var hasDebt = i % 3 != 2; // 20/30 with debts
+            var hasDebt = i % 3 != 2; // 30 个里 20 个带债
             var inputs = graph.Edges.Select(e =>
             {
                 double scoreP, scoreC;

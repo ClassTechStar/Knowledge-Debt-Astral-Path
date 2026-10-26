@@ -92,7 +92,7 @@ public sealed class ApiBootstrapper
             options.MultipartHeadersLengthLimit = int.MaxValue;
         });
 
-        // ── 限流（P1 审计 M2）────────────────────────────────────────────
+        // 限流（P1 审计 M2）
         // 全仓原先零限流：同网段可无上限并发上传打满磁盘。按远端 IP 分两个令牌桶：
         // 上传路径严格（60/min），其余宽松（6000/min，避免演示页轮询误伤）。超限 429，
         // 响应形状由下方框架级错误转写统一为 {data,error,traceId}。
@@ -233,17 +233,17 @@ public sealed class ApiBootstrapper
         builder.Services.AddSingleton(modules);
         builder.Services.AddSingleton(new AppServices(store));
 
-        // ── 知识库 / 向量检索层持久化（配置节 Persistence）──────────────
+        // 知识库 / 向量检索层持久化（配置节 Persistence）
         // 原先这段装配缺失，`appsettings.json` 里的 Persistence:Mode=postgres 形同虚设；
         // 与 services/*-svc 保持同源接线。
         builder.Services.AddAstralPathPersistence(builder.Configuration);
 
-        // ── 资料落盘目录移出 bin（P2-7）──────────────────────────────────
+        // 资料落盘目录移出 bin（P2-7）
         // 原先落在 AppContext.BaseDirectory\materials-uploads，实测已积累 576MB 用户上传，
         // 一次 dotnet clean / 重新 publish 就会静默清空。改到数据根目录（旧内容会自动迁移）。
         AstralPath.Api.Controllers.MaterialsController.ConfigureStorage(ResolveDataRoot(builder.Configuration));
 
-        // ── 运行时状态快照（学生 / 作答 / 掌握度 / 计划 / consent / 知识库 / 画像 / 智能体）──
+        // 运行时状态快照（学生 / 作答 / 掌握度 / 计划 / consent / 知识库 / 画像 / 智能体）──
         // 这一层不属于 IKnowledgeRepository：它是业务账本，原先只活在内存里，
         // 进程一重启就退回 seed 数据。用一份 JSON 快照补齐。
         var snapshotOptions = ResolveSnapshotOptions(builder.Configuration);
@@ -261,7 +261,7 @@ public sealed class ApiBootstrapper
         var app = builder.Build();
         app.Lifetime.ApplicationStopping.Register(() => snapshot.Flush());
 
-        // ── 启动自检：如实说明「数据到底存在哪」，避免静默降级 ──────────
+        // 启动自检：如实说明「数据到底存在哪」，避免静默降级
         ReportPersistenceHealth(builder.Configuration, snapshotOptions, snapshotLoad);
 
         // 全局异常兜底：避免未捕获异常变成空白 500，统一 ApiFailure 形状
@@ -320,11 +320,11 @@ public sealed class ApiBootstrapper
         app.UseCors("demo");
         app.UseRateLimiter();
 
-        // ── 访问控制（P2-1）──────────────────────────────────────────────
+        // 访问控制（P2-1）
         // 原实现全站零鉴权：无令牌即可读他人画像、**替他人授予/撤销 consent**、替他人提交作答。
         // 两层处理（默认不改变演示体验）：
-        //   ① 携带 Bearer 令牌时：路由里的学生 id 必须与令牌主体一致 → 否则 403；
-        //   ② Security:RequireAuth=true 时：/v1/** 一律要求有效令牌 → 缺令牌 401。
+        // ① 携带 Bearer 令牌时：路由里的学生 id 必须与令牌主体一致 → 否则 403；
+        // ② Security:RequireAuth=true 时：/v1/** 一律要求有效令牌 → 缺令牌 401。
         // 说明：AuthUser 目前没有角色字段，因此「教师端仅教师可见」仍需补数据模型，见后续待办。
         var requireAuth = string.Equals(builder.Configuration["Security:RequireAuth"], "true",
             StringComparison.OrdinalIgnoreCase);
@@ -391,7 +391,7 @@ public sealed class ApiBootstrapper
             await next();
         });
 
-        // ── 框架级错误形状统一（P2-3）────────────────────────────────────
+        // 框架级错误形状统一（P2-3）
         // 415 / 405 / 路由 404 由框架在进入 MVC 之前产生，响应体是 RFC problem+json，
         // 与项目统一契约 {data,error,traceId} 不一致（实测 415 返回
         // {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.16",...}）。

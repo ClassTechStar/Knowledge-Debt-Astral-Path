@@ -1,25 +1,13 @@
 namespace AstralPath.Core.Agent;
 
 /// <summary>
-/// 受约束智能体路由器 v3。
-///
-/// 相对 v2 的修复：
-/// ① v2 定义了 TauExec / TauClarify / MaxClarify 三个常量却**从未使用**，
-///    实际阈值是硬编码 0.5，注释说的"低置信"分支根本不存在。
-///    v3 真正启用它们，并加入「次优差距过小 → 判为歧义」的判定。
-/// ② 打分只取单个最高锚点，多锚点同时命中（更强的证据）不加分。
-///    v3 改为「主锚点 + 其余锚点饱和累加 + 覆盖率奖励」。
-/// ③ 锚点分数只取决于长度，与句子无关 → 长句里偶然命中一个 2 字词也会 execute。
-///    v3 引入覆盖率（命中长度 / 句子长度）抑制偶然命中。
-/// ④ R2.5 负例用 ContainsAny → "好的，帮我生成计划" 会被整句判死。
-///    v3 只在负例占整句 ≥60% 时才落。
-/// ⑤ R1 槽位分支只要传了 awaitingIntent 就永远返回 clarify，**永远不会 execute**，
-///    而且既不抽取已填槽位，也不检查 clarifyCount → 追问可以无限循环。
-///    v3：抽取已填槽位、槽位齐了就 execute、超过 MaxClarify 停止追问、
-///    且允许"中途换话题"（新意图分数够高就切换）。
-/// ⑥ 角色过滤用 1u &lt;&lt; (Bit % 32) 位图 —— 意图超过 32 个就会位冲突，
-///    且每意图都要 Split 字符串。v3 改为预建 HashSet，无 32 位上限。
-/// ⑦ 无多轮上下文：用户说"再解释一下"无法继承上文意图。v3 支持 prevIntent。
+/// 受约束智能体路由器 v3。相比 v2 修了几个老毛病：阈值常量以前定义了却没用上（实际硬编码 0.5），
+/// 现在真的走 TauExec / TauClarify / MaxClarify，还加了「和次优差距太小算歧义」的判断；
+/// 打分改成主锚点加分、其余锚点饱和累加，多个锚点同时命中算更强的证据，另外按覆盖率压住
+/// 长句里偶然碰中一个短词就 execute 的误判；负例要占整句够长才判死，不然"好的，帮我生成计划"
+/// 会被整句干掉；槽位分支会抽已填槽位、槽位齐了就 execute，追问到 MaxClarify 就不再纠缠，
+/// 也允许中途换话题；角色过滤换成预建 HashSet，去掉 32 个意图的位图上限；最后支持 prevIntent，
+/// "再解释一下"这种省略指代能接上上文。
 /// </summary>
 public sealed class AgentRouter
 {
@@ -120,7 +108,7 @@ public sealed class AgentRouter
         string? awaitingIntent = null,
         string? prevIntentId = null)
     {
-        // ── R0 危机词（最高优先级，永远先判）────────────
+        // R0 危机词最先判，优先级最高
         var crisis = _crisis.MatchFirst(utterance);
         if (crisis.Hit)
             return new AgentRouteResult("crisis.handoff", 1.0, "crisis.handoff", Array.Empty<string>(),
@@ -128,7 +116,7 @@ public sealed class AgentRouter
 
         var norm = PatternSet.Normalize(utterance);
 
-        // ── R2.5 负例快落（v3：要求负例占整句 ≥60%，避免误杀"好的，帮我…"）──
+        // R2.5 负例快落：负例得占整句 60% 以上才认，免得误杀"好的，帮我…"这种
         if (norm.Length > 0 && _negative.ContainsAny(norm))
         {
             var longest = _negative.LongestMatchLength(norm);
@@ -142,7 +130,7 @@ public sealed class AgentRouter
         var best = ranked.Count > 0 ? ranked[0] : null;
         var second = ranked.Count > 1 ? ranked[1] : null;
 
-        // ── R1 槽位填充 / 话题切换 ───────────────────────
+        // R1 槽位填充 / 话题切换
         if (!string.IsNullOrWhiteSpace(awaitingIntent))
         {
             var pending = _intents.FirstOrDefault(i => i.IntentId == awaitingIntent);
@@ -175,7 +163,7 @@ public sealed class AgentRouter
             }
         }
 
-        // ── R3 锚点路由 ──────────────────────────────────
+        // R3 锚点路由
         if (best is not null)
         {
             var intent = _intents.FirstOrDefault(i => i.IntentId == best.IntentId);
@@ -206,7 +194,7 @@ public sealed class AgentRouter
                     $"R3:anaphora;score={best.Score:0.00}");
         }
 
-        // ── R6 兜底 ──────────────────────────────────────
+        // R6 兜底
         var help = _intents.FirstOrDefault(i => i.IntentId == "meta.help");
         return new AgentRouteResult(help?.IntentId ?? "meta.help", 0.0, "fallback", Array.Empty<string>(), "R6:fallback");
     }
@@ -229,12 +217,10 @@ public sealed class AgentRouter
     private const string SlotPunct = "，,。.！!？?：:；;、\"'“”‘’（）()【】[]";
 
     /// <summary>
-    /// 从用户话里抽取已提供的槽位。
-    /// 两级启发式（纯函数、可测；真实部署应替换为 NER/模板抽槽）：
-    ///   ① 槽位**名**出现 → 该槽位已填（"书名是会计基础"）
-    ///   ② 残余法：把命中锚点与口语填充词剔除后仍有实质内容，
-    ///      且只剩一个槽位未填 → 该残余即它的**值**（"检索 会计基础"）
-    /// 缺了 ② 就会出现"用户明明给了值，系统还在追问"的死循环。
+    /// 从用户话里抽已提供的槽位，两级启发式（纯函数、好测；真上生产建议换 NER/模板抽槽）：
+    /// 槽位名直接出现就算填了（"书名是会计基础"）；
+    /// 再不然走残余法，把命中锚点和口语填充词剔掉还剩实质内容、且只剩一个槽位没填，剩下的就是它的值（"检索 会计基础"）。
+    /// 少了残余法会出现"用户明明给了值，系统还在追问"的死循环。
     /// </summary>
     public static IReadOnlyList<string> ExtractProvidedSlots(AgentIntent intent, string normalizedUtterance)
     {

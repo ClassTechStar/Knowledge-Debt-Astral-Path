@@ -1,26 +1,26 @@
 /**
- * store.js —— state 分片持久化（方案 P6）
- * ===========================================================
- * 背景：原实现把整包轻状态塞进**单个** localStorage 键（`astralpath_monolith_v2`），
- * 每次作答都要 JSON.stringify 全量 → O(全量) 写；配额一爆就整包失败。
- * P1-M5 已把教材正文下沉 IndexedDB，本模块继续把剩下的轻状态**分片**：
+  * store.js —— 轻状态分片存 localStorage
+  * ===========================================================
+  * 以前整包轻状态塞在**一个** localStorage 键里（`astralpath_monolith_v2`），
+  * 每次作答都要 JSON.stringify 全量再写回去，配额一爆就整包写失败。
+  * 教材正文已经搬去 IndexedDB 了，这里把剩下的轻状态拆成分片：
  *
- *   ap:meta      user / consent / optOut / activeBookId / day / userName / userTag
- *                / kgMode / onboard / planMeta / chat（+ 任何未知键兜底）
- *   ap:books     books[]（章节骨架；大文本已在 IndexedDB，这里只留索引）
- *   ap:answers   mastery / logs / debtExplain（作答与诊断，写最频繁）
- *   ap:plan      plan / sale
- *   ap:papers    papers[]（试卷作业识别结果）
+  * ap:meta      user / consent / optOut / activeBookId / day / userName / userTag
+  *                / kgMode / onboard / planMeta / chat（+ 任何未知键兜底）
+  * ap:books     books[]（章节骨架；大文本已在 IndexedDB，这里只留索引）
+  * ap:answers   mastery / logs / debtExplain（作答与诊断，写最频繁）
+  * ap:plan      plan / sale
+  * ap:papers    papers[]（试卷作业识别结果）
  *
- * 收益：一次作答只重写 `ap:answers`（通常几 KB），而不是几百 KB 的整包。
- * 迁移：首次加载若只发现旧单键 → 先备份到 `ap:backup:<ts>`，再写分片；
- *       分片写成功后才由调用方删除旧键（回退路径始终存在）。
+  * 好处：一次作答只重写 `ap:answers`（通常几 KB），不是几百 KB 的整包。
+  * 迁移：第一次加载如果只看到旧单键，先备份到 `ap:backup:<ts>`，再写分片；
+  * 分片写成功后才让调用方删旧键（回退路径一直留着）。
  *
- * 兼容：`ap:meta` 收留所有未登记的新键，因此调用方新增字段**不会丢**。
- * 约束：不做写入节流——作答即落盘是既有的持久性语义，节流会在关标签页时丢数据。
+  * 兼容：`ap:meta` 收留所有没登记的新键，所以调用方加字段**不会丢**。
+  * 不做写入节流——作答即落盘是原来的持久性语义，节流会在关标签页时丢数据。
  *
- * UMD：浏览器 `window.APStore`，Node `require("./shared/store.js")`（供 verify_store.py 跑黄金用例）。
- */
+  * UMD：浏览器 `window.APStore`，Node `require("./shared/store.js")`（verify_store.py 跑用例）。
+  */
 (function (root, factory) {
   "use strict";
   var api = factory();
@@ -74,8 +74,8 @@
   }
 
   /** 读全部分片；hasShards 表示「至少有一个分片存在」。
-   *  注意：JSON.parse("null") 不抛错但结果是 null，parse 成功≠数据可用，
-   *  因此解析后还必须校验「非空对象」才算有效，否则记入 missing。 */
+    * 注意：JSON.parse("null") 不抛错但结果是 null，parse 成功≠数据可用，
+   * 因此解析后还必须校验「非空对象」才算有效，否则记入 missing。 */
   function read(ls) {
     var parts = {}, missing = [], has = false;
     PARTS.forEach(function (p) {
@@ -93,12 +93,12 @@
   }
 
   /**
-   * 写分片：只写**内容变化**的分片。
-   * @param {object} ls      localStorage 兼容对象（getItem/setItem/removeItem）
-   * @param {object} state   要落盘的状态（通常是 liteCopy 后的轻状态）
-   * @param {object} [cache] 上次写入的 part→json 缓存，用于跳过未变更分片
-   * @returns {{written:string[], failed:string[], cache:object, bytes:number, changed:boolean}}
-   */
+    * 写分片：只写**内容变化**的分片。
+    * @param {object} ls      localStorage 兼容对象（getItem/setItem/removeItem）
+    * @param {object} state   要落盘的状态（通常是 liteCopy 后的轻状态）
+    * @param {object} [cache] 上次写入的 part→json 缓存，用于跳过未变更分片
+    * @returns {{written:string[], failed:string[], cache:object, bytes:number, changed:boolean}}
+    */
   function write(ls, state, cache) {
     var parts = pick(state);
     var written = [], failed = [], nc = {}, bytes = 0;
@@ -130,7 +130,7 @@
   }
 
   /** 迁移备份：把旧单键原始串存到 ap:backup:<ts>，并只保留最新一份。
-   *  键带毫秒时间戳，同毫秒内连续备份会撞键 → 先探测占用，冲突则追加序号。 */
+   * 键带毫秒时间戳，同毫秒内连续备份会撞键 → 先探测占用，冲突则追加序号。 */
   function backup(ls, raw) {
     var key = null;
     for (var attempt = 0; attempt < 64; attempt++) {

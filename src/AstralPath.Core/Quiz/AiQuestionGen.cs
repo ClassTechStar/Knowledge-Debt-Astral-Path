@@ -23,7 +23,7 @@ public static class AiQuestionGen
     public static string PickQuizLevel(int aiQuestionCount)
         => Levels[((aiQuestionCount % Levels.Length) + Levels.Length) % Levels.Length];
 
-    // ── 题干归一化（源 normalize + isDup，L6637/L4474）────────────────────
+    // 题干归一化（源 normalize + isDup，L6637/L4474）
     public static string NormalizeStem(string? s)
     {
         if (string.IsNullOrEmpty(s)) return "";
@@ -53,7 +53,7 @@ public static class AiQuestionGen
         return pool.Any(q => DedupKey(q.Stem) == key);
     }
 
-    // ── 模型输出解析（源 parseQuiz，L4461-4472）──────────────────────────
+    // 模型输出解析（源 parseQuiz，L4461-4472）
     /// <summary>
     /// 解析模型 JSON 输出为题目；结构不合法（缺 options/stem、选项数≠4）返回 null。
     /// 答案索引支持数字与字母 A-D 双形态，越界钳制到 0（源 L4464-4465）。
@@ -105,7 +105,7 @@ public static class AiQuestionGen
             Explain: explain);
     }
 
-    // ── 题池管理（源 L4483：push 后超 300 从头截断）────────────────────────
+    // 题池管理（源 L4483：push 后超 300 从头截断）
     public const int PoolCap = 300;
 
     /// <summary>入池（去重命中则不入）；超上限从头截断，返回是否入池。</summary>
@@ -117,7 +117,7 @@ public static class AiQuestionGen
         return true;
     }
 
-    // ── 命题上下文（源 buildQuizContext，L4424-4442）──────────────────────
+    // 命题上下文（源 buildQuizContext，L4424-4442）
     public const int ContextBudget = 3600;
 
     public static string BuildQuizContext(QuizBook book, QuizNode? node)

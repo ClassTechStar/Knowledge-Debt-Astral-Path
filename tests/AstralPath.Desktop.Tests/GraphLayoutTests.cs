@@ -6,7 +6,7 @@ using Xunit;
 namespace AstralPath.Desktop.Tests;
 
 /// <summary>
-/// 图谱布局（方案 §12.2 / §14.7）：确定性、分层正确性、400 节点帧预算。
+/// 图谱布局的用例：同样的输入结果要一样、分层方向跟依赖一致、400 节点跑得够快。
 /// </summary>
 public sealed class GraphLayoutTests
 {
@@ -101,7 +101,7 @@ public sealed class GraphLayoutTests
         Assert.Empty(GraphLayout.Build(SyntheticGraph(5, 5), 0, 0).Nodes);
     }
 
-    // ── 合成图（确定性 DAG） ────────────────────────────────────
+    // 合成图（确定性 DAG）
 
     private static GraphViewNodeDto Node(string id)
         => new(id, $"知识点 {id}", "ACC-101", 60, "yellow");

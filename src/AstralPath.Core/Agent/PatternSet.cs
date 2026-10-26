@@ -4,8 +4,8 @@ using System.Text.RegularExpressions;
 namespace AstralPath.Core.Agent;
 
 /// <summary>
-/// 模式集匹配（§47 OC-1）：归一化 + Contains 级联 / 正则回退。
-/// 语义等价：命中任一模式即 true；用于危机词、禁词、锚点。
+/// 一组模式的匹配器，归一化后做 Contains，带括号或竖线的模式当正则用。
+/// 命中任意一个就算命中，危机词、禁词、锚点都走它。
 /// </summary>
 public sealed class PatternSet
 {
@@ -34,7 +34,7 @@ public sealed class PatternSet
         }
     }
 
-    /// <summary>文本归一化：全半角、空白、常见繁简差异折叠（§47 R0/R3）。</summary>
+    /// <summary>文本归一化：全角转半角、空白并成空格、统一小写，匹配前都先过这。</summary>
     public static string Normalize(string? text)
     {
         if (string.IsNullOrEmpty(text)) return "";
@@ -90,7 +90,7 @@ public sealed class PatternSet
         return (false, null, -1);
     }
 
-    /// <summary>返回命中的最长模式长度（用于判断"整句是否就是这句客套话"）。</summary>
+    /// <summary>返回命中的最长模式有多长，用来判断整句是不是就是这句客套话。</summary>
     public int LongestMatchLength(string? raw)
     {
         var norm = Normalize(raw);

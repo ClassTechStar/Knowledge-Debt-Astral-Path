@@ -5,7 +5,7 @@ from pathlib import Path
 p = Path(__file__).resolve().parent.parent / "deploy" / "monolith-web" / "index.html"
 t = p.read_text(encoding="utf-8")
 
-# ── 补丁 1：extractChapters 目录页优先 ──
+# 补丁 1：extractChapters 目录页优先
 old1 = '''function extractChapters(text,maxCh){
   maxCh=maxCh||40;
   const lines=String(text).split("\\n");const marks=[];'''
@@ -43,7 +43,7 @@ new1 = '''function extractChapters(text,maxCh){
 assert t.count(old1) == 1, "p1 anchor %d" % t.count(old1)
 t = t.replace(old1, new1)
 
-# ── 补丁 2：generateQuestions v2（真实题目）──
+# 补丁 2：generateQuestions v2（真实题目）
 gq_start = t.index("function generateQuestions(book){")
 gq_end = t.index("function contentFingerprint(")
 new_gq = '''function chTermsOf(c){
@@ -107,7 +107,7 @@ function generateQuestions(book){
 '''
 t = t[:gq_start] + new_gq + t[gq_end:]
 
-# ── 补丁 3：智能体深层联动 ──
+# 补丁 3：智能体深层联动
 old3a = '''    case "graph.view":return graphSummary();
     case "material.parse":return "到「藏书阁」上传 PDF/TXT/MD；乱码或扫描版 PDF 会自动转 OCR 识别，也可粘贴正文后点「从粘贴文本解析」。解析完成会自动写入识网图谱。";
     case "kb.search":{

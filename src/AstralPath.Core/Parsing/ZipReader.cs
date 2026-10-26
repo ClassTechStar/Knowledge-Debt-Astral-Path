@@ -5,8 +5,8 @@ using AstralPath.Core.Diagnostics;
 namespace AstralPath.Core.Parsing;
 
 /// <summary>
-/// ZIP 容器读取（P1 迁移，源：Astralpath readZipEntries，L3210-3249）。
-/// OOXML/EPUB 通用，零依赖；条目数/单条/总量上限保护；存储式直读 + 标准解压回退。
+/// ZIP 容器读取，OOXML/EPUB 通用，零依赖；条目数/单条/总量都有上限保护；
+/// 能存储式直读就直读，不行退回标准解压。
 /// </summary>
 public static class ZipReader
 {
@@ -70,7 +70,7 @@ public static class ZipReader
         return s.Replace("&lt;", "<").Replace("&gt;", ">").Replace("&quot;", "\"").Replace("&apos;", "'").Replace("&amp;", "&");
     }
 
-    /// <summary>OOXML → 文本：段落/换行转 \n，其余标签剥离，实体解码在去标签之后（源 t10XmlText，L3262-3271）。</summary>
+    /// <summary>OOXML → 文本：段落/换行转 \n，其余标签剥离，实体解码在去标签之后。</summary>
     public static string XmlText(string xml)
     {
         var s = xml ?? "";
@@ -85,7 +85,7 @@ public static class ZipReader
         return System.Text.RegularExpressions.Regex.Replace(s, "\n{3,}", "\n\n").Trim();
     }
 
-    /// <summary>HTML → 文本（源 t10HtmlText，L3272-3281）。</summary>
+    /// <summary>HTML → 文本。</summary>
     public static string HtmlText(string html)
     {
         var s = html ?? "";

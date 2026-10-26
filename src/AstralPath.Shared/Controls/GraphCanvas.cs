@@ -208,7 +208,7 @@ public sealed class GraphCanvas : Control
         context.DrawGeometry(brush, null, geometry);
     }
 
-    // ── 命中测试与键盘导航 ─────────────────────────────────────
+    // 命中测试与键盘导航
 
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
@@ -315,7 +315,7 @@ public sealed class GraphCanvas : Control
             : $"知识债图谱，当前选中 {node.Name}，掌握度 {node.Score:0.##}，{Shared.DemoMeta.BandLabel(node.Band)}。");
     }
 
-    // ── 配色（严格取自方案；色盲安全模式下改用三色） ─────────────
+    // 配色（严格取自方案；色盲安全模式下改用三色）
 
     private Color BandColor(string band) => ColorBlindSafe
         ? band switch

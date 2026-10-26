@@ -6,9 +6,9 @@ using Xunit;
 namespace AstralPath.Core.Tests;
 
 /// <summary>
-/// P1 迁移验证：AI 计划官 golden 契约（eval/golden/plan_ai.json）。
-/// 覆盖草案解析（类型/难度/时长钳制）、编排四态（合法草案/幻觉剔除/全幻觉回退/传输失败回退）、
-/// K3 说明回填、K1 自动压缩。
+/// AI 计划官的用例（eval/golden/plan_ai.json）。
+/// 覆盖草案解析（类型/难度/时长钳制）、编排四种情况（合法草案、幻觉剔除、全是幻觉时回退、传输失败回退）、
+/// 说明里回填先修名、超长说明自动压缩。
 /// </summary>
 public class GoldenPlanAiTests
 {
@@ -107,7 +107,7 @@ public class GoldenPlanAiTests
                 Assert.Equal(dc.GetInt32(), result.Days.Count);
             if (expect.TryGetProperty("k3Backfill", out var k3) && k3.GetBoolean())
             {
-                // K3 回填：所有含 from_kp 的条目 why 须含先修名
+                // 回填说明：带 from_kp 的条目，why 里都要写清先修名
                 foreach (var day in result.Days)
                     foreach (var item in day.Items)
                         if (item.FromKpName != null)

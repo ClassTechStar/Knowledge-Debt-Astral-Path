@@ -44,8 +44,8 @@ public static class MasteryCalculator
         var st = Math.Max(streak, 0);
         var n = Math.Max(attempts, 1);
         return FormulaConstants.Stability0
-               * (1.0 + FormulaConstants.StabilityAlpha * st)
-               * (1.0 + FormulaConstants.StabilityBeta * Math.Log(1.0 + n));
+                * (1.0 + FormulaConstants.StabilityAlpha * st)
+                * (1.0 + FormulaConstants.StabilityBeta * Math.Log(1.0 + n));
     }
 
     /// <summary>Ebbinghaus 保持率 = exp(-age / S)，S 越大遗忘越慢。</summary>
@@ -90,7 +90,7 @@ public static class MasteryCalculator
         return Clamp01(Math.Min(raw, PrereqCeiling(input.PrereqScores)));
     }
 
-    // ── v1 兼容入口（迁移期调用）────────────────────────
+    // v1 兼容入口，迁移期还有人调
     /// <summary>v1 签名：raw/100 作经验代理，streak 作稳定性代理。</summary>
     public static double ComputeScore(double raw, double ageDays, int streak, IReadOnlyList<double> prereqScores)
     {

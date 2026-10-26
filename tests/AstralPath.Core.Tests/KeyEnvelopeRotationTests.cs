@@ -4,9 +4,8 @@ using Xunit;
 namespace AstralPath.Core.Tests;
 
 /// <summary>
-/// P5 密钥信封三态验证：Seal / Open / Rotate / Invalidate（吊销与失效原因可感知）。
-/// 不变量：信封失效时**必须**回退内置演示密钥且 <see cref="MimoConfigResolution.Issue"/> 如实报告，
-/// 不再静默回退——这是 P5「失效可感知」的核心断言。
+/// 密钥信封的加解密、轮换与失效处理（Seal / Open / Rotate / Invalidate）。
+/// 关键是信封失效后要回退内置演示密钥，并且 <see cref="MimoConfigResolution.Issue"/> 说清失效原因，不能悄悄降级。
 /// </summary>
 public class KeyEnvelopeRotationTests
 {
@@ -42,7 +41,7 @@ public class KeyEnvelopeRotationTests
         Assert.NotNull(rotated);
         Assert.Equal("sk-rotate-me", KeyEnvelopeCrypto.Open(rotated!, newDek));
         Assert.Null(KeyEnvelopeCrypto.Open(rotated!, oldDek));
-        Assert.NotEqual(env.KeyId, rotated!.KeyId); // 轮换后指纹必须变（旧信封可被精确吊销）
+        Assert.NotEqual(env.KeyId, rotated!.KeyId); // 轮换后指纹要变（旧信封才能被精确吊销）
     }
 
     [Fact]
@@ -67,7 +66,7 @@ public class KeyEnvelopeRotationTests
         Assert.Equal(EnvelopeIssue.Revoked, r.Issue);
         Assert.False(string.IsNullOrWhiteSpace(r.UserMessage));
         Assert.True(store.Invalidated);
-        Assert.NotEqual("sk-leaked", r.Config?.Key); // 不得回吐被吊销的密钥
+        Assert.NotEqual("sk-leaked", r.Config?.Key); // 不能把被吊销的密钥返回出去
     }
 
     [Fact]
@@ -101,7 +100,7 @@ public class KeyEnvelopeRotationTests
     [Fact]
     public void Resolver_LegacyEnvelopeWithoutKeyId_StillResolves()
     {
-        // 旧信封（v1，无 keyId）：吊销清单管不到，但解密必须照旧成功——零迁移
+        // 旧信封（v1，没有 keyId）：吊销清单管不到它，但解密要照旧成功，不用迁移
         var dek = NewDek();
         var env = KeyEnvelopeCrypto.Seal("sk-legacy", dek, "https://legacy/v1", "legacy-model");
         var legacy = new KeyEnvelope(env.CiphertextB64, env.IvB64, env.Base, env.Model, env.UpdatedAt);

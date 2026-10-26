@@ -1,13 +1,12 @@
 /**
  * gen-shared-core.js —— 由 tools/agent-intents.json 生成 shared/core.js 的常量块
- * ===========================================================
- * 方案 P3：意图表成为**真正单一事实源**。此前 p2-ai-integration.js 独立维护一份
- * INTENTS，22→26 扩容时漏同步（kb.search 少 13 个锚点等 17 处）。本生成器把共享
- * 内核里的常量改为构建期产物，并打上 DO NOT EDIT 标记，从根上消灭平行副本。
+ * 意图表只维护一份。以前 p2-ai-integration.js 自己另存了一份 INTENTS，22→26
+ * 扩容时漏了同步（kb.search 少 13 个锚点等 17 处）。这里把共享内核的常量改成
+ * 构建期产物，打上 DO NOT EDIT 标记，平行副本就没地方藏了。
  *
  * 用法：node scripts/gen-shared-core.js [--check]
  *       --check  只校验生成块是否与 JSON 一致，不写文件（CI 用）
- * 退出码：0 = 一致/已生成；1 = 漂移（--check 且不一致时）
+ * 退出码：0 = 一致/已生成；1 = 不一致（--check 时）
  */
 "use strict";
 const fs = require("fs");

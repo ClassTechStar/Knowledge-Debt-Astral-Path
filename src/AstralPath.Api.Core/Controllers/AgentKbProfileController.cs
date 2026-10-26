@@ -44,7 +44,7 @@ public sealed class AgentKbProfileController : ControllerBase
         return AppContext.BaseDirectory;
     }
 
-    // ═══════════════════════════ §44 智能体 ═══════════════════════════════
+    // §44 智能体
 
     [HttpPost("/v1/agent/turns")]
     public IResult Turn([FromBody] AgentTurnRequest? body)
@@ -116,7 +116,7 @@ public sealed class AgentKbProfileController : ControllerBase
         return HttpResults.Fail(404, ErrorCodes.ResourceNotFound, $"金样不存在：{goldenId}");
     }
 
-    // ═══════════════════════════ §45 知识库 ═══════════════════════════════
+    // §45 知识库
 
     [HttpPost("/v1/kb/documents")]
     public IResult CreateDocument([FromBody] KbCreateDocument? body)
@@ -249,7 +249,7 @@ public sealed class AgentKbProfileController : ControllerBase
         return HttpResults.Success(_modules.SearchKb(_store, u, r, body.Query ?? ""));
     }
 
-    // ── 分片直传 / 证据片段 / 内部导入（原 501 延后项，已补齐）─────────────
+    // 分片直传 / 证据片段 / 内部导入（原 501 延后项，已补齐）
 
     /// <summary>申请知识库分片直传票据。body：{"title":"…","ownerUserId":"…","visibility":"private","courseCode":"LINALG","partCount":3}</summary>
     [HttpPost("/v1/kb/uploads")]
@@ -315,7 +315,7 @@ public sealed class AgentKbProfileController : ControllerBase
         return _store.Lock(() => HttpResults.Created(_modules.InternalImport(body.OwnerUserId ?? "demo-student-a", items)));
     }
 
-    // ═══════════════════════════ §46 用户画像 ═════════════════════════════
+    // §46 用户画像
 
     [HttpGet("/v1/profile/{studentId}")]
     public IResult Profile(string studentId, [FromQuery] bool teacherSide = false)
@@ -397,7 +397,7 @@ public sealed class AgentKbProfileController : ControllerBase
                 : HttpResults.Fail(404, ErrorCodes.ResourceNotFound, "学生不存在"));
     }
 
-    // ═══════════════════════════ 模块自检与图索引 ═════════════════════════
+    // 模块自检与图索引
 
     [HttpGet("/v1/modules/status")]
     public IResult ModuleStatus() => _store.Lock(() => HttpResults.Success(_modules.ModuleStatus(_store)));

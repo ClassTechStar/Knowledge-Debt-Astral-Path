@@ -12,7 +12,7 @@ public class ApiEndToEndTests : IClassFixture<WebApplicationFactory<Program>>
 
     public ApiEndToEndTests(WebApplicationFactory<Program> factory)
     {
-        _factory = factory.WithWebHostBuilder(b => b.UseSetting("Security:RequireAuth", "false")); // 测试明确退出鉴权（生产默认开启）
+        _factory = factory.WithWebHostBuilder(b => b.UseSetting("Security:RequireAuth", "false")); // 测试里关掉鉴权，生产默认是开着的
     }
 
     private HttpClient CreateClient()
@@ -152,7 +152,7 @@ public class ApiEndToEndTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.True(beforeData.GetProperty("authorizedCount").GetInt32() >= 1);
         Assert.True(beforeData.GetProperty("hotspots").GetArrayLength() >= 1);
 
-        // grant B then revoke A
+        // 先给 B 授权，再撤销 A
         var grant = await client.PostAsJsonAsync("/v1/consents/demo-student-b/grant", new
         {
             teacherId = "demo-teacher",
@@ -171,7 +171,7 @@ public class ApiEndToEndTests : IClassFixture<WebApplicationFactory<Program>>
 
         var after = await client.GetAsync("/v1/teachers/demo-teacher/hotspots?only_consent=true");
         var afterData = await Data(after);
-        // B still authorized; A purged. Hotspots should only reflect authorized students.
+        // B 还有授权，A 的已被清掉；热点只应统计有授权的学生
         var authorized = afterData.GetProperty("authorizedCount").GetInt32();
         Assert.True(authorized >= 1);
         Assert.Equal("granted", (await client.GetFromJsonAsync<JsonDocument>("/v1/consents/demo-student-b"))!
@@ -195,7 +195,7 @@ public class ApiEndToEndTests : IClassFixture<WebApplicationFactory<Program>>
         var questionId = task.GetProperty("questionId").GetString();
         var kpId = task.GetProperty("kpId").GetString();
 
-        // submit two good attempts
+        // 先答对两次
         for (var i = 0; i < 2; i++)
         {
             var resp = await client.PostAsJsonAsync("/v1/attempts", new
@@ -211,7 +211,7 @@ public class ApiEndToEndTests : IClassFixture<WebApplicationFactory<Program>>
             Assert.True(resp.IsSuccessStatusCode);
         }
 
-        // diagnose to get a debt key
+        // 诊断一次，拿一条债边来做销账检查
         var diag = await Data(await client.PostAsync("/v1/students/demo-student-a/diagnose?graph_ver=1&top_n=5", null));
         var debt = diag.GetProperty("topDebts")[0];
         var saleResp = await client.PostAsJsonAsync("/v1/debt-edges/sale-check", new
@@ -244,7 +244,7 @@ public class ApiEndToEndTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.True(resp.IsSuccessStatusCode);
         var data = await Data(resp);
         Assert.True(data.GetProperty("detected").GetBoolean());
-        // weight may not be 1.6; just ensure positive impact and formula consistency when weight=1
+        // 权重不一定还是 1.6，这里只看 impact 为正、recency 符合公式
         Assert.True(data.GetProperty("impact").GetDouble() > 0);
         Assert.Equal(1.0, data.GetProperty("recency").GetDouble(), 6);
     }
@@ -277,7 +277,7 @@ public class ApiEndToEndTests : IClassFixture<WebApplicationFactory<Program>>
         var client = CreateClient();
         var resp = await client.PostAsJsonAsync("/v1/demo/advance", new { studentId = "demo-student-a" });
         Assert.True(resp.IsSuccessStatusCode);
-        // run until day >= 7
+        // 一直推进到第 7 天
         for (var i = 0; i < 8; i++)
         {
             resp = await client.PostAsJsonAsync("/v1/demo/advance", new { studentId = "demo-student-a" });

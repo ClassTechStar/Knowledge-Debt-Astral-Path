@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-"""前端构建合并：shared/*.js → index.html 生成区（方案 P2 阶段二 / W3）
-====================================================================
+"""前端构建合并：shared/*.js → index.html 生成区。
 此前的重复：esc / normalize / parseJsonLoose / removeCyclesTopo 在
-`shared/`（唯一事实源）与 `deploy/monolith-web/index.html`（页面）各有一份，
-p0/p1/p2 集成脚本里还有第三份。阶段一已把集成脚本收编到 shared/integrations/，
-本脚本把最后一份——页面内联副本——也改为**生成区**：
+`shared/`（源头，只维护这一份）与 `deploy/monolith-web/index.html`（页面）各有一份，
+p0/p1/p2 集成脚本里还有第三份。集成脚本已经收编到 shared/integrations/，
+本脚本把最后一份——页面内联副本——也改成生成区：
 
     /* AP:BEGIN core.js#normalize · generated · DO NOT EDIT */
     function normalize(s) { … }

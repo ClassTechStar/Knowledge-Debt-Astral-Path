@@ -55,7 +55,7 @@ def slug(name: str) -> str:
     return re.sub(r"[\\/:*?\"<>|\s（）()【】\[\]·：:,，]+", "_", stem).strip("_")[:60]
 
 
-# ── OCR worker（与 bench_ocr_engines.py 同一套初始化） ──
+# OCR worker（与 bench_ocr_engines.py 同一套初始化）
 _ENGINE = None
 _ENGINE_NAME = None
 
@@ -155,7 +155,7 @@ def _ocr_job(args):
     }
 
 
-# ── 渲染（父进程内小线程池） ──
+# 渲染（父进程内小线程池）
 def _render_book_pages(pdf_name, engine, with_text):
     """生成器：逐页产出 (book, page, png_bytes, text_layer, text_layer_chars)。"""
     import pymupdf
@@ -222,7 +222,7 @@ def run(gt_only: bool, engine: str | None, workers: int, books_filter: str | Non
             print(f"[gt] {name[:26]} pages+{n_pages} chars+{n_chars} {time.time()-t0:.1f}s", flush=True)
         return 0
 
-    # ── OCR 全量模式 ──
+    # OCR 全量模式
     assert engine
     out_dir = OUT / "full" / engine
     out_dir.mkdir(parents=True, exist_ok=True)

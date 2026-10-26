@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """常量对齐校验：JS 的 K 对象 ↔ C# 的 FormulaConstants.cs
 
-用途：P4 在 index.html 里内联了一份 JS 版公式常量，必须与 P2 的 C# 常量逐项一致。
-本脚本把「人工签字」变成「CI 可执行的门禁」。
+index.html 里内联了一份 JS 版公式常量，必须和 C# 常量逐项一致。
+以前靠人工核对签字，现在用这个脚本在 CI 里自动查。
 
 用法：
     python scripts/verify_constants.py
@@ -25,7 +25,7 @@ HTML = ROOT / "deploy" / "monolith-web" / "index.html"
 
 TOL = 1e-9
 
-# ── 21 项「数值直映射」：JS 路径 → C# 常量名 ─────────────────────────
+# 21 项「数值直映射」：JS 路径 → C# 常量名
 DIRECT_MAP = [
     ("W.e",        "WEmpirical",            0.50),
     ("W.r",        "WRetention",            0.30),
@@ -50,7 +50,7 @@ DIRECT_MAP = [
     ("saleMinAtt", "SaleMinAttempts",       3.0),
 ]
 
-# ── 3 项「语义映射」：JS 里写成字面量，需在 C# 侧核对 ────────────────
+# 3 项「语义映射」：JS 里写成字面量，要在 C# 侧核对
 SEMANTIC_MAP = [
     ("ConfScale",     5.0, "JS 中 clamp01(conf/5) 与 0.3*(conf/5) 的分母"),
     ("PriorSuccess",  0.5, "JS 中 (s+0.5)/(n+1) 的 Jeffreys 先验"),
@@ -97,7 +97,7 @@ def parse_js_k(path: Path) -> dict:
         j += 1
     body = text[start + 1 : j]
 
-    # JS 对象字面量 → 合法 JSON：①裸键加引号 ②.5 → 0.5
+    # JS 对象字面量 → 合法 JSON：1) 裸键加引号 2) .5 → 0.5
     s = re.sub(r"(^|[{,])(\s*)([A-Za-z_]\w*)(\s*):", r'\1\2"\3"\4:', body)
     s = re.sub(r"([:,])(\s*)(\.\d)", r"\g<1>\g<2>0\g<3>", s)
     try:
@@ -153,7 +153,7 @@ def main() -> int:
                      "JS": "见字面量" if present else "缺失", "C#": cv,
                      "期望": expect, "结果": "OK" if ok else "MISMATCH"})
 
-    # 间隔偏移 {0,2,6}（附加项，不计入 24）：K.SpacingOffsets 常量（P6-7 后唯一形态）
+    # 间隔偏移 {0,2,6}（附加项，不计入 24）：K.SpacingOffsets 常量，现在只剩这一种写法
     offsets = cs.get("SpacingOffsets")
     js_offsets_ok = bool(re.search(r"SpacingOffsets\s*[:=]\s*\[\s*0\s*,\s*2\s*,\s*6\s*\]", html_text))
     offsets_ok = offsets == [0.0, 2.0, 6.0] and js_offsets_ok

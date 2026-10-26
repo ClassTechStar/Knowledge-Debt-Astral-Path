@@ -46,7 +46,7 @@ STOP_TERMS = {
 }
 
 
-# P2-12：章节形态扩展——第N章/篇/部分/阶段/讲、行首"步骤N"、Part/Unit/Lesson/Stage N
+# 章节形态扩展——第N章/篇/部分/阶段/讲、行首"步骤N"、Part/Unit/Lesson/Stage N
 CHAPTER_FIND_RE = re.compile(
     r"第\s*[0-9一二三四五六七八九十百零]+\s*(?:章|篇|部分|阶段|讲)[^\n]{0,40}"
     r"|^\s*(?:步骤|Step)\s*#?\d+[^\n]{0,40}"
@@ -167,12 +167,12 @@ def extract_outline(text: str, max_chapters: int = 80, max_sections: int = 200) 
     seen_c: set[str] = set()
     seen_s: set[str] = set()
 
-    # P2-12：章节形态扩展（复用模块级 CHAPTER_FIND_RE）
+    # 章节形态扩展（复用模块级 CHAPTER_FIND_RE）
     for m in CHAPTER_FIND_RE.finditer(text):
         raw = clean_chapter_title(strip_noise_title(m.group(0)))
         if is_noise_title(raw):
             continue
-        # P2-12：编号独立成行时（如"步骤6"后换行才是标题），把下一行并入标题
+        # 编号独立成行时（如"步骤6"后换行才是标题），把下一行并入标题
         if re.fullmatch(r"(?:步骤|Step)\s*#?\d+|第\s*[0-9一二三四五六七八九十百零]+\s*(?:篇|阶段|讲|部分)", (raw or "").strip()):
             nxt = [ln for ln in text[m.end():m.end() + 100].splitlines() if ln.strip()]
             if nxt:
@@ -269,13 +269,13 @@ def extract_terms_weighted(text: str, chapter_offsets: list[tuple[int, str]], li
             counts[term] += 1
             if term not in first_pos:
                 first_pos[term] = m.start()
-            # P2-13：按章统计术语分布（不只首次出现）
+            # 按章统计术语分布（不只首次出现）
             if bound_offs:
                 k = bisect.bisect_right(bound_offs, m.start()) - 1
                 if k >= 0:
                     ch_counts[term][bound_names[k]] += 1
 
-    # P6-5 词典双通道：jieba 高频中文词通道**始终运行**——词典是 CS 领域词表，
+    # 词典双通道：jieba 高频中文词通道始终运行——词典是 CS 领域词表，
     # 对数学/文史/传记类书覆盖≈0，而「词典命中数」类门控会被通用词命中骗过
     # （传记书里 变量/类型/对象 也能凑够 14 个）。补位词不带词典加成（dom_w=1），
     # 天然排在词典词之后；与既有术语去重（tok in counts 跳过）；jieba 缺失则跳过。
@@ -326,7 +326,7 @@ def extract_terms_weighted(text: str, chapter_offsets: list[tuple[int, str]], li
         return freq * pos_w * dom_w * len_w
 
     ranked = sorted(counts.keys(), key=lambda t: (-score(t), t))
-    # P6-5 中文配额：jieba 补位词分数天然低于词典/专名词，纯按分数会全部落榜、
+    # 中文配额：jieba 补位词分数天然低于词典/专名词，纯按分数会全部落榜、
     # 非中文书图谱依旧「全英文」。强制保留 ≥ max(8, limit//3) 个中文术语，
     # 用低分非中文术语换入分数最高的中文补位词。
     cn_quota = max(8, limit // 3)
@@ -499,7 +499,7 @@ def build_knowledge_graph(
     """完整构图算法。目录尽量全量入图（章+节+小节）。"""
     chapters, sections = extract_outline(text, max_chapters=max_chapters, max_sections=max_sections)
 
-    # 若章过少，从文件名/正则兜底（P2-12：同样覆盖 步骤N/阶段N/Part N 等形态）
+    # 若章过少，从文件名/正则兜底（同样覆盖 步骤N/阶段N/Part N 等形态）
     if len(chapters) < 2:
         for m in CHAPTER_FIND_RE.finditer(text):
             t = clean_chapter_title(strip_noise_title(m.group(0)))
@@ -632,7 +632,7 @@ def build_knowledge_graph(
                 "from": ch_ids[0], "to": nid, "edgeType": "prerequisite", "weight": 0.7,
                 "source": "kg:term-fallback",
             })
-        # P2-13：术语在多章高频出现时补 related 边（章 → 术语，方向保持无环）
+        # 术语在多章高频出现时补 related 边（章 → 术语，方向保持无环）
         for ch_name, _c in (term.get("chapter_top") or [])[1:3]:
             hid2 = ch_id.get(ch_name)
             if hid2 and hid2 != host_id:
@@ -696,9 +696,7 @@ def build_knowledge_graph(
     }
 
 
-# ---------------------------------------------------------------------------
 # 对齐 KnowledgeGraph（RDF/三元组 + 属性图）与 mind-map（逻辑结构树）
-# ---------------------------------------------------------------------------
 
 PREDICATE_MAP = {
     "kg:chapter-sequence": "后继章节",

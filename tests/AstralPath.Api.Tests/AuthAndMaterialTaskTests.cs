@@ -12,7 +12,7 @@ public class AuthAndMaterialTaskTests : IClassFixture<WebApplicationFactory<Prog
 
     public AuthAndMaterialTaskTests(WebApplicationFactory<Program> factory)
     {
-        _client = factory.WithWebHostBuilder(b => b.UseSetting("Security:RequireAuth", "false")).CreateClient(); // 测试明确退出鉴权（生产默认开启）
+        _client = factory.WithWebHostBuilder(b => b.UseSetting("Security:RequireAuth", "false")).CreateClient(); // 测试里关掉鉴权，生产默认是开着的
     }
 
     private static async Task<JsonElement> Data(HttpResponseMessage resp)
@@ -68,7 +68,7 @@ public class AuthAndMaterialTaskTests : IClassFixture<WebApplicationFactory<Prog
         var profile = await Data(me);
         Assert.Equal("接口测试", profile.GetProperty("displayName").GetString());
 
-        // material today requires auth
+        // 今日资料任务要带令牌
         using var todayReq = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/material-today?maxTasks=6");
         todayReq.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
         var today = await _client.SendAsync(todayReq);
@@ -85,13 +85,13 @@ public class AuthAndMaterialTaskTests : IClassFixture<WebApplicationFactory<Prog
         var seedData = await Data(seed);
         Assert.True(seedData.GetProperty("seeded").GetInt32() >= 0);
 
-        // parse at least one known sample synchronously if present
+        // 有样例资料的话，同步解析其中一本
         var materials = await Data(await _client.GetAsync("/v1/materials"));
         if (materials.ValueKind == JsonValueKind.Array && materials.GetArrayLength() > 0)
         {
             var id = materials[0].GetProperty("id").GetString();
             var name = materials[0].GetProperty("name").GetString();
-            // skip heavy C#/Go; prefer Kotlin if exists
+            // 避开 C#/Go 这些大书，优先选 Kotlin
             for (var i = 0; i < materials.GetArrayLength(); i++)
             {
                 var n = materials[i].GetProperty("name").GetString() ?? "";
@@ -125,7 +125,7 @@ public class AuthAndMaterialTaskTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task TodayEndpoint_IncludesMaterialTasksWhenAvailable()
     {
-        // ensure some material tasks exist
+        // 先跑一遍资料解析，保证有任务可出
         var todayBooks = await _client.PostAsync("/v1/materials/parse-all?ocr=quick", null);
         Assert.True(todayBooks.IsSuccessStatusCode);
         await Task.Delay(500);

@@ -1,23 +1,23 @@
 /**
- * core.js —— 前端共享内核（方案 P2）
- * ===========================================================
- * 收编此前四处平行维护的共享逻辑：
- *   normalize            ← index.html L6644
- *   parseJsonLoose       ← index.html L6385（p0 内叫 jsonLoose，同实现）
- *   removeCyclesTopo     ← p1 L253 / p2 L182（两份逐字相同）
- *   INTENTS/CRISIS/BANNED/NEGATIVE ← 构建期由 tools/agent-intents.json 生成
+  * core.js —— 前端共享的基础函数
+  * ===========================================================
+  * 把以前散在四处、各写一份的共享逻辑收拢到这里：
+  * normalize            ← index.html L6644
+  * parseJsonLoose       ← index.html L6385（p0 内叫 jsonLoose，同实现）
+  * removeCyclesTopo     ← p1 L253 / p2 L182（两份逐字相同）
+  * INTENTS/CRISIS/BANNED/NEGATIVE ← 构建期由 tools/agent-intents.json 生成
  *
- * 使用方式：
- *   浏览器：<script src="shared/core.js"></script> → window.APCore
- *   Node  ：require("./shared/core.js")
+  * 使用方式：
+  * 浏览器：<script src="shared/core.js"></script> → window.APCore
+  * Node  ：require("./shared/core.js")
  *
- * ⚠ 下方 GENERATED 块由 scripts/gen-shared-core.js 生成，**禁止手工编辑**。
- *   改意图表请改 tools/agent-intents.json 后跑：
- *     node scripts/gen-shared-core.js && python scripts/verify_agent_intents.py
+  * ⚠ 下面 GENERATED 块由 scripts/gen-shared-core.js 生成，**别手改**。
+  * 改意图表请改 tools/agent-intents.json，然后跑：
+  * node scripts/gen-shared-core.js && python scripts/verify_agent_intents.py
  *
- * 行为等价由 scripts/verify_core.py 守卫：把 index.html / p1 / p2 的旧实现与新内核
- * 在同一组图/文本用例上双跑对拍，输出不一致即判红（方案 P2 的「双跑对比」灰度策略）。
- */
+  * 行为等价由 scripts/verify_core.py 把关：旧实现（index.html / p1 / p2）和新内核
+  * 在同一组图/文本用例上跑两遍对比，结果不一致就判红。
+  */
 (function (root, factory) {
   "use strict";
   var api = factory();

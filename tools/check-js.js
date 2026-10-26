@@ -1,17 +1,17 @@
 /**
- * check-js.js —— 前端 JS 语法门禁（方案 P1）
- * ===========================================================
- * 覆盖两类目标：
- *   ① 独立 .js 文件（shared/、tools/、scripts/、deploy/monolith-web/）
- *   ② HTML 内联 <script>…</script> 块（不含 <script src=…>）
- *      —— deploy/monolith-web/index.html（单一事实源）、.cloudflare/pages/index.html、
- *         materials/**\/index.html
- * 只做**解析**不执行：用 vm.Script 编译，等价于 node --check，无副作用。
+  * check-js.js —— 前端 JS 语法门禁（方案 P1）
+  * ===========================================================
+  * 覆盖两类目标：
+  * ① 独立 .js 文件（shared/、tools/、scripts/、deploy/monolith-web/）
+  * ② HTML 内联 <script>…</script> 块（不含 <script src=…>）
+  * —— deploy/monolith-web/index.html（单一事实源）、.cloudflare/pages/index.html、
+  * materials/**\/index.html
+  * 只做**解析**不执行：用 vm.Script 编译，等价于 node --check，无副作用。
  *
- * 用法：node tools/check-js.js             # 全量
- *       node tools/check-js.js --json      # 输出机器可读结果
- * 退出码：0 = 全部通过；1 = 存在语法错误
- */
+  * 用法：node tools/check-js.js             # 全量
+  * node tools/check-js.js --json      # 输出机器可读结果
+  * 退出码：0 = 全部通过；1 = 存在语法错误
+  */
 "use strict";
 
 const fs = require("fs");

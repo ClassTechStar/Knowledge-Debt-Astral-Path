@@ -1,11 +1,11 @@
 /**
- * exam.js —— 试卷作业错题的结构化与层级图谱（P2-8 首个下沉边界）
- * ===========================================================
- * 从单文件 index.html 抽出的一簇纯文本处理函数（OLE/zip 解包、XML/HTML 文本、
- * 题头与选项解析、结构化）。不依赖 DOM 与页面状态，浏览器与 Node 双端可用
- * （Node 侧由 scripts/exam_runner.js 跑黄金用例）。
- * 注：buildExamKG 依赖页面词库与教材状态，仍留在 index.html。
- */
+  * exam.js —— 试卷 / 作业 / 错题的文本结构化
+  * ===========================================================
+  * 从 index.html 抽出来的纯文本处理：OLE/zip 解包、XML/HTML 取文本、
+  * 题头与选项解析、结构化。不碰 DOM 和页面状态，浏览器和 Node 都能跑
+  * （Node 侧由 scripts/exam_runner.js 跑用例）。
+  * buildExamKG 要用页面词库和教材状态，所以还留在 index.html。
+  */
 (function (root, factory) {
   "use strict";
   var api = factory();

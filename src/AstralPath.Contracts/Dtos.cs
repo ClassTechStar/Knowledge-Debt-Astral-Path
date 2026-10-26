@@ -195,11 +195,11 @@ public sealed record GraphVersionDto(string PackId, int GraphVersion, string Pub
 public sealed record WhatIfRequest(string StudentId, string FromKp, string ToKp, double? OverrideScoreFrom, double? OverrideScoreTo, int? OverrideFreq, int? OverrideDays);
 public sealed record WhatIfResponse(double ScoreFrom, double ScoreTo, int Freq, int Days, double Impact, bool Detected, double Recency);
 
-// ── §44 受约束智能体（agent-orchestrator）────────────────────────────────
+// §44 受约束智能体（agent-orchestrator）
 public sealed record AgentTurnRequest(string UserId, string Role, string Utterance, string? SessionId = null);
 public sealed record AgentToolRequest(string Role);
 
-// ── §45 知识库（kb-svc / kb-search-svc）──────────────────────────────────
+// §45 知识库（kb-svc / kb-search-svc）
 public sealed record KbCreateDocument(
     string Title, string OwnerUserId, string? Visibility = null,
     string? CourseCode = null, string? Text = null, string[]? Tags = null);
@@ -211,10 +211,10 @@ public sealed record KbPublishRequest(string? Version = null, string? ActorId = 
 public sealed record KbRollbackRequest(string Version, string? ActorId = null);
 public sealed record KbSearchRequest(string Query, string? UserId = null, string? Role = null, int? TopK = null);
 
-// ── §46 用户画像（profile-svc）───────────────────────────────────────────
+// §46 用户画像（profile-svc）
 public sealed record ProfileTagUpsert(string Tag, string Domain, double Weight = 1.0, bool OptOut = false, string? ActorId = null);
 
-// ── §45 知识库：分片直传 / 片段 / 内部导入 ─────────────────────────────────
+// §45 知识库：分片直传 / 片段 / 内部导入
 public sealed record KbUploadTicketRequest(
     string Title, string OwnerUserId, string? Visibility = null, string? CourseCode = null, int PartCount = 1);
 public sealed record KbUploadCommitRequest(

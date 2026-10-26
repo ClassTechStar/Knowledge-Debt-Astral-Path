@@ -6,9 +6,9 @@ using Xunit;
 namespace AstralPath.Core.Tests;
 
 /// <summary>
-/// P0 迁移验证：AI 智能出题 golden 契约（eval/golden/quiz.json）+ 编排重试语义。
-/// 覆盖层级轮换、题干归一化/去重键、模型输出解析（双形态答案/钳制/围栏）、
-/// 题池去重与上限截断、命题上下文预算、编排重试与"重复不入池交付"语义。
+/// AI 出题的用例（eval/golden/quiz.json）加编排重试的行为。
+/// 覆盖层级轮换、题干归一化与去重键、模型输出解析、题池去重与上限截断、
+/// 命题上下文预算，以及重试后仍重复时"交付但不入池"。
 /// </summary>
 public class GoldenQuizTests
 {
@@ -128,7 +128,7 @@ public class GoldenQuizTests
                 for (var i = 0; i < n; i++)
                     AiQuestionGen.TryAddToPool(pool, MakeQuestion("题目" + i));
                 Assert.Equal(cap.GetProperty("expectCount").GetInt32(), pool.Count);
-                // 从头截断：保留最新题（索引 addCount - expectCount 起）
+                // 从头截断，留下的都是最新题（下标从 addCount - expectCount 起）
                 Assert.Equal("题目" + cap.GetProperty("expectFirstIndex").GetInt32(), pool[0].Stem);
             }
         }
@@ -168,7 +168,7 @@ public class GoldenQuizTests
     [Fact]
     public async Task QuizOrchestrator_RetriesOnce_OnDuplicate_ThenDeliversWithoutPooling()
     {
-        // 重试语义（源 L4475-4486）：重复 → 重试一次 → 仍重复 → 交付但不入池（DuplicateInPool=true）
+        // 重复 → 重试一次 → 还是重复 → 照常交付但不入池（DuplicateInPool=true）
         var pool = new List<AiQuestion> { MakeQuestion("关于缓存映射的说法") };
         var calls = 0;
         var client = new MimoClient((req, ct) =>

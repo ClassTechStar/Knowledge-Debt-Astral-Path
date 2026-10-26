@@ -11,19 +11,17 @@ using Xunit;
 namespace AstralPath.Api.Tests;
 
 /// <summary>
-/// P0 / P1 修复的回归测试（2026-09-25 验收报告）。
-///
-/// 锁定三件事，防止将来被改回去：
-///   P1-1 畸形请求体一律 400 + 统一错误形状，**不得**再出现 500 NullReferenceException；
-///   P1-2 运行时状态可落盘并恢复（学生 / 作答 / 知识库 / 智能体轮次）；
-///   P1-2 /health/ready 如实暴露持久化模式与快照状态。
+/// 已修问题的回归测试，防止以后又被改回去：
+/// 畸形请求体一律 400 且错误结构统一，不能再出现 500 NullReferenceException；
+/// 运行时状态能落盘再恢复（学生 / 作答 / 知识库 / 智能体轮次）；
+/// /health/ready 如实报告持久化模式与快照状态。
 /// </summary>
 public class RegressionP0P1Tests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly WebApplicationFactory<Program> _factory;
 
     public RegressionP0P1Tests(WebApplicationFactory<Program> factory)
-        => _factory = factory.WithWebHostBuilder(b => b.UseSetting("Security:RequireAuth", "false")); // 测试明确退出鉴权（生产默认开启）
+        => _factory = factory.WithWebHostBuilder(b => b.UseSetting("Security:RequireAuth", "false")); // 测试里关掉鉴权，生产默认是开着的
 
     private static async Task<string> ErrorCode(HttpResponseMessage resp)
     {
@@ -31,7 +29,7 @@ public class RegressionP0P1Tests : IClassFixture<WebApplicationFactory<Program>>
         return doc.RootElement.GetProperty("error").GetProperty("code").GetString() ?? "";
     }
 
-    // ── P1-1：畸形 JSON ─────────────────────────────────
+    // 畸形 JSON
     [Theory]
     [InlineData("/v1/attempts")]
     [InlineData("/v1/debt-edges/sale-check")]
@@ -43,7 +41,7 @@ public class RegressionP0P1Tests : IClassFixture<WebApplicationFactory<Program>>
         var resp = await client.PostAsync(path,
             new StringContent("{bad", Encoding.UTF8, "application/json"));
 
-        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode); // 曾为 500（NullReferenceException）
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode); // 以前这里是 500（NullReferenceException）
         Assert.Equal("VALIDATION_ERROR", await ErrorCode(resp));
     }
 
@@ -90,7 +88,7 @@ public class RegressionP0P1Tests : IClassFixture<WebApplicationFactory<Program>>
             $"正常请求应成功，实际 {(int)resp.StatusCode}");
     }
 
-    // ── P1-2：健康检查如实暴露持久化 ─────────────────────
+    // 健康检查要如实暴露持久化
     [Fact]
     public async Task P12_Health_Ready_Exposes_Persistence_And_Snapshot()
     {
@@ -114,12 +112,12 @@ public class RegressionP0P1Tests : IClassFixture<WebApplicationFactory<Program>>
         Assert.False(string.IsNullOrWhiteSpace(note.GetString()));
     }
 
-    // ── P1-2：状态导出/导入往返 ─────────────────────────
+    // 状态导出/导入往返
     [Fact]
     public void P12_Store_ExportImport_RoundTrips()
     {
         var src = new AstralPathStore(AstralPathStore.FindGraphPack());
-        src.ImportState(new StoreStateDto()); // no-op，仅确保可调用
+        src.ImportState(new StoreStateDto()); // 空导入，确认能调用就行
         src.Lock(() =>
         {
             var s = src.EnsureStudent("roundtrip-student");
@@ -182,7 +180,7 @@ public class RegressionP0P1Tests : IClassFixture<WebApplicationFactory<Program>>
     [Fact]
     public void P12_Snapshot_Disabled_Does_Not_Throw_And_Does_Not_Write()
     {
-        // 测试宿主走的就是这条路径：关闭状态构造不得抛异常（曾导致 52 项测试失败）
+        // 测试宿主走的就是这条路：快照关掉时构造不能抛异常（以前这里炸掉 52 个用例）
         var store = new AstralPathStore(AstralPathStore.FindGraphPack());
         var modules = new AstralPathModules();
         var options = new RuntimeSnapshotOptions { DataDir = null };
@@ -215,7 +213,7 @@ public class RegressionP0P1Tests : IClassFixture<WebApplicationFactory<Program>>
             var snapshot = new RuntimeSnapshotStore(new RuntimeSnapshotOptions { DataDir = dir }, store, new AstralPathModules());
             var load = snapshot.Load();
 
-            Assert.False(load.Loaded);          // 版本不符 → 安全忽略
+            Assert.False(load.Loaded);          // 版本对不上就安全忽略
             Assert.NotNull(load.Error);
         }
         finally
@@ -228,17 +226,14 @@ public class RegressionP0P1Tests : IClassFixture<WebApplicationFactory<Program>>
         }
     }
 
-    // ── P3-10：seed-samples 不得重复复制 ─────────────────
+    // seed-samples 不能重复复制
     [Fact]
     public async Task P310_SeedSamples_Is_Idempotent()
     {
-        // 背景：去重原先只比对内存注册表，重启后注册表为空 → 反复调用把上传目录撑到 17GB
-        //（同一本书多 GUID 副本）。修复后以「磁盘同名 + 同字节数」判定。
-        //
-        // 幂等不变量（与目录初始状态无关）：
-        //   ① 连续两次调用，第二次必须零新增；
-        //   ② 两次调用之间，落盘目录的文件数不得增长。
-        // 注意不能断言 skipped == 第一次的 seeded：目录里可能早有历史副本。
+        // 背景：以前去重只看内存注册表，重启后注册表是空的，反复调用会把上传目录撑到 17GB
+        //（同一本书复制出一堆 GUID 副本）。现在按「磁盘同名 + 同字节数」判断。
+        // 这里只看幂等：连续调两次，第二次零新增，中间目录文件数不涨。
+        // 不能拿 skipped 和第一次的 seeded 比，目录里可能本来就有历史副本。
         var client = _factory.CreateClient();
         var dir = AstralPath.Api.Controllers.MaterialsController.CurrentMaterialsDir;
         var countBefore = Directory.Exists(dir) ? Directory.GetFiles(dir).Length : 0;
@@ -253,11 +248,11 @@ public class RegressionP0P1Tests : IClassFixture<WebApplicationFactory<Program>>
         var seeded2 = doc2.GetProperty("seeded").GetInt32();
 
         var countAfter = Directory.GetFiles(dir).Length;
-        Assert.Equal(0, seeded2);            // 第二次调用不得再复制任何文件
-        Assert.Equal(countBefore, countAfter); // 目录文件数不得增长
+        Assert.Equal(0, seeded2);            // 第二次调用不能再复制文件
+        Assert.Equal(countBefore, countAfter); // 目录文件数不能涨
     }
 
-    // ── 2.3-②：IAstralPathStore 契约解析（控制器已面向仓储接口）──
+    // 控制器从容器解析 IAstralPathStore
     [Fact]
     public void P15_Controllers_Resolve_IAstralPathStore()
     {
@@ -266,7 +261,7 @@ public class RegressionP0P1Tests : IClassFixture<WebApplicationFactory<Program>>
         Assert.NotEmpty(store.ScanDebts("demo-student-a")); // 种子学生可走完整诊断路径
     }
 
-    // ── P1-M3：快照介质 SQLite（WAL）──────────────────────
+    // 快照介质换成 SQLite（WAL）
     [Fact]
     public void P13_Snapshot_Legacy_Json_Is_Migrated_Into_Sqlite()
     {
@@ -307,20 +302,20 @@ public class RegressionP0P1Tests : IClassFixture<WebApplicationFactory<Program>>
         }
     }
 
-    // ── P1-M1：鉴权默认开启 ───────────────────────────────
+    // 鉴权默认开启
     [Fact]
     public async Task P14_RequireAuth_True_Gate_Works()
     {
         var secureFactory = _factory.WithWebHostBuilder(b => b.UseSetting("Security:RequireAuth", "true"));
         var client = secureFactory.CreateClient();
 
-        // ① 无令牌访问学生数据 → 401（原先全站裸奔）
+        // ① 不带令牌访问学生数据 → 401（以前完全不拦）
         var anon = await client.GetAsync("/v1/students/demo-student-a/mastery");
         Assert.Equal(HttpStatusCode.Unauthorized, anon.StatusCode);
 
-        // ② 注册（默认 student 角色）→ 登录 → 携带令牌访问**本人**数据 → 200
-        // 注意：register 会按邮箱自动绑定演示学生，必须用响应里的 demoStudentId，
-        // 否则会被「归属校验」以 403 拦下（那是另一道正在工作的门禁）。
+        // ② 注册（默认 student 角色）→ 登录 → 带令牌访问本人数据 → 200
+        // 注意：register 会按邮箱自动绑定演示学生，得用响应里的 demoStudentId，
+        // 否则会被归属校验以 403 拦下（那道检查本身是正常的）。
         var email = $"gate-{Guid.NewGuid():N}@test.local";
         var reg = await client.PostAsJsonAsync("/api/v1/auth/register", new { email, password = "pass123456" });
         reg.EnsureSuccessStatusCode();
@@ -332,7 +327,7 @@ public class RegressionP0P1Tests : IClassFixture<WebApplicationFactory<Program>>
         var own = await client.GetAsync($"/v1/students/{demoId}/mastery");
         Assert.Equal(HttpStatusCode.OK, own.StatusCode);
 
-        // ③ student 令牌读教师端聚合 → 403（角色门禁）
+        // ③ student 令牌读教师端聚合 → 403（角色检查）
         var teacher = await client.GetAsync("/v1/teachers/demo-teacher/hotspots");
         Assert.Equal(HttpStatusCode.Forbidden, teacher.StatusCode);
     }

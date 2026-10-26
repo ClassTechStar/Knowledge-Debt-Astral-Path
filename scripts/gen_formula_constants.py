@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""公式常量注入（T21 阶段三 / P2-10）
-==================================
-把 index.html 里的 JS 公式常量 K 改为**由 C# 单一事实源生成**，消除「两侧人工
-同步」这一类漂移：src/AstralPath.Core/Formula/FormulaConstants.cs 是唯一来源。
+"""公式常量注入：把 index.html 里的 JS 公式常量 K 改成由 C# 生成，消掉「两侧人工
+同步」这类漂移。src/AstralPath.Core/Formula/FormulaConstants.cs 是唯一来源。
 
 - 21 项数值直映射（W.e / floor / stab0 / … / saleMinAtt）从 C# 常量读出；
-- SpacingOffsets 是 JS 侧独有的计划间隔偏移，保留字面量并在注释中说明；
+- SpacingOffsets 是 JS 侧独有的计划间隔偏移，C# 里没对应声明，保留字面量并在注释里说明；
 - 生成区写入 index.html，--check 只校验（CI / verify_all 用）。
 
 用法：
     python scripts/gen_formula_constants.py            # 生成并写入
     python scripts/gen_formula_constants.py --check    # 只校验
-退出码：0 = 一致/已生成；1 = 漂移
+退出码：0 = 一致/已生成；1 = 对不上
 """
 from __future__ import annotations
 
@@ -22,7 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
-from verify_constants import DIRECT_MAP  # noqa: E402  复用对拍用的映射表
+from verify_constants import DIRECT_MAP  # noqa: E402  复用比对用的映射表
 
 CS = ROOT / "src" / "AstralPath.Core" / "Formula" / "FormulaConstants.cs"
 HTML = ROOT / "deploy" / "monolith-web" / "index.html"

@@ -8,10 +8,8 @@ using Xunit;
 namespace AstralPath.Desktop.Tests;
 
 /// <summary>
-/// 各页面视图模型的行为断言（方案 §11–§17 的硬约束）。
-///
-/// 这些用例只依赖 VM 与数据源，不需要 Avalonia 平台，因此用普通 <c>[Fact]</c>，
-/// 跑得快且能精确定位是哪条业务规则被破坏。
+/// 各页面视图模型的行为用例。
+/// 只依赖 VM 和数据源，不需要 Avalonia 平台，所以用普通 <c>[Fact]</c>，跑得快也好定位是哪条规则坏了。
 /// </summary>
 public sealed class PageViewModelTests
 {
@@ -26,7 +24,7 @@ public sealed class PageViewModelTests
         return (vm, data, nav);
     }
 
-    // ── 计划 ───────────────────────────────────────────────────
+    // 计划
 
     [Fact]
     public void 生成计划后得到不超十四天的计划且约束已校验()
@@ -44,7 +42,7 @@ public sealed class PageViewModelTests
         Assert.InRange(vm.Days.Count, 1, 14);
         Assert.Equal(Enumerable.Range(1, vm.Days.Count), vm.Days.Select(d => d.Day));
 
-        // 硬约束：K1–K5 校验结果与违规列表必须一致——不允许「未通过却不说为什么」
+        // 校验结果和违规列表要对得上：没通过就得说清是哪条违规
         Assert.Equal(vm.Plan!.ConstraintsChecked, vm.NoViolations);
         Assert.Equal(!vm.Plan.ConstraintsChecked, vm.HasViolations);
         Assert.Equal(vm.Plan.ConstraintViolations.Count, vm.Violations.Count);
@@ -60,12 +58,12 @@ public sealed class PageViewModelTests
         var budget = vm.Plan!.DayBudgetMin;
         foreach (var day in vm.Days)
         {
-            // 超预算必须被显式标注出来，不能静默超支
+            // 超预算要显式标出来，不能静默超支
             Assert.Equal(day.Minutes > budget, day.IsOverBudget);
         }
     }
 
-    // ── 进度 ───────────────────────────────────────────────────
+    // 进度
 
     [Fact]
     public void 进度页给出掌握度分布且明确不做学生排名()
@@ -78,11 +76,11 @@ public sealed class PageViewModelTests
         Assert.Contains("平均 score", vm.AverageText, StringComparison.Ordinal);
         Assert.Contains("不对学生做分数排名", vm.RankDisclaimer, StringComparison.Ordinal);
 
-        // 每行都必须有 band 中文标签，不能只靠颜色区分
+        // 每行都要有 band 中文标签，不能只靠颜色区分
         Assert.All(vm.Rows, r => Assert.False(string.IsNullOrWhiteSpace(r.BandText)));
     }
 
-    // ── 债边 ───────────────────────────────────────────────────
+    // 债边
 
     [Fact]
     public void 债边清单可筛选并执行销账检查()
@@ -94,12 +92,12 @@ public sealed class PageViewModelTests
 
         vm.CheckSaleCommand.Execute(first);
 
-        // 销账检查必须给出结论：要么已销账，要么还差几次连续达标
+        // 销账检查要给出结论：要么已销账，要么还差几次连续达标
         Assert.False(string.IsNullOrWhiteSpace(vm.StatusMessage));
         Assert.True(vm.StatusCleared || vm.StatusNotCleared);
     }
 
-    // ── 练习 ───────────────────────────────────────────────────
+    // 练习
 
     [Fact]
     public void 练习页信心值必填_未填时不可提交()
@@ -165,7 +163,7 @@ public sealed class PageViewModelTests
         Assert.True(vm.LatencyMs >= 0);
     }
 
-    // ── What-if ───────────────────────────────────────────────
+    // What-if
 
     [Fact]
     public void WhatIf初始推演与真实债边一致且可实时复算()
@@ -187,7 +185,7 @@ public sealed class PageViewModelTests
         Assert.Contains("impact = freq", vm.FormulaText, StringComparison.Ordinal);
     }
 
-    // ── 教师端 ─────────────────────────────────────────────────
+    // 教师端
 
     [Fact]
     public void 教师端默认fail_closed且撤销后显示指定空态()
@@ -231,7 +229,7 @@ public sealed class PageViewModelTests
         Assert.DoesNotContain(texts, t => t.Contains("score", StringComparison.OrdinalIgnoreCase));
     }
 
-    // ── 画像 ───────────────────────────────────────────────────
+    // 画像
 
     [Fact]
     public void 画像时间线与热力图在产生作答后有数据()
@@ -239,8 +237,8 @@ public sealed class PageViewModelTests
         AppSettings.Current.Reset();
         var data = new OfflineDemoDataSource();
 
-        // 时间线按日聚合作答记录；先制造两次作答，验证端上确实能画出时间线
-        // （回归：数据源曾把 days 计数当数组读，导致时间线恒为空）
+        // 时间线按日聚合作答；先做两次作答，确认端上真能画出来
+        //（以前数据源把 days 计数当数组读，时间线一直是空的）
         var today = new TodayViewModel(data, new NavigationService());
         today.Load(PageContext.ForStudent(DemoMeta.StudentAId, "演示学生 A"));
         foreach (var task in today.Tasks.Take(2))
@@ -264,10 +262,10 @@ public sealed class PageViewModelTests
         Assert.True(vm.ShowRadarCanvas, "雷达图应有轴可画");
 
         Assert.All(vm.Timeline, t => Assert.False(string.IsNullOrWhiteSpace(t.AccuracyText)));
-        // 热力图不能只靠颜色：每格必须带数值文本
+        // 热力图不能只靠颜色：每格都得带数值文本
         Assert.All(vm.HeatColumns, c => Assert.All(c.Cells, cell =>
             Assert.False(string.IsNullOrWhiteSpace(cell.ValueText))));
-        // 雷达图同样不能只靠图形：每根轴必须有可读数值
+        // 雷达图一样不能只靠图形：每根轴都得有可读数值
         Assert.All(vm.RadarAxes, a => Assert.False(string.IsNullOrWhiteSpace(a.LabelText)));
     }
 
@@ -276,7 +274,7 @@ public sealed class PageViewModelTests
     {
         var (vm, _, _) = Create((d, n) => new ProfileViewModel(d, n));
 
-        // 离线演示不预置画像标签，页面必须走空态分支而不是留白
+        // 离线演示不预置画像标签，页面要走空态分支而不是留白
         Assert.False(vm.HasTags);
         Assert.Empty(vm.Tags);
         Assert.True(vm.ShowVisualizations);
@@ -322,14 +320,14 @@ public sealed class PageViewModelTests
         Assert.True(vm.HasTimeline);
     }
 
-    // ── 知识库 ─────────────────────────────────────────────────
+    // 知识库
 
     [Fact]
     public void 知识库可新建文档并检索到()
     {
         var (vm, _, _) = Create((d, n) => new KnowledgeViewModel(d, n));
 
-        // 离线演示不预置知识库文档；空库必须走空态而不是空白
+        // 离线演示不预置知识库文档；空库要走空态而不是空白
         Assert.False(vm.HasDocuments);
         Assert.True(vm.IsDocumentsEmpty);
 
@@ -356,7 +354,7 @@ public sealed class PageViewModelTests
         Assert.False(string.IsNullOrWhiteSpace(vm.SearchEmptyReason));
     }
 
-    // ── 设置 ───────────────────────────────────────────────────
+    // 设置
 
     [Fact]
     public void 设置页双向绑定可访问性开关并可恢复默认()
@@ -390,7 +388,7 @@ public sealed class PageViewModelTests
         Assert.Equal(DemoMeta.FooterDisclaimer, vm.Disclaimer);
     }
 
-    // ── 图谱 ───────────────────────────────────────────────────
+    // 图谱
 
     [Fact]
     public void 图谱页选中节点后给出关联债边说明()
@@ -432,7 +430,7 @@ public sealed class PageViewModelTests
         Assert.All(vm.Debts, d =>
         {
             Assert.False(string.IsNullOrWhiteSpace(d.Story));
-            // 降级模板必须显式标注
+            // 降级模板要显式标注
             Assert.Equal(d.Degraded, !string.IsNullOrWhiteSpace(d.SafetyText));
         });
     }

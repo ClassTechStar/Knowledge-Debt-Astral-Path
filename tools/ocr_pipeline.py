@@ -25,13 +25,11 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from table_extract import extract_markdown_tables  # P1-3
+    from table_extract import extract_markdown_tables
 except Exception:  # pragma: no cover
     extract_markdown_tables = None  # type: ignore
 
-# ---------------------------------------------------------------------------
 # tesseract 路径与 tessdata（完全对齐 tesseract 安装布局）
-# ---------------------------------------------------------------------------
 TESSERACT_EXE_CANDIDATES = [
     os.environ.get("ASTRALPATH_TESSERACT", ""),
     os.environ.get("TESSERACT_CMD", ""),
@@ -142,9 +140,7 @@ TERM_PATTERNS = [
 ]
 
 
-# ---------------------------------------------------------------------------
 # tesseract OCR（照抄官方 CLI 调用）
-# ---------------------------------------------------------------------------
 def tesseract_ocr_image(
     image_path: Path,
     output_base: Path,
@@ -354,7 +350,7 @@ def clean_ocr_text(text: str) -> str:
     text = (text or "").replace("　", " ").replace("\x00", "")
     lines = []
     for line in text.splitlines():
-        s = line.rstrip()  # P6-2：保留行首缩进（代码页），仅去尾
+        s = line.rstrip()  # 保留行首缩进（代码页），仅去尾
         if not s:
             continue
         if len(s) <= 1 and not s.isdigit():
@@ -545,9 +541,9 @@ def build_suggested_tasks(nodes: list, material_title: str, max_tasks: int = 6) 
     return tasks[:max_tasks]
 
 
-# ── 行/页级乱码判定（与前端 deploy/monolith-web/index.html 的 garbledPages() 同一套规则与阈值）──
+# 行/页级乱码判定（与前端 deploy/monolith-web/index.html 的 garbledPages() 同一套规则与阈值）
 # 可疑字符 = 私有使用区（BMP / 平面 15 / 平面 16）、U+FFFD、CJK 部首区（康熙部首 + 部首补充，
-# pypdf ToUnicode 缺陷会把"黄"抽成"⻩"这类伪汉字，P0-3 起计入可疑）、以及中文技术书里不可能出现的稀有文字。
+# pypdf ToUnicode 缺陷会把"黄"抽成"⻩"这类伪汉字，也算可疑）、以及中文技术书里不可能出现的稀有文字。
 # 正体 CJK、注音、假名、谚文、拉丁扩展、希腊、西里尔、数学符号、emoji、全角标点一律视为正常字符。
 GARBLE_RANGES = (
     (0x0530, 0x058F),     # 亚美尼亚文
@@ -632,9 +628,7 @@ def garbled_pages(page_texts: list[str]) -> dict[str, Any]:
     return {"flaggedPages": flagged, "pageCount": len(page_texts)}
 
 
-# ---------------------------------------------------------------------------
-# P0/P1 抽取质量核心：部首修复 / 双抽取器 / 逐页择优合并 / 弱页检测 / 图示页 / 缓存
-# ---------------------------------------------------------------------------
+# 抽取质量核心：部首修复 / 双抽取器 / 逐页择优合并 / 弱页检测 / 图示页 / 缓存
 WORD_CHAR_RE = re.compile(r"[A-Za-z0-9一-鿿]")
 
 # NFKC 修不了的 CJK 部首补充区（U+2E80–U+2EEF）映射：条目全部来自真实语料上下文验证
@@ -796,8 +790,8 @@ def is_figure_page(ocr_text: str, image_cov: float = 0.0) -> bool:
     return (image_cov >= 0.5 and avg < 12) or avg < 5.0
 
 
-# ── P3-16 页级 OCR 缓存（生产 rapid 路径）：key 含引擎/倍率/预处理标志，环境变化自动失效 ──
-# P5-5 补充：PIPELINE_VERSION 进 key——OCR 通道/纠错规则变化时 +1，旧缓存整体失效
+# 页级 OCR 缓存（生产 rapid 路径）：key 含引擎/倍率/预处理标志，环境变化自动失效
+# 补充：PIPELINE_VERSION 也进 key——OCR 通道/纠错规则变化时 +1，旧缓存整体失效
 # （否则行为改了还命中旧文本，实测大模型书 1.1s 全命中旧缓存的教训）。
 PIPELINE_VERSION = "3.2"
 _OCR_CACHE_DIR = os.path.join(os.path.expanduser("~"), ".astralpath", "ocr-cache", "prod")
@@ -837,7 +831,7 @@ def _ocr_cache_put(key: str, text: str) -> None:
         pass
 
 
-# ── P1-9 rapid 路径预处理（对齐 umi：灰度 + 对比度拉伸；ASTRALPATH_OCR_PREPROCESS=0 可关）──
+# rapid 路径预处理（对齐 umi：灰度 + 对比度拉伸；ASTRALPATH_OCR_PREPROCESS=0 可关）
 def preprocess_pil_for_ocr(img):
     if os.environ.get("ASTRALPATH_OCR_PREPROCESS", "1") != "1":
         return img
@@ -850,7 +844,7 @@ def preprocess_pil_for_ocr(img):
         return img
 
 
-# ── P1-11 出版方 OCR 夹层复核：文本层 vs 抽样 OCR 的相似度过低 → 文本层不可信 ──
+# 出版方 OCR 夹层复核：文本层 vs 抽样 OCR 的相似度过低 → 文本层不可信
 def overlay_suspect_check(path: Path, page_texts: list[str], sample: int = 6,
                           time_budget_s: float = 60.0) -> dict[str, Any]:
     import difflib
@@ -982,7 +976,7 @@ def extract_full_text(path: Path, ocr_mode: str = "standard", force_pages: list[
         max_text_pages = 0  # 0 = 全部
     page_limit = max_text_pages if max_text_pages else 100000
 
-    # ── P0-1 多抽取器交叉验证（pymupdf / pypdf / pdfium，可用者参与，择优）──
+    # 多抽取器交叉验证（pymupdf / pypdf / pdfium，可用者参与，择优）
     pm_texts, pm_pages, _pm_mode = try_extract_text_pymupdf_pages(path, max_pages=page_limit)
     pp_texts, pp_pages, _pp_mode = try_extract_text_pages(path, max_pages=page_limit)
     pd_texts, pd_pages, _pd_mode = try_extract_text_pdfium_pages(path, max_pages=page_limit)
@@ -993,7 +987,7 @@ def extract_full_text(path: Path, ocr_mode: str = "standard", force_pages: list[
     ])
     notes.extend(sel_notes)
 
-    # ── P0-2 部首伪汉字还原 ──
+    # 部首伪汉字还原
     if page_texts:
         fixed_pages = sum(1 for t in page_texts if t and any(0x2E80 <= ord(c) <= 0x2FDF for c in t))
         if fixed_pages:
@@ -1069,7 +1063,7 @@ def extract_full_text(path: Path, ocr_mode: str = "standard", force_pages: list[
 
     sparse = len(text) < 80 or density < 120
     if ocr_mode == "quick" and pages and pages > max_text_pages:
-        notes.append("quick_capped:%d/%d" % (max_text_pages, pages))  # P5-5：quick 静默截断显式化
+        notes.append("quick_capped:%d/%d" % (max_text_pages, pages))  # quick 静默截断显式化
     if sparse:
         notes.append("text_layer_sparse:density=%.1f" % density)
     if not engine_ok:
@@ -1083,7 +1077,7 @@ def extract_full_text(path: Path, ocr_mode: str = "standard", force_pages: list[
             detail["medianPageWords"] = med
         detail["weakPages"] = sorted({i + 1 for i in weak})
         # 目标选择：整本稀疏，或书里存在成规模图片内容（median cov ≥0.03 或存在 ≥0.5 的整页图）
-        # → 全书逐页 OCR（P0-4 的彻底解：图文混排书靠密度阈值必然漏半图页）；
+        # → 全书逐页 OCR（彻底做法：图文混排书靠密度阈值必然漏半图页）；
         # 纯文本书 → 乱码页 ∪ 弱页 ∪ 前端可疑页。
         cov_vals = sorted(cov.values()) if cov else []
         has_images = bool(cov_vals) and (cov_vals[len(cov_vals) // 2] >= 0.03 or cov_vals[-1] >= 0.5)
@@ -1102,7 +1096,7 @@ def extract_full_text(path: Path, ocr_mode: str = "standard", force_pages: list[
             budget = float(os.environ.get("ASTRALPATH_OCR_BUDGET_S", "900"))
 
         if targets:
-            # P1-11 夹层复核（仅 standard/full、非稀疏、页数充足时）：文本层疑似劣质出版方 OCR → full 下全页重抽
+            # 夹层复核（仅 standard/full、非稀疏、页数充足时）：文本层疑似劣质出版方 OCR → full 下全页重抽
             if ocr_mode in ("standard", "full") and not sparse and len(page_texts) >= 20:
                 overlay = overlay_suspect_check(path, page_texts)
                 detail["overlay"] = overlay
@@ -1126,7 +1120,7 @@ def extract_full_text(path: Path, ocr_mode: str = "standard", force_pages: list[
     text = clean_ocr_text("\n".join(page_texts)).strip() if page_texts else ""
     if not sparse and not flagged:
         notes.append("text_layer_full")
-    detail["ocrUsed"] = ocr_used  # P5-5：显式布尔，替代 notes 子串反推
+    detail["ocrUsed"] = ocr_used  # 显式布尔，替代 notes 子串反推
     return text, pages, mode, notes, detail
 
 
@@ -1180,8 +1174,8 @@ def process_file(path: Path, ocr_mode: str = "standard", force_pages: list[int] 
     result["notes"].extend(notes)
     result["garblePages"] = detail.get("garbledPages", [])
     result["ocrPages"] = detail.get("ocrPages", [])
-    result["ocrUsed"] = bool(detail.get("ocrUsed"))  # P5-5：显式布尔（此前 notes 子串反推，「tesseract_unavailable」也误判 true）
-        # P1-3 表格抽取：识别区转 Markdown
+    result["ocrUsed"] = bool(detail.get("ocrUsed"))  # 显式布尔（此前 notes 子串反推，「tesseract_unavailable」也误判 true）
+        # 表格抽取：识别区转 Markdown
     if extract_markdown_tables is not None and text:
         try:
             text, tables = extract_markdown_tables(text)
@@ -1218,7 +1212,7 @@ def process_file(path: Path, ocr_mode: str = "standard", force_pages: list[int] 
                     cq.append({
                         "chapterId": ch.get("id"),
                         "chapterTitle": ch.get("title"),
-                        **q,
+                         * *q,
                     })
             result["chapterQuestions"] = cq
             result["notes"].append(
@@ -1241,7 +1235,7 @@ def process_file(path: Path, ocr_mode: str = "standard", force_pages: list[int] 
         result["edges"] = kg.get("edges", [])
         result["graphAlgorithm"] = kg.get("stats", {}).get("algorithm", "kg-v2")
         result["graphStats"] = kg.get("stats", {})
-        # P2-14 输入质量闸：文本层欠抽取/夹层可疑/OCR 截断时，图谱可信度打折并显式标记
+        # 输入质量闸：文本层欠抽取/夹层可疑/OCR 截断时，图谱可信度打折并显式标记
         if any(k in n for n in result["notes"]
                for k in ("sparse", "underextract", "overlay_suspect", "truncated", "radical")):
             result["graphStats"]["inputQuality"] = "low"
@@ -1423,9 +1417,7 @@ def main() -> int:
     return 0 if payload.get("ok", False) else 1
 
 
-# ═══════════════════════════════════════════════════════════════
 # OCR v2：预处理 / 置信度 / 多配置投票 / 中文断行 / 误识修复
-# ═══════════════════════════════════════════════════════════════
 
 CHAR_CONFUSIONS = (
     ("（", "("), ("）", ")"), ("［", "["), ("］", "]"),
@@ -1506,7 +1498,7 @@ def fix_ocr_text(text: str, aggressive: bool | None = None) -> str:
             s = s.replace(a, b)
     s = re.sub(r"([一-鿿])([A-Za-z])", r"\1 \2", s)
     s = re.sub(r"([A-Za-z])([一-鿿])", r"\1 \2", s)
-    # 中文软断行：行尾无标点则与下一行合并；P6-2：任一侧带行首缩进（代码行）不合并
+    # 中文软断行：行尾无标点则与下一行合并；任一侧带行首缩进（代码行）不合并
     out: list[str] = []
     buf = ""
     for line in (ln.rstrip() for ln in s.splitlines() if ln.strip()):
@@ -1578,12 +1570,10 @@ def ocr_image_v2(image_path: Path, workdir: Path, tag: str) -> str:
     return fix_ocr_text(merged)
 
 
-# ---------------------------------------------------------------------------
 # RapidOCR 引擎（rapidocr v3 包）+ 页级并行
 # 引擎选择：ASTRALPATH_OCR_ENGINE = auto(默认) | rapid | tesseract
 # 并行度：ASTRALPATH_OCR_WORKERS（默认 4 个线程，每线程独立引擎实例）
 # 单实例线程：ASTRALPATH_OCR_INTRA（默认 2，EngineConfig.onnxruntime.intra_op_num_threads）
-# ---------------------------------------------------------------------------
 
 _RAPID_TL = threading.local()
 _RAPID_INIT_LOCK = threading.Lock()
@@ -1701,9 +1691,7 @@ def _render_scale_for(path: Path, page_index: int, base: float = 2.0) -> float:
     return base
 
 
-# ---------------------------------------------------------------------------
-# P6-1/2/3 内容专项通道：代码保真 / 公式密集重试 / 旋转文本
-# ---------------------------------------------------------------------------
+# 内容专项通道：代码保真 / 公式密集重试 / 旋转文本
 _CODE_TOKEN_RE = re.compile(
     r"\{\s*$|};|=>|</[a-zA-Z]|::|\)\s*;"
     r"|^\s*(def |class |import |from |func |public |private |static |var |let |const |return |if |for |while )",
@@ -1850,7 +1838,7 @@ def rapid_pdf_pages_detail(path: Path, page_indexes: list[int], scale: float = 2
             return idx, ""
         try:
             text = ocr_image_rapid(rendered)
-            # P6-1 公式重试：数学符号密集页升倍率（≤3.2）重识别一次，
+            # 公式重试：数学符号密集页升倍率（≤3.2）重识别一次，
             # 按（词字符 + 2×数学符号）取更优者；高倍率结果复用同一缓存键
             if _formula_dense(text) and float(eff_scale) < 3.0:
                 hi_scale = min(3.2, eff_scale * 1.4)
@@ -1900,7 +1888,7 @@ def rapid_pdf_pages_detail(path: Path, page_indexes: list[int], scale: float = 2
 
     used = sum(1 for v in pages_out.values() if v.strip())
     text = "\n".join(pages_out[i] for i in sorted(pages_out) if pages_out[i].strip())
-    # P0-2 流式进度：宿主桥读 stderr 的 PROGRESS 行
+    # 流式进度：宿主桥读 stderr 的 PROGRESS 行
     try:
         sys.stderr.write("PROGRESS ocr %d/%d\\n" % (used, min(max_pages, total)))
         sys.stderr.flush()

@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
-"""XSS 收口门禁（方案 P4）
-============================================================
-两部分：
-  ① 黄金用例：contracts/golden/xss-cases.json → shared/safe-dom.js 的 safeRich/esc
-     必须阻断事件注入、协议注入、mutation XSS，同时不误伤白名单富文本。
-  ② 源码哨兵：主 HTML 与 shared/integrations 的 innerHTML 直插点，若 RHS 出现
-     「模型输出 / 用户内容」变量而未包裹 esc()/safeRich()/setHTML() 则判红。
+"""XSS 注入点检查，分两部分：
+  1) 用例：contracts/golden/xss-cases.json → shared/safe-dom.js 的 safeRich/esc
+     必须挡下事件注入、协议注入、mutation XSS，同时不误伤白名单富文本。
+  2) 源码扫描：主 HTML 与 shared/integrations 的 innerHTML 直插点，RHS 出现
+     「模型输出 / 用户内容」变量又没包 esc()/safeRich()/setHTML() 就判红。
 
 用法：python scripts/verify_xss.py
-退出码：0 = ALL GREEN；1 = 存在未收口注入点
+退出码：0 = ALL GREEN；1 = 还有没管住的注入点
 """
 import json
 import re
@@ -27,16 +25,16 @@ SCAN_TARGETS = [
     ROOT / "shared" / "integrations" / "p2-ai-integration.js",
 ]
 
-# 已知承载「模型输出 / 用户内容」的属性/变量（只取属性引用，避免 acc/logs 之类
-# 数值变量造成的假红；流式 acc 的写入点在下面 GUARD 覆盖）
+# 承载「模型输出 / 用户内容」的属性/变量。只取属性引用，不然 acc/logs 这类
+# 数值变量会造出一堆假红；流式 acc 的写入点由下面的 GUARD 兜住
 SINK = re.compile(
     r"(\.stem|\.explain|\.text|\.title|\.name|\.label|\.fromName|\.toName"
     r"|reply|aiText|_aiExplain)"
 )
-# 已收口的转义出口
+# 已经包了转义的出口
 GUARD = re.compile(r"(esc\(|safeRich\(|setHTML\(|setText\(|sanitizeText\(|APSafe\.)")
 
-# C3 回归哨兵（与 sync-monolith-html.ps1 同款）
+# 回归哨兵，和 sync-monolith-html.ps1 里那个同款，专抓没转义的 .map(title)
 C3_SENTINEL = re.compile(r"\.map\(title\)")
 
 # 拼接标记字符串的证据（'<div' / "<span" 之类字面量）
@@ -106,7 +104,7 @@ def assignment_block(lines, start_idx, ident):
 
 
 def check_sources():
-    """两层扫描：① 行内直插（单语句）；② 变量赋值回溯（跨行构造再插入）。"""
+    """两层扫描：先看行内直插（单语句），再做变量赋值回溯（跨行构造再插入）。"""
     hits = 0
     for f in SCAN_TARGETS:
         if not f.exists():
@@ -134,17 +132,17 @@ def check_sources():
             rhs = m.group(3)
             if GUARD.search(ln):
                 continue
-            # ① 行内：RHS 直接出现未转义的动态内容
+            # 行内：RHS 直接出现没转义的动态内容
             if SINK.search(rhs):
                 failed.append(f"{rel} L{i}: innerHTML 直插疑似未转义的动态内容 → {ln.strip()[:160]}")
                 hits += 1
                 continue
-            # ② 回溯：RHS 引用的变量，其**邻近**赋值语句是否在拼接标记字符串时
-            #    混入了未转义的动态内容。三重收敛条件，避免跨作用域跟随同名变量
-            #    （i/b/n/data 之类通用名在全文件范围内会产生大量假红）：
-            #      a) 赋值点必须在该 innerHTML 行上方 WINDOW 行内（同一局部作用域）
-            #      b) 赋值块必须确实在拼接标记（出现 '<tag' 字面量）
-            #      c) 块内出现承载模型/用户内容的属性且本行无转义出口
+            # 回溯：RHS 引用的变量，看它邻近的赋值语句是不是在拼标记字符串时
+            # 混进了没转义的动态内容。三个条件都要满足，避免跨作用域跟到同名变量
+            # （i/b/n/data 这种通用名一跟全文件就是一堆假红）：
+            #   a) 赋值点在该 innerHTML 行上方 WINDOW 行内（同一个局部作用域）
+            #   b) 赋值块确实在拼标记（出现 '<tag' 字面量）
+            #   c) 块里出现承载模型/用户内容的属性，且本行没有转义出口
             WINDOW = 25
             for ident in js_identifiers(rhs):
                 for st in assigns.get(ident, []):

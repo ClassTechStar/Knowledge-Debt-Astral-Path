@@ -1,20 +1,11 @@
-# 数字单一事实源（P3-2 收口）：意图 / 危机词 / 测试数 从代码统计，README 数字自动对拍
-# ============================================================================
-# 背景：README 曾手工维护「26 意图 / 11 危机词 / 329 测试」，T20/T21 后漂移到
-# 三套互相矛盾的数字（P3-2 一直「未做——文档仍手工」）。
-#
-# 事实源：
-#   ① 意图 / 危机词：tools/agent-intents.json（五方对拍的唯一登记表）
-#   ② 测试数：tests/**/*.cs 静态统计（[Fact]/[AvaloniaFact] 记 1；
-#      [Theory]/[AvaloniaTheory] 按 [InlineData] 行数展开，无数据记 1）
-#
-# README 中被门禁保护的数字用成对注释标记包裹：
+# README 里的数字只维护一份：意图 / 危机词 / 测试数都从代码统计出来，自动和 README 比对
+# 早先这些数字是手填的，改几轮代码后就和实际对不上了，所以改成机器统计。
+# 意图 / 危机词来自 tools/agent-intents.json，测试数用 dotnet test --list-tests 枚举。
+# README 中被盯住的数字用成对注释标记包起来：
 #   <!-- metrics:key -->值<!-- /metrics:key -->
-#   --check 模式只校验；默认模式把 README 改写为统计值。
-#
 # 用法：python scripts/verify_metrics.py          # 统计 + 回写 README + 写 eval/metrics.json
 #       python scripts/verify_metrics.py --check  # 只校验（CI / verify_all 用）
-# 退出码：0 = ALL GREEN；1 = 漂移
+# 退出码：0 = ALL GREEN；1 = 数字对不上
 import json
 import re
 import subprocess
@@ -45,8 +36,8 @@ LIST_LINE_RE = re.compile(r"^\s{4,}\S")
 def count_project_tests(csproj_dir: Path) -> int:
     """用 dotnet test --list-tests 精确枚举用例数（含 Theory 数据展开）。
 
-    为什么不用静态统计：MemberData/自定义数据源让「数 InlineData」必然漂移，
-    P3-2 的教训就是手工/近似数字不可信。要求先构建（--no-build）。
+    不用静态数 InlineData：MemberData 这类自定义数据源根本数不准，迟早又对不上。
+    要求先构建过（--no-build）。
     """
     proc = subprocess.run(
         ["dotnet", "test", str(csproj_dir), "-c", "Release", "--no-build", "--list-tests"],

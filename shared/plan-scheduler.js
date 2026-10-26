@@ -1,14 +1,14 @@
 /**
- * plan-scheduler.js —— 修复计划调度与 K1–K5 合约（P2-8 第四个下沉边界）
- * ===========================================================
- * 从单文件 index.html 抽出的纯计划逻辑：合约校验、14 天逐日容量调度、
- * 先修感知重排、超预算减压。页面状态（图谱边、节点、标题、叙事文案）由 ctx 注入，
- * 模块本身不读 DOM、不读全局状态。
+  * plan-scheduler.js —— 修复计划的排程与 K1–K5 合约检查
+  * ===========================================================
+  * 从 index.html 抽出来的纯计划逻辑：合约校验、14 天逐日容量排程、
+  * 先修感知重排、超预算减压。图谱边、节点、标题、文案由 ctx 传进来，
+  * 这里不读 DOM、不读全局状态。
  *
- * 使用方式：
- *   浏览器：window.APPlan（由 scripts/gen_frontend_regions.py 内联进页面生成区）
- *   Node  ：require("./shared/plan-scheduler.js")
- */
+  * 用法：
+  * 浏览器：window.APPlan（由 scripts/gen_frontend_regions.py 内联进页面生成区）
+  * Node  ：require("./shared/plan-scheduler.js")
+  */
 (function (root, factory) {
   "use strict";
   var api = factory();
@@ -25,9 +25,9 @@
   }
 
   /**
-   * K1–K5 合约。ctx：edges（图谱边）、titleOf（id→标题）、deferred（显式延期）。
-   * opts：edges / debts / deferred 可覆盖 ctx。
-   */
+    * K1–K5 合约。ctx：edges（图谱边）、titleOf（id→标题）、deferred（显式延期）。
+    * opts：edges / debts / deferred 可覆盖 ctx。
+    */
   function checkPlanK(plan, budgetPerDay, opts, ctx) {
     opts = opts || {};
     ctx = ctx || {};
@@ -135,9 +135,9 @@
   }
 
   /**
-   * 本地版调度器 v2：逐日容量 + 先修感知。
-   * ctx：edges / nodes、courseOf、prereqs、label、why、spacingOffsets。
-   */
+    * 本地版调度器 v2：逐日容量 + 先修感知。
+    * ctx：edges / nodes、courseOf、prereqs、label、why、spacingOffsets。
+    */
   function schedule(ds, budget, opts, ctx) {
     opts = opts || {};
     ctx = ctx || {};

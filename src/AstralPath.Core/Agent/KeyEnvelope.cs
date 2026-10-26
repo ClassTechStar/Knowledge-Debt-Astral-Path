@@ -4,22 +4,21 @@ using System.Text;
 namespace AstralPath.Core.Agent;
 
 /// <summary>
-/// 密钥信封（P0 迁移，源：Astralpath __AP_MIMO__ 信封，L6242-6275）。
-/// 明文密钥经 AES-256-GCM 加密后存储（信封），数据密钥（DEK）由宿主持久层保管且不可导出，
-/// 信封与 DEK 分离，降低密钥泄露风险。桌面端 DEK 可用 DPAPI/Keychain，Web 端用 IndexedDB 不可导出 CryptoKey。
+/// 密钥信封：API key 先用 AES-256-GCM 加密再落盘，加密用的数据密钥（DEK）由宿主单独保管、不可导出。
+/// 信封和 DEK 分开存，单泄一个拿不到明文。桌面端 DEK 走 DPAPI/Keychain，Web 端放 IndexedDB 的不可导出 CryptoKey。
 /// </summary>
-/// <param name="CiphertextB64">密文（ciphertext ‖ tag，与 Web Crypto 格式一致）。</param>
+/// <param name="CiphertextB64">密文（ciphertext ‖ tag，和 Web Crypto 的格式一致）。</param>
 /// <param name="IvB64">12 字节随机 IV。</param>
-/// <param name="Base">网关 base URL（同样在信封内，不落明文）。</param>
-/// <param name="Model">模型名（同样在信封内）。</param>
+/// <param name="Base">网关 base URL，也放信封里，不落明文。</param>
+/// <param name="Model">模型名，同样在信封里。</param>
 /// <param name="UpdatedAt">写入时间（Unix ms）。</param>
 /// <param name="Version">
-/// 信封格式版本（P5）：Seal 时写入 <see cref="KeyEnvelopeCrypto.CurrentVersion"/>。
-/// 版本落后说明是旧格式，仍可解密；仅用于排障与后续迁移判断，不参与解密。
+/// 信封格式版本，Seal 时写入 <see cref="KeyEnvelopeCrypto.CurrentVersion"/>。
+/// 旧版本照样能解开，这个字段只用来排障和判断要不要迁移，不参与解密。
 /// </param>
 /// <param name="KeyId">
-/// 信封指纹（P5）：密文的 SHA-256 前 8 字节 hex。用于**吊销清单**精确匹配——
-/// 服务端/运维下发一个 keyId 黑名单即可让某个泄露信封作废，无需接触用户本机 DEK。
+/// 信封指纹：密文 SHA-256 的前 8 字节 hex。给吊销清单精确匹配用——
+/// 运维下发一个 keyId 黑名单就能作废泄露的信封，不用碰用户本机的 DEK。
 /// </param>
 public sealed record KeyEnvelope(
     string CiphertextB64,
@@ -30,7 +29,7 @@ public sealed record KeyEnvelope(
     int Version = 1,
     string? KeyId = null);
 
-/// <summary>信封失效原因（P5：让「静默回退」变成「可感知」）。</summary>
+/// <summary>信封失效的原因。以前静默回退用户没感觉，现在能报出来。</summary>
 public enum EnvelopeIssue
 {
     /// <summary>无问题（未配置自定义密钥，或解密成功）。</summary>
@@ -45,7 +44,7 @@ public enum EnvelopeIssue
 
 public static class KeyEnvelopeCrypto
 {
-    /// <summary>当前信封格式版本（P5 起为 2：新增 keyId 指纹）。</summary>
+    /// <summary>当前信封格式版本，2 起带 keyId 指纹。</summary>
     public const int CurrentVersion = 2;
 
     public static KeyEnvelope Seal(string plaintextKey, byte[] dek, string? baseUri, string? model)
@@ -79,8 +78,8 @@ public static class KeyEnvelopeCrypto
     }
 
     /// <summary>
-    /// 轮换（P5）：用新 DEK 重新加密同一明文，生成**新信封**（版本升到当前值、指纹重算）。
-    /// 旧信封随即失效——调用方应在换机器/怀疑泄露时用它，而不是原地改 IV。
+    /// 轮换：用新 DEK 把同一明文重新加密成新信封（版本和指纹都按当前格式重算），旧信封作废。
+    /// 换机器或者怀疑泄露时走这个，别原地改 IV 糊弄。
     /// </summary>
     public static KeyEnvelope? Rotate(KeyEnvelope env, byte[] oldDek, byte[] newDek)
     {
@@ -115,7 +114,7 @@ public static class KeyEnvelopeCrypto
     }
 }
 
-/// <summary>信封吊销清单（P5）：只认 <see cref="KeyEnvelope.KeyId"/>，不需要接触用户 DEK。</summary>
+/// <summary>信封吊销清单：只认 <see cref="KeyEnvelope.KeyId"/>，不用碰用户的 DEK。</summary>
 public interface IKeyRevocationList
 {
     bool IsRevoked(KeyEnvelope env);

@@ -1,9 +1,8 @@
 namespace AstralPath.Core.Agent;
 
 /// <summary>
-/// 故障冷却分类（P0 迁移，源：Astralpath __t13TxErr，L7052）。
-/// 仅传输/网络类错误（HTTP 状态、网络失败、超时、中断）触发冷却；
-/// 模型内容类问题（JSON 解析失败等）不冷却，下次照常重试。冷却期默认 8 秒（T14：30→8）。
+/// 故障冷却的分类。只有传输/网络类错误（HTTP 状态、网络失败、超时、中断）才冷却；
+/// 模型内容问题（比如 JSON 解析失败）不冷却，下次照常试。冷却默认 8 秒，以前 30 秒太影响体验。
 /// </summary>
 public static class FaultCooldown
 {
@@ -16,7 +15,7 @@ public static class FaultCooldown
         "Name or service not known", "No such host", "Connection refused"
     };
 
-    /// <summary>判定异常是否属于传输类故障（应触发冷却）。</summary>
+    /// <summary>判断这个异常算不算传输类故障，算才触发冷却。</summary>
     public static bool IsTransportError(Exception e)
         => IsTransportMessage(e?.Message ?? "") || e is HttpRequestException or TaskCanceledException or TimeoutException;
 

@@ -1,21 +1,20 @@
-# 智能体意图登记表 · 多方对拍（P2 单一事实源门禁；P5-1 扩展）
-# ============================================================
-# 唯一事实源：tools/agent-intents.json
-# 对拍对象：
-#   ① deploy/monolith-web/index.html 的 CRISIS/BANNED/NEGATIVE/INTENTS 字面量
+# 智能体意图登记表 · 多方比对
+# 事实只维护一份：tools/agent-intents.json，其他各处的副本都要和它对得上。
+# 比对对象：
+#   1) deploy/monolith-web/index.html 的 CRISIS/BANNED/NEGATIVE/INTENTS 字面量
 #      （三端同源，另两份镜像由 sync-monolith-html.ps1 保证 md5 一致）
-#   ② src/AstralPath.Core/Agent/AgentRouter.cs 的 DefaultAgentIntents.Table
-#      —— P5-1 起登记表即运行时表（DefaultIntents() 委托它），故锚点/角色/描述逐字对拍
-#   ③ AgentRouter.CreateDefault() 的 crisisWords / negativeWords 内联数组
-#      —— K-03：危机词漏词曾是检测盲区（后端缺「活不下去」无人报警）
-#   ④ src/AstralPath.Core/Formula/FormulaWeights.cs 的 BannedWords ↔ JSON bannedEthics
-#      —— 路由禁语（伦理）与 JS BANNED（隐私）是两类，分别登记、分别对拍
-#   ⑤ shared/integrations/p2-ai-integration.js 的 CRISIS/BANNED/NEGATIVE/INTENTS
-#      —— P3（2026-10-18）：22→26 意图扩容时该副本漏同步（kb.search 少 13 个锚点等
-#         17 处），而 .cloudflare/pages/* 被 gitignore 排除，漂移长期无人发现。
-#         修复后脚本收编进受控目录 shared/integrations/，并纳入本对拍（第四方）。
+#   2) src/AstralPath.Core/Agent/AgentRouter.cs 的 DefaultAgentIntents.Table
+#      —— 登记表就是运行时表（DefaultIntents() 直接用它），锚点/角色/描述逐字比对
+#   3) AgentRouter.CreateDefault() 的 crisisWords / negativeWords 内联数组
+#      —— 危机词漏词就是检测盲区（后端缺「活不下去」没人报警，踩过一次）
+#   4) src/AstralPath.Core/Formula/FormulaWeights.cs 的 BannedWords ↔ JSON bannedEthics
+#      —— 路由禁语（伦理）与 JS BANNED（隐私）是两类，分别登记、分别比对
+#   5) shared/integrations/p2-ai-integration.js 的 CRISIS/BANNED/NEGATIVE/INTENTS
+#      —— 22→26 意图扩容那次（2026-10-18）这个副本漏了同步（kb.search 少 13 个锚点等
+#         17 处），而 .cloudflare/pages/* 被 gitignore 排除，漂了很久没人发现。
+#         修好后脚本收进受控目录 shared/integrations/，也纳入比对（第四方）。
 # 用法：python scripts/verify_agent_intents.py
-# 退出码：0 = ALL GREEN；1 = 漂移
+# 退出码：0 = ALL GREEN；1 = 不一致
 import json
 import re
 import sys
@@ -25,13 +24,13 @@ ROOT = Path(__file__).resolve().parent.parent
 INTENTS_JSON = ROOT / "tools" / "agent-intents.json"
 INDEX_HTML = ROOT / "deploy" / "monolith-web" / "index.html"
 AGENT_ROUTER = ROOT / "src" / "AstralPath.Core" / "Agent" / "AgentRouter.cs"
-# P7（2026-10-18）：登记表从 AgentRouter.cs 拆到独立文件（单文件单职责），
-# 运行时词表仍在 AgentRouter.CreateDefault() 内联，故两个文件分别对拍。
+# 登记表后来从 AgentRouter.cs 拆成独立文件（一个文件只管一件事），
+# 运行时词表还在 AgentRouter.CreateDefault() 里内联，所以两个文件都要比。
 DEFAULT_INTENTS = ROOT / "src" / "AstralPath.Core" / "Agent" / "DefaultAgentIntents.cs"
 FORMULA_WEIGHTS = ROOT / "src" / "AstralPath.Core" / "Formula" / "FormulaWeights.cs"
-# P3：第四方 JS 副本（受控目录；p0/p1 不定义路由常量，故只校验定义了的一方）
+# 第四方 JS 副本（受控目录；p0/p1 不定义路由常量，所以只校验定义了的一方）
 P2_JS = ROOT / "shared" / "integrations" / "p2-ai-integration.js"
-# P2/P3：共享内核 —— 常量块由 build 期 JSON 生成（DO NOT EDIT），仍需对拍防生成器漏跑
+# 共享内核：常量块是构建期从 JSON 生成的（DO NOT EDIT），还是得比一遍，防止生成器忘了重跑
 CORE_JS = ROOT / "shared" / "core.js"
 
 
@@ -69,7 +68,7 @@ def main():
         fail(f"缺少 {INTENTS_JSON}")
     canon = json.loads(INTENTS_JSON.read_text(encoding="utf-8"))
 
-    # ── ① JS 字面量 ─────────────────────────────────────────
+    # 1) JS 字面量
     html = INDEX_HTML.read_text(encoding="utf-8")
     js_crisis = extract_js_array(html, "CRISIS")
     js_banned = extract_js_array(html, "BANNED")
@@ -91,7 +90,7 @@ def main():
         if js_map[k] != canon_map[k]:
             fail(f"意图 {k} 锚点不一致\n  json={canon_map[k]}\n  js={js_map[k]}")
 
-    # ── ② C# 登记表（=运行时表）：锚点 + 角色 + 描述逐字对拍 ──
+    # 2) C# 登记表（就是运行时表）：锚点 + 角色 + 描述逐字比对
     cs = AGENT_ROUTER.read_text(encoding="utf-8")
     tbl_src = DEFAULT_INTENTS.read_text(encoding="utf-8") if DEFAULT_INTENTS.exists() else cs
     table = re.search(r"DefaultAgentIntents[\s\S]*?Table\s*=\s*\{([\s\S]*?)\n    \};", tbl_src)
@@ -99,7 +98,7 @@ def main():
         table = re.search(r"Table\s*=\s*\{([\s\S]*?)\n    \};", tbl_src)
     if not table:
         fail(f"找不到 DefaultAgentIntents.Table（查过 {DEFAULT_INTENTS.name} 与 {AGENT_ROUTER.name}）")
-    # P5-1：RoleMask 允许逗号多角色（旧正则 "(\w+)" 只认单角色，是检测盲区）
+    # RoleMask 允许逗号分隔的多角色，旧正则 "(\w+)" 只认单角色，会漏检
     entries = re.findall(
         r'new\(\s*(\d+)\s*,\s*"([a-z.]+)"\s*,\s*"([\w,]+)"\s*,\s*'
         r'(?:Array\.Empty<string>\(\)|new\[\]\s*\{([^}]*)\})\s*,\s*'
@@ -125,7 +124,7 @@ def main():
         if cs_desc[k] != canon_desc[k]:
             fail(f"意图 {k} 描述不一致\n  json={canon_desc[k]!r}\n  cs={cs_desc[k]!r}")
 
-    # ── ③ C# 运行时危机/负例词（CreateDefault 内联数组）──
+    # 3) C# 运行时危机/负例词（CreateDefault 内联数组）
     cs_crisis = extract_cs_string_array(cs, "crisisWords:", "crisisWords")
     cs_negative = extract_cs_string_array(cs, "negativeWords:", "negativeWords")
     # 词表无序语义，按集合比对（跨语言手抄顺序不强制）
@@ -134,7 +133,7 @@ def main():
     if sorted(cs_negative) != sorted(canon["negative"]):
         fail(f"CreateDefault 负例词与 JSON 不一致\n  json={canon['negative']}\n  cs={cs_negative}")
 
-    # ── ④ 伦理禁语：FormulaWeights.BannedWords ↔ JSON bannedEthics ──
+    # 4) 伦理禁语：FormulaWeights.BannedWords ↔ JSON bannedEthics
     if FORMULA_WEIGHTS.exists():
         fw = FORMULA_WEIGHTS.read_text(encoding="utf-8")
         cs_banned_ethics = extract_cs_string_array(fw, "BannedWords =", "BannedWords")
@@ -142,7 +141,7 @@ def main():
             fail(f"FormulaWeights.BannedWords 与 JSON bannedEthics 不一致\n"
                  f"  json={canon.get('bannedEthics')}\n  cs={cs_banned_ethics}")
 
-    # ── ⑤ 第四方 JS 副本：shared/integrations/p2-ai-integration.js ──
+    # 5) 第四方 JS 副本：shared/integrations/p2-ai-integration.js
     p2_map = {}
     p2_checked = False
     if P2_JS.exists():
@@ -166,7 +165,7 @@ def main():
                 fail(f"p2 意图 {k} 锚点不一致（第四方副本漂移）\n  json={canon_map[k]}\n  p2={p2_map[k]}")
         p2_checked = True
 
-    # ── ⑥ 共享内核 shared/core.js（构建期生成块）──
+    # 6) 共享内核 shared/core.js（构建期生成的块）
     core_map = {}
     core_checked = False
     if CORE_JS.exists():

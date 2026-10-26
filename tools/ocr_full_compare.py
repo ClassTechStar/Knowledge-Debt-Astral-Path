@@ -40,7 +40,7 @@ def save_state(st):
     STATE.write_text(json.dumps(st, ensure_ascii=False), encoding="utf-8")
 
 
-# ── 独立抽取：文本层全覆盖；低文本页 RapidOCR（1.5x）──
+# 独立抽取：文本层全覆盖；低文本页 RapidOCR（1.5x）
 def independent_full(pdf: Path, ocr_low: bool = True, ocr_cap: int = 25):
     import numpy as np
     import pymupdf
@@ -87,7 +87,7 @@ def independent_full(pdf: Path, ocr_low: bool = True, ocr_cap: int = 25):
     return pages, n
 
 
-# ── 项目抽取：分块 mixed（每块 150 页）──
+# 项目抽取：分块 mixed（每块 150 页）
 def project_full(pdf: Path, chunk=120, save_path=None):
     from ocr_pipeline_umi import extract_document
     import pymupdf
@@ -123,7 +123,7 @@ def project_full(pdf: Path, chunk=120, save_path=None):
     return pages, total, time.time() - t0
 
 
-# ── 字符级对比 ──
+# 字符级对比
 def char_diff(ta: str, tb: str):
     ca, cb = Counter(WORD.findall(ta or "")), Counter(WORD.findall(tb or ""))
     only_a = sum((ca - cb).values())

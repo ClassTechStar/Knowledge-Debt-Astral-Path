@@ -12,7 +12,7 @@ public class GoldenSampleTests
     {
         get
         {
-            // 环境变量 → 常规候选 → 从测试输出目录逐级向上回溯（不硬编码机器特定路径）
+            // 先看环境变量，再试常规位置，最后从测试输出目录逐级往上找（不写死机器路径）
             var env = Environment.GetEnvironmentVariable("ASTRALPATH_GOLDEN_DIR");
             if (!string.IsNullOrWhiteSpace(env) && Directory.Exists(env)) return env;
             var candidates = new[]
@@ -119,12 +119,12 @@ public class GoldenSampleTests
                 topDebts.Add((td.GetProperty("from_kp").GetString()!, td.GetProperty("to_kp").GetString()!));
             }
 
-            // For K3 case, why doesn't contain from_kp_name - checker uses FromKpName
+            // 这个用例 why 里没写 from_kp_name，检查器是从 FromKpName 字段拿的
             var result = PlannerConstraintChecker.Check(days, budget, topDebts);
             var expectChecked = c.GetProperty("expect").GetProperty("constraints_checked").GetBoolean();
             var id = c.GetProperty("id").GetString();
 
-            // K5 may fire for uncovered top debts on single-day golden inputs; compare expected violation codes primarily
+            // 单天用例里 top 债没被覆盖时可能触发 K5，所以主要比对期望的违规码
             if (expectChecked)
             {
                 Assert.True(result.ConstraintsChecked, $"{id}: expected pass but got {string.Join(",", result.Violations.Select(v => v.Code + ":" + v.Message))}");

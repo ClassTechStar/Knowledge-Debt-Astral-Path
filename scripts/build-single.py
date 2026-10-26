@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """知债：星穹学途 · 自包含单文件构建
-================================================================================
-以本目录权威 index.html（单体版 2.5 基座）为唯一事实源，内联全部 OCR 依赖：
+以本目录权威 index.html（单体版 2.5 基座）为唯一来源，内联全部 OCR 依赖：
 
   A. pdf.js 三件套（v1.x 起，file:// 也可用）
     - ocr-wasm.js                        → 原样内联（IIFE，引擎入口）
@@ -26,9 +25,8 @@
   执行），ocr-wasm.js v1.4.0 检测到桥后全部走 Blob/内存资源，零网络请求——
   部署在只托管单个 HTML 的环境（如 DuMate artifacts）也能完成扫描版 PDF OCR。
 
-  产物：astralpath-monolith.html（除 onnxruntime-web CDN（带 onerror 降级哨兵，
+  产物：astralpath-monolith.html（除 onnxruntime-web CDN（带 onerror 降级，
   缺失仅损失 ONNX 推理引擎）外零外部资源引用）
-================================================================================
 """
 import base64
 import gzip
@@ -54,22 +52,12 @@ ORT_DIR = os.path.join(ROOT, "deploy", "monolith-web", "ort-runtime")
 ORT_JS = os.path.join(ORT_DIR, "ort.min.js")
 ORT_WASM = os.path.join(ORT_DIR, "ort-wasm-simd-threaded.wasm")
 
-# 门禁：基座 index.html 漂移检测。2026-10-12 T11（UX 反馈落地）、2026-10-13 T12（内置演示密钥 AES-256-GCM 密文内嵌）、T13（并发闸/冷却分类/推理兜底/出题预算修复）、T14（AI 随时可用且迅速：思维链流式、垫题秒出+自动替换、命题进度流式、重复重试、冷却 30→8s、建议生成中占位）改动后重打基线。
-# 同日 T10.1 修复 matchExamKps 同题重复命中（重复知识点只计一次）后再次重打基线。
-# 2026-10-15 T15 修复（AI 构图/出题失效三连）：complete() SSE 分支 onDelta 未定义致全链路失败、mergeGraphAI 整池覆盖丢 AI 题、垫题 _pendingAi 残留持久化。
-# （主仓库 deploy/monolith-web 门禁 97135d02... 对应更早版本，此副本已含同版
-# OCR/功能改动，重基线前先人工比对确认。）
-# 2026-10-18 T20（方案 P4）：XSS 收口——renderTrend 的 SVG 文本节点 d.label 与
-# 学情报告 rowsTrend 表格首列改走 esc()（原为裸插，虽当前取值是日期串不可利用，
-# 但属未收口直插面），基座字节变化故重打基线。
-# 2026-10-25 P0-2/P2-10：首页系统状态卡片移入 ?debug=1 调试面板、清理残留工程黑话，
-# 公式常量改为 C# 生成区（K 由 FormulaConstants.cs 注入），教材文本/章节/关键词
-# 下沉 shared/kg-text.js（页面只留兼容层），基座字节变化故重打基线。
-# 2026-10-26 P2-8：智能体路由与计划调度下沉 shared/agent-router.js、shared/plan-scheduler.js，
-# 页面仅保留 ctx 注入的兼容层，基座字节再次变化。
-EXPECTED_MD5 = "dc356639c74693cb609ea30a4e83caf1"
+# 基座 index.html 的 md5 指纹。基座一改 md5 就变，构建会直接拒绝，这时要重打基线，
+# 也就是把 EXPECTED_MD5 更新成新值（值后续统一重算）。之前几次重打都是基座本身
+# 有改动：UI 调整、密钥内嵌、AI 流式、XSS 修复、公式常量改由 C# 生成、逻辑搬进 shared/ 等。
+EXPECTED_MD5 = "581d70640eaa95860c0e0fb526668ad5"
 
-# 唯一放行的外部 CDN 引用（页面内有 onerror 哨兵，缺失时自动降级）
+# 唯一放行的外部 CDN 引用（页面内有 onerror 降级，缺失时自动降级）
 ALLOWED_EXTERNAL_PREFIX = "https://cdn.jsdelivr.net/npm/onnxruntime-web"
 
 
@@ -98,7 +86,7 @@ def must_contain(text, needle, what):
 def main():
     html = read(SRC_HTML)
 
-    # 0) 基座一致性门禁
+    # 0) 基座一致性检查
     md5 = hashlib.md5(html.encode("utf-8")).hexdigest()
     if md5 != EXPECTED_MD5:
         print(f"[门禁失败] index.html md5={md5} != {EXPECTED_MD5}，拒绝构建")
@@ -118,7 +106,7 @@ def main():
             print(f"[内联失败] {name} 含 </script 字面量，无法直接内联")
             sys.exit(1)
 
-    # ── B-1：worker.min.js 补丁 ──────────────────────────────────────────────
+    # B-1：worker.min.js 补丁
     # a) 去掉 sourcemap 注释（Blob 上下文无意义）
     worker_js = re.sub(r"//# sourceMappingURL=worker\.min\.js\.map\s*$", "", worker_js)
     # b) initialize langs join：t.data → t.code（上游 5.1.1 缺陷，见文件头说明）
@@ -133,14 +121,14 @@ def main():
     must_contain(worker_js, ji_from, "importScripts(core)")
     worker_js = worker_js.replace(ji_from, ji_to)
 
-    # ── B-2：资源 base64 化 ─────────────────────────────────────────────────
+    # B-2：资源 base64 化
     worker_b64 = b64(worker_js.encode("utf-8"))
     core_simd_b64 = b64(read_bin(CORE_SIMD_LSTM))
     core_lstm_b64 = b64(read_bin(CORE_LSTM))
     chi_b64 = b64(gzip.compress(read_bin(CHI_SIM), 9, mtime=0))
     eng_b64 = b64(gzip.compress(read_bin(ENG), 9, mtime=0))
 
-    # ── B-3：内联资源桥（惰性解码，OCR 引擎首次初始化才执行）────────────────
+    # B-3：内联资源桥（惰性解码，OCR 引擎第一次初始化才执行）
     bridge_block = (
         "<script>\n"
         "/* 单文件构建注入：WASM OCR 内联资源桥（ocr-wasm.js v1.4.0，纯前端离线）。\n"
@@ -175,7 +163,7 @@ def main():
     )
     tesseract_block = "<script>\n" + tesseract_js + "\n</script>\n"
 
-    # ── A-1：替换外部 script 引用为内联块（按原顺序）——用 lambda 避免 re 模板转义
+    # A-1：把外部 script 引用换成内联块（按原顺序）。用 lambda 是为了避开 re 模板转义
     # ocr-wasm.js 位置替换为：资源桥 + tesseract.min.js + ocr-wasm.js 三连内联块
     # （保证解析顺序：桥与全局 Tesseract 先于引擎入口就绪）
     r1 = re.sub(
@@ -198,7 +186,7 @@ def main():
         print("[失败] 未找到 pdf.min.js 引用行")
         sys.exit(1)
 
-    # ── A-2：注入 pdf worker Blob：base64 → Uint8Array → Blob → objectURL
+    # A-2：注入 pdf worker Blob：base64 → Uint8Array → Blob → objectURL
     pw_b64 = b64(pdf_worker.encode("utf-8"))
     worker_script = (
         "<script>\n"
@@ -222,7 +210,7 @@ def main():
         count=1,
     )
 
-    # ── A-3：pdfJsTextLayer 内 workerSrc：优先使用内联 Blob
+    # A-3：pdfJsTextLayer 里的 workerSrc：优先用内联 Blob
     # （兼容两种基座形态：原始行 / 已含 __AP_WORKER_BLOB__ 回退的行）
     raw_src = 'window.pdfjsLib.GlobalWorkerOptions.workerSrc=new URL("ocr-engine/pdf.worker.min.js",document.baseURI).href;'
     patched_src = 'window.pdfjsLib.GlobalWorkerOptions.workerSrc = window.__AP_WORKER_BLOB__ || new URL("ocr-engine/pdf.worker.min.js", document.baseURI).href;'
@@ -234,7 +222,7 @@ def main():
         print("[警告] 未找到 workerSrc 行（pdf.js 将尝试相对加载）")
         r4 = r3
 
-    # 3b) ONNX 运行时内联（P2-9）：单文件版不再依赖 jsdelivr。
+    # 3b) ONNX 运行时内联：单文件版不再依赖 jsdelivr。
     #     源文件仍保留 CDN script 标签（带 onerror 哨兵），单文件版替换为内联脚本 +
     #     wasm base64 桥，运行期由 ortInlinePaths() 解出 blob URL 喂给 ORT。
     ort_inlined = False
@@ -264,7 +252,7 @@ def main():
     else:
         print("[OK] 已按 --no-onnx-inline 保留 CDN 引用")
 
-    # 4) 收尾清理：确保无残留外部 src/link（onnxruntime-web CDN 除外：带 onerror 降级哨兵）
+    # 4) 收尾清理：确认没残留外部 src/link（onnxruntime-web CDN 除外，它带 onerror 降级）
     externals = []
     for tag in re.finditer(r'<(?:script|link)\b[^>]*?(?:src|href)="([^"]+)"', r4):
         url = tag.group(1)

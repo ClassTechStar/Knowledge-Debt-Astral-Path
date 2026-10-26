@@ -1,10 +1,9 @@
-﻿# 单一事实源同步：deploy/monolith-web/index.html → Windows 壳 / Android 壳
-# =====================================================================
+﻿# 同步 deploy/monolith-web/index.html → Windows 壳 / Android 壳（源头只维护一份）
 # 用法：
 #   scripts/sync-monolith-html.ps1                    # 复制到两端镜像并校验 md5
 #   scripts/sync-monolith-html.ps1 -Check             # 只校验不复制（verify_all / CI 用）
 #   scripts/sync-monolith-html.ps1 -IncludeOcrEngine  # 连 ocr-engine/ 运行时一起同步
-# 退出码：0 = ALL GREEN；非 0 = 有镜像漂移或命中 C3 回归哨兵。
+# 退出码：0 = ALL GREEN；非 0 = 镜像不一致或命中回归哨兵。
 param(
     [switch]$Check,
     [switch]$IncludeOcrEngine
@@ -19,8 +18,8 @@ $targets = @(
 
 function Get-Md5($p) { (Get-FileHash -Algorithm MD5 -LiteralPath $p).Hash }
 
-# C3 回归哨兵（2026-09-26 修复）：图谱/章节「先修链」渲染必须经过 esc()，
-# 禁止回退到裸 .map(title) 直接拼 innerHTML（节点标题来自用户上传的教材，可注入脚本）。
+# 回归哨兵（2026-09-26 修过一次）：图谱/章节「先修链」渲染必须走 esc()，
+# 禁止退回裸 .map(title) 直接拼 innerHTML（节点标题来自用户上传的教材，能注入脚本）。
 $sentinel = '\.map\(title\)'
 foreach ($p in (@($src) + $targets | ForEach-Object { Join-Path $root $_ })) {
     if ((Test-Path $p -PathType Leaf) -and (Select-String -LiteralPath $p -Pattern $sentinel -Quiet)) {

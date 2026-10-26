@@ -4,7 +4,7 @@ namespace AstralPath.Core.Algorithms;
 
 /// <summary>
 /// 计划生成 v2：拓扑约束 + 间隔重复（0/2/6 天三遍）+ 影响优先。
-/// 输出满足 PlannerConstraintChecker（K1–K5）。
+/// 输出要过 PlannerConstraintChecker 的约束检查。
 /// </summary>
 public static class PlannerBuilder
 {
@@ -35,7 +35,7 @@ public static class PlannerBuilder
                 var debtRef = debtFrom is null || debtTo is null
                     ? Array.Empty<string>()
                     : new[] { debtFrom, debtTo };
-                // Type 必须落在 concept|drill|quiz|review；FromKpName 用名称（K3 要求 Why 含该名）
+                // Type 只能是 concept|drill|quiz|review；FromKpName 用名称，Why 里得带上这个名字
                 var type = layer == "core" ? "drill" : "review";
                 var why = fromName is null ? $"巩固「{name}」" : $"巩固「{name}」（先修：{fromName}）";
                 items.Add(new PlanItemInput(
@@ -57,7 +57,7 @@ public static class PlannerBuilder
             for (var p = 0; p < offsets.Length; p++)
             {
                 var day = 1 + offsets[p];
-                // 先修先练（K2）
+                // 先修先练
                 Place(goal.FromKp, fromName, "core", p == 0 ? 20 : 12, day, goal.FromKp, goal.ToKp, fromName);
                 Place(goal.ToKp, toName, p == 0 ? "challenge" : "core", p == 0 ? 15 : 10, day + 1, goal.FromKp, goal.ToKp, fromName);
             }

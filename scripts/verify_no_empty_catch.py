@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
-"""空 catch 门禁（方案 P13）
-============================================================
-不变量：任何 `catch` 块都不得为空——空吞异常会让线上故障只能靠猜。
+"""空 catch 检查：catch 块不许为空，空吞异常线上出事只能靠猜。
 
-判定口径（只认「完全空」与「仅注释」，不做语义分析，避免误伤）：
+判定口径只认「完全空」和「只剩注释」，不做语义分析，免得误伤：
   FAIL  catch { }
   FAIL  catch (Exception) { /* 忽略 */ }
   PASS  catch (Exception ex) { Diag.Recover(ex); }
-  PASS  catch { return ""; }            ← 有降级动作，不是空吞
+  PASS  catch { return ""; }            ← 有降级动作，不算空吞
 
 用法：python scripts/verify_no_empty_catch.py [--verbose]
 退出码：0 = 无空 catch；1 = 存在空 catch
@@ -20,7 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SKIP_DIRS = {"bin", "obj", "build", "publish", "TestResults", "node_modules", ".git", "Migrations"}
 VERBOSE = "--verbose" in sys.argv
 
-# 允许白名单：诊断器自身最后一道防线（Diag.Record 内的 catch 必须吞）
+# 白名单：诊断器自己是最后一道防线，它内部的 catch 就得吞（Diag.Record）
 ALLOW = {
     ("src/AstralPath.Core/Diagnostics/Diag.cs", None),
 }

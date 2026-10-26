@@ -19,7 +19,7 @@ public readonly record struct ScoreResult(double Score, double SevNorm)
 
 /// <summary>
 /// BASELINE score：100 × (0.6×recent_acc + 0.3×sev_norm + 0.1×(self_conf/5))
-/// 禁止 LLM 改分；金样容差 1e-6。
+/// 禁止 LLM 改分；结果要和用例里的期望值对上，容差 1e-6。
 /// </summary>
 public static class ScoreCalculator
 {

@@ -37,7 +37,7 @@ public abstract class ExtensionServiceControllerBase : ControllerBase
     protected IResult BadRequest(string msg) => HttpResults.Fail(400, ErrorCodes.ValidationError, msg);
 }
 
-// ═══════════ §19.1 concept-diffusion-svc ═══════════
+// §19.1 concept-diffusion-svc
 [ApiController]
 public sealed class DiffusionController : ExtensionServiceControllerBase
 {
@@ -77,7 +77,7 @@ public sealed class DiffusionController : ExtensionServiceControllerBase
     }
 }
 
-// ═══════════ §19.2 exam-impact-svc ═══════════
+// §19.2 exam-impact-svc
 [ApiController]
 public sealed class ExamImpactController : ExtensionServiceControllerBase
 {
@@ -135,7 +135,7 @@ public sealed class ExamImpactController : ExtensionServiceControllerBase
     }
 }
 
-// ═══════════ §19.3 peer-cohort-svc（强伦理）══════════
+// §19.3 peer-cohort-svc（强伦理）
 [ApiController]
 public sealed class PeerCohortController : ControllerBase
 {
@@ -172,7 +172,7 @@ public sealed class PeerCohortController : ControllerBase
     }
 }
 
-// ═══════════ §19.4 study-group-svc（强伦理）══════════
+// §19.4 study-group-svc（强伦理）
 [ApiController]
 public sealed class StudyGroupController : ControllerBase
 {
@@ -216,7 +216,7 @@ public sealed class StudyGroupController : ControllerBase
         => Prop(el, name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() ?? fallback : fallback;
 }
 
-// ═══════════ §19.5 micro-lesson-svc ═══════════
+// §19.5 micro-lesson-svc
 [ApiController]
 public sealed class MicroLessonController : ExtensionServiceControllerBase
 {
@@ -243,7 +243,7 @@ public sealed class MicroLessonController : ExtensionServiceControllerBase
     public IResult Get(string id) => NotFound("演示版微课为请求级装配结果，未持久化；请调用 POST /v1/micro-lessons/assemble 重新生成。");
 }
 
-// ═══════════ §19.6 learning-velocity-svc ═══════════
+// §19.6 learning-velocity-svc
 [ApiController]
 public sealed class LearningVelocityController : ExtensionServiceControllerBase
 {
@@ -275,7 +275,7 @@ public sealed class LearningVelocityController : ExtensionServiceControllerBase
     }
 }
 
-// ═══════════ §19.7 spaced-review-svc ═══════════
+// §19.7 spaced-review-svc
 [ApiController]
 public sealed class SpacedReviewController : ExtensionServiceControllerBase
 {
@@ -313,7 +313,7 @@ public sealed class SpacedReviewController : ExtensionServiceControllerBase
     }
 }
 
-// ═══════════ §19.8 prerequisite-simulator-svc ═══════════
+// §19.8 prerequisite-simulator-svc
 [ApiController]
 public sealed class PrerequisiteSimulatorController : ExtensionServiceControllerBase
 {
@@ -338,7 +338,7 @@ public sealed class PrerequisiteSimulatorController : ExtensionServiceController
     }
 }
 
-// ═══════════ §19.9 knowledge-forecast-svc（强伦理）══════════
+// §19.9 knowledge-forecast-svc（强伦理）
 [ApiController]
 public sealed class KnowledgeForecastController : ExtensionServiceControllerBase
 {
@@ -374,7 +374,7 @@ public sealed class KnowledgeForecastController : ExtensionServiceControllerBase
     }
 }
 
-// ═══════════ §19.10 lab-bench-svc（内部）══════════
+// §19.10 lab-bench-svc（内部）
 [ApiController]
 public sealed class LabBenchController : ControllerBase
 {

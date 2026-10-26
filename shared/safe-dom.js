@@ -1,25 +1,25 @@
 /**
- * safe-dom.js —— XSS 唯一出口（方案 P4）
- * ===========================================================
- * 背景：模型输出与用户上传教材内容都会进入 DOM；历史上 esc()/sanitizeText()
- * 分散在各处、使用不一致（方案 P4 证据：集成脚本里 `innerHTML = '…' + esc(...)`
- * 与裸插并存）。本文件收敛为**唯一安全出口**：
+  * safe-dom.js —— 内容进 DOM 前的唯一安全出口
+  * ===========================================================
+  * 模型输出和用户上传的教材内容都会进 DOM；以前 esc()/sanitizeText() 分散在各处、
+  * 用法不一致（集成脚本里 `innerHTML = '…' + esc(...)` 和裸插并存）。
+  * 这里收敛成**唯一安全出口**：
  *
- *   esc(t)           纯文本转义（等价于现有 esc，行为保持逐字一致）
- *   safeRich(text)   白名单富文本渲染：仅 <b><i><code><br><strong><em> 保留，
- *                    其余（含任何带属性的标签）一律转义
- *   setText(el, t)   文本优先写入（textContent）
- *   setHTML(el, t)   富文本写入，内部强制过 safeRich
- *   sanitizeUrl(u)   URL 白名单：只放行 http/https/mailto，其余返回 about:blank
+  * esc(t)           纯文本转义（等价于现有 esc，行为保持逐字一致）
+  * safeRich(text)   白名单富文本渲染：仅 <b><i><code><br><strong><em> 保留，
+  * 其余（含任何带属性的标签）一律转义
+  * setText(el, t)   文本优先写入（textContent）
+  * setHTML(el, t)   富文本写入，内部强制过 safeRich
+  * sanitizeUrl(u)   URL 白名单：只放行 http/https/mailto，其余返回 about:blank
  *
- * 设计约束：
- *   1. 零依赖、可在浏览器与 Node 双端加载（Node 侧供 verify_xss.py 跑黄金用例）；
- *   2. 不引入 DOMPurify 之类的第三方（纯前端单文件形态，18MB 体积已敏感）；
- *   3. 行为与现有 esc() 逐字一致，替换点不产生视觉差异（golden 不变量）。
+  * 几个约束：
+  * 1. 零依赖，浏览器和 Node 都能加载（Node 侧给 verify_xss.py 跑用例）；
+  * 2. 不引 DOMPurify 之类第三方（单文件形态，18MB 已经不小了）；
+  * 3. 行为和原来的 esc() 逐字一致，替换点不产生视觉差异。
  *
- * ⚠ DO NOT EDIT 之外的部分可改；但改后必须跑：
- *     python scripts/verify_xss.py   （contracts/golden/xss-cases.json 12 例）
- */
+  * ⚠ 这个文件可以改，但改完必须跑：
+  * python scripts/verify_xss.py   （contracts/golden/xss-cases.json 12 例）
+  */
 (function (root, factory) {
   "use strict";
   var api = factory();

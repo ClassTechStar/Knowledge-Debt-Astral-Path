@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
-"""shared/store.js 分片存储门禁（方案 P6）
-============================================
-两层断言：
-  1) 行为层：scripts/store_runner.js 的 9 条黄金用例（ST-01…ST-09）全过；
+"""shared/store.js 分片存储检查，两层断言：
+  1) 行为层：scripts/store_runner.js 的 9 条用例（ST-01…ST-09）全过；
   2) 接入层：deploy/monolith-web/index.html 必须真的调用 APStore
-     （read/write/clear 至少各出现一次）——防止「模块写好了但页面没接上」。
+     （read/write/clear 至少各出现一次），防止模块写好了但页面没接上。
 
 用法：python scripts/verify_store.py
-退出码：0 = 全绿；1 = 用例失败或未接入
+退出码：0 = 全绿；1 = 用例失败或没接上
 """
 import json
 import subprocess

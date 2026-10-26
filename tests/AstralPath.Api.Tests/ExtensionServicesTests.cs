@@ -7,15 +7,15 @@ using Xunit;
 namespace AstralPath.Api.Tests;
 
 /// <summary>
-/// §19 十个扩展服务 + §45 补齐能力（分片直传/片段/内部导入）的端到端用例。
-/// 重点验证：算法确定性、伦理闸门（k-匿名/互补不排名/外推抑制）、以及"不写生产权威数据"的边界。
+/// 扩展服务和知识库补齐能力（分片直传/片段读取/内部导入）的端到端用例。
+/// 重点看算法结果稳不稳定、伦理限制是不是真拦住了（k-匿名、不排名、外推抑制），以及不写生产数据这条边界。
 /// </summary>
 public class ExtensionServicesTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly WebApplicationFactory<Program> _factory;
 
     public ExtensionServicesTests(WebApplicationFactory<Program> factory)
-        => _factory = factory.WithWebHostBuilder(b => b.UseSetting("Security:RequireAuth", "false")); // 测试明确退出鉴权（生产默认开启）
+        => _factory = factory.WithWebHostBuilder(b => b.UseSetting("Security:RequireAuth", "false")); // 测试里关掉鉴权，生产默认是开着的
 
     private HttpClient Client() => _factory.CreateClient();
 
@@ -26,7 +26,7 @@ public class ExtensionServicesTests : IClassFixture<WebApplicationFactory<Progra
         return root.ValueKind == JsonValueKind.Object && root.TryGetProperty("data", out var d) ? d : root;
     }
 
-    // ═══════════ §19.1 传播模拟 ═══════════
+    // 传播模拟
 
     [Fact]
     public async Task Diffusion_Returns_Bound_And_Ranking()
@@ -38,7 +38,7 @@ public class ExtensionServicesTests : IClassFixture<WebApplicationFactory<Progra
         var data = await Data(resp);
         Assert.Equal("diff-v1", data.GetProperty("algoVersion").GetString());
         Assert.True(data.GetProperty("nodeCount").GetInt32() >= 30);
-        // 截断误差界必须给出（生产结果可解释性要求）
+        // 截断误差界得给出来，结果要能解释
         Assert.True(data.GetProperty("truncationBound").GetDouble() >= 0);
         Assert.True(data.GetProperty("repairRanking").GetArrayLength() > 0);
     }
@@ -63,7 +63,7 @@ public class ExtensionServicesTests : IClassFixture<WebApplicationFactory<Progra
         Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
     }
 
-    // ═══════════ §19.2 考试影响 ═══════════
+    // 考试影响
 
     [Fact]
     public async Task ExamImpact_And_PreExamPlan_Respect_TimeBox()
@@ -83,7 +83,7 @@ public class ExtensionServicesTests : IClassFixture<WebApplicationFactory<Progra
             Assert.True(day.GetProperty("minutes").GetInt32() <= 35, "任一天不得超过 35 分钟");
     }
 
-    // ═══════════ §19.3 同辈对照（强伦理）══════════
+    // 同辈对照（隐私要求严）
 
     [Fact]
     public async Task Cohort_Suppresses_When_Sample_Below_K()
@@ -98,11 +98,11 @@ public class ExtensionServicesTests : IClassFixture<WebApplicationFactory<Progra
         var moreData = await Data(more);
         Assert.False(moreData.GetProperty("suppressed").GetBoolean());
         Assert.True(moreData.GetProperty("p50").GetDouble() > 0);
-        // 不得回传个体明细
+        // 不能回传个体明细
         Assert.False(moreData.TryGetProperty("members", out _));
     }
 
-    // ═══════════ §19.4 学习小组（强伦理）══════════
+    // 学习小组（隐私要求严）
 
     [Fact]
     public async Task StudyGroup_Matches_Complementary_And_No_Ranking()
@@ -135,7 +135,7 @@ public class ExtensionServicesTests : IClassFixture<WebApplicationFactory<Progra
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 
-    // ═══════════ §19.5 微课 ═══════════
+    // 微课
 
     [Fact]
     public async Task MicroLesson_Assemble_Has_No_Numeric_Claim()
@@ -157,7 +157,7 @@ public class ExtensionServicesTests : IClassFixture<WebApplicationFactory<Progra
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 
-    // ═══════════ §19.6–§19.8 速度 / 间隔 / 先修推演 ═══════════
+    // 速度 / 间隔复习 / 先修推演
 
     [Fact]
     public async Task Velocity_Fit_Returns_Explained_Slope()
@@ -211,7 +211,7 @@ public class ExtensionServicesTests : IClassFixture<WebApplicationFactory<Progra
         Assert.Contains("只读推演", data.GetProperty("note").GetString());
     }
 
-    // ═══════════ §19.9 预警（强伦理）══════════
+    // 预警（隐私要求严）
 
     [Fact]
     public async Task Forecast_Suppresses_When_Extrapolating_TooFar()
@@ -226,11 +226,11 @@ public class ExtensionServicesTests : IClassFixture<WebApplicationFactory<Progra
             new { studentId = "demo-student-a", daysAhead = 60 });
         var farData = await Data(far);
         Assert.True(farData.GetProperty("suppressed").GetBoolean(), "外推 >30 天必须抑制");
-        // 区间必须存在且下限 <= 上限
+        // 区间要有，且下限不大于上限
         Assert.True(farData.GetProperty("lowerBound").GetDouble() <= farData.GetProperty("upperBound").GetDouble());
     }
 
-    // ═══════════ §19.10 实验台 ═══════════
+    // 实验台
 
     [Fact]
     public async Task LabBench_Promote_Requires_TwoDistinctPeople()
@@ -258,7 +258,7 @@ public class ExtensionServicesTests : IClassFixture<WebApplicationFactory<Progra
         Assert.False(fail.GetProperty("regressionOk").GetBoolean());
     }
 
-    // ═══════════ §45 补齐：分片直传 / 片段 / 内部导入 ═══════════
+    // 知识库补齐：分片直传 / 片段读取 / 内部导入
 
     [Fact]
     public async Task Kb_Upload_Ticket_Commit_And_Chunk_Read()
@@ -285,7 +285,7 @@ public class ExtensionServicesTests : IClassFixture<WebApplicationFactory<Progra
         var docId = commitData.GetProperty("doc").GetProperty("id").GetString()!;
         Assert.True(commitData.GetProperty("chunkCount").GetInt32() >= 1);
 
-        // 分片数不符应冲突
+        // 分片数对不上要报错
         var mismatch = await client.PostAsJsonAsync($"/v1/kb/uploads/{uploadId}/commit",
             new { ownerUserId = "demo-student-a", parts = new[] { "x" } });
         Assert.Equal(HttpStatusCode.NotFound, mismatch.StatusCode);

@@ -1,14 +1,14 @@
 /**
- * kg-text.js —— 教材文本 → 章节 / 关键词 / 共现短语（P2-8 第二个下沉边界）
- * ===========================================================
- * 从单文件 index.html 抽出的纯文本处理簇：分词、TextRank、PMI、依赖句式、
- * 标题有效性过滤、兜底分章、大纲抽取与加权术语。不依赖 DOM 与页面状态，
- * 浏览器与 Node 双端可用（Node 侧由 scripts/kg_text_runner.js 跑黄金用例）。
+  * kg-text.js —— 教材文本处理：分词、章节抽取、关键词
+  * ===========================================================
+  * 从 index.html 抽出来的纯文本处理代码：分词、TextRank、PMI、依赖句式、
+  * 标题过滤、兜底分章、大纲抽取与加权术语。不碰 DOM 和页面状态，
+  * 浏览器和 Node 都能跑（Node 侧由 scripts/kg_text_runner.js 跑用例）。
  *
- * 使用方式：
- *   浏览器：window.APKGText（由 scripts/gen_frontend_regions.py 内联进页面生成区）
- *   Node  ：require("./shared/kg-text.js")
- */
+  * 用法：
+  * 浏览器：window.APKGText（由 scripts/gen_frontend_regions.py 内联进页面生成区）
+  * Node  ：require("./shared/kg-text.js")
+  */
 (function (root, factory) {
   "use strict";
   var api = factory();
@@ -18,10 +18,9 @@
   "use strict";
 
 function tokenize(text){return (String(text).match(/[一-鿿]{2,8}|[A-Za-z][A-Za-z0-9_\.]{1,20}/g)||[]).filter(function(t){return t.length>=2;});}
-/* ── textRank：稀疏邻接表 ──────────────────────────────────────────────────────
-   修复：原实现用稠密 n×n 矩阵（n=30433 时需 n²×8 B ≈ 7.41 GB）＋每行一个 Float64Array，
-   教材级文本在浏览器里必然 OOM / 永不完成。改为 Map 邻接表累积 → CSR（Int32 列 + Float64 权重），
-   内存 O(非零边)。迭代公式与原稠密实现等价：
+/* textRank 用稀疏邻接表而不是 n×n 矩阵。之前用稠密矩阵时 n=30433 光矩阵就要
+   n²×8 B ≈ 7.41 GB，教材级文本在浏览器里直接 OOM。现在用 Map 累加再转成 CSR
+   （Int32 列 + Float64 权重），内存只和实际边数有关。迭代公式没变：
      rank[i]=(1-d)/n + d·Σ_j (w[j][i]/rowSum[j])·rank[j]                      */
 function textRank(tokens,window,iterations,damping){
   window=window||5;iterations=iterations||12;damping=damping||0.85;
@@ -84,21 +83,13 @@ function dependencyEdges(text,concepts){
   }
   return out;
 }
-/* ════════════════════════════════════════════════════════════════════════════
-参考算法整合 v3（来源：github.com/-Knowledge-Debt-Astral-Path
-      tools/kg_algorithm.py + tools/kg_builder.py + contracts/golden json）
-   A. 图谱升级：extractOutlineV2（章节层级增强：第N篇/部分/阶段/讲/步骤#N/
-      Part/Unit/Lesson/Stage#N/N.N.N 小节码 + 中文数字映射 + 停用词过滤）
-      · extractTermsWeighted（频率 × 靠前章节加权 × 领域词典加成）
-      · removeCyclesTopo（DAG 投影 + Kahn 拓扑删环）
-      · toTriples / toPropertyGraph / toMindmapTree / toMarkdownOutline（四态导出）
-   B. 智能体合约：goldenScore（掌握度公式）· checkPlanK（K1 日预算/K3 why 含 from_kp）
-      · saleNeed（销账缺口）· narrativeExplain（叙事化脱敏 + slot 填充）
-   ════════════════════════════════════════════════════════════════════════════ */
+/* 下面这组图谱算法最初对照过 tools/kg_algorithm.py 与 tools/kg_builder.py 的实现，
+   并用 contracts/golden 的样例校对过行为。这里的 extractOutlineV2 与
+   extractTermsWeighted 是后来在 index.html 里做的增强版，抽出来时一并带了过来。 */
 var KG_CN_NUM={"一":1,"二":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9,"十":10,"百":100,"千":1000};
 var KG_DICT={"人工智能":3,"机器学习":3,"深度学习":3,"神经网络":3,"Transformer":3,"大模型":3,"LLM":3,"Agent":3,"RAG":3,"注意力":2,"反向传播":2,"梯度下降":2,"算法":2,"数据结构":2,"递归":2,"动态规划":3,"微服务":3,"分布式":3,"并发":2,"数据库":2,"范式":2,"索引":2,"事务":2,"视图":2,"触发器":2,"存储过程":2,"API":2,"接口":1,"面向对象":1,"继承":1,"多态":2,"变量":1,"函数":1,"循环":1,"数组":1,"链表":2,"排序":2,"查找":2,"哈希":2,"二叉树":2,"栈":1,"队列":1,"会计":1,"资产":2,"负债":2,"权益":2,"复式记账":2,"借贷":2,"凭证":2,"账簿":2,"试算平衡":2,"报表":2,"编译":2,"操作系统":2,"网络":1,"协议":2,"加密":2,"缓存":2,"正则":2,"异常处理":2};
 var KG_STOP={"www":1,"http":1,"https":1,"cn":1,"com":1,"org":1,"net":1,"pdf":1,"isbn":1,"copyright":1,"版权所有":1,"仅供":1,"内部资料":1,"目录":1,"前言":1,"索引":1,"参考文献":1,"习题":1,"思考题":1,"小结":1,"本章":1,"如图":1,"式中":1,"综上":1,"显然":1,"因此":1,"从而":1,"可知":1,"得到":1,"进行":1,"通过":1,"对于":1,"可以":1,"需要":1,"使用":1,"其中":1,"并且":1,"或者":1,"如果":1,"同时":1,"分别":1,"以上":1,"以下":1,"上述":1,"目前":1,"方法":1,"问题":1,"实现":1,"计算":1,"作用":1,"说明":1,"定义":1,"定义式":1};
-/* ── P0-1：概念/标题有效性过滤（拦截英文断词碎片、数字串、括号残片、单字碎片）── */
+/* 概念/标题过滤：挡掉英文断词碎片、长数字串、括号残片、单字碎片 */
 var KG_STOP_EN={"the":1,"and":1,"for":1,"with":1,"this":1,"that":1,"from":1,"under":1,"when":1,"then":1,"than":1,"into":1,"onto":1,"over":1,"about":1,"above":1,"are":1,"was":1,"were":1,"been":1,"have":1,"has":1,"had":1,"will":1,"would":1,"can":1,"could":1,"should":1,"shall":1,"may":1,"might":1,"must":1,"not":1,"but":1,"all":1,"any":1,"each":1,"its":1,"his":1,"her":1,"our":1,"your":1,"their":1,"one":1,"two":1,"new":1,"use":1,"using":1,"used":1,"also":1,"more":1,"most":1,"some":1,"such":1,"only":1,"other":1,"which":1,"what":1,"who":1,"how":1,"why":1,"you":1};
 function kgValidTitle(t){
   let s=String(t||"").trim();
@@ -116,7 +107,7 @@ function kgValidTitle(t){
   }
   return s.slice(0,46);
 }
-/* ── P0-2：兜底分章——空行分段失效时按句子聚合切块，保证今日任务/练习有素材 ── */
+/* 兜底分章：空行分段失效时按句子聚合切块，否则今日任务/练习没有素材 */
 function kgChunkChapters(text,maxCh){
   maxCh=maxCh||60;
   const s=String(text).replace(/\r/g,"");
@@ -163,14 +154,14 @@ function extractOutlineV2(text,maxCh,tocMode){
       if(ln.length>60){
         // 长行：目录标题与正文同行（如"第3章 CPU与总线 CPU通过总线…"），按行内章节标记提取纯净标题
         const rm=/^(第\s*[0-9一二三四五六七八九十百千]+\s*[章节篇讲])[\s:：·.、-]*([^\s。；：:，,、]{2,40})/.exec(ln);
-        if(rm){const _rt=kgValidTitle(rm[2]);if(_rt)TM.push({i:i,title:_rt.slice(0,40),level:1,ord:parseInt(rm[1].replace(/[^\d]/g,""),10)||TM.length+1});} // P0-1
+        if(rm){const _rt=kgValidTitle(rm[2]);if(_rt)TM.push({i:i,title:_rt.slice(0,40),level:1,ord:parseInt(rm[1].replace(/[^\d]/g,""),10)||TM.length+1});}
         continue;
       }
       const m=/^(第\s*[0-9一二三四五六七八九十百千]+\s*[章节篇讲])\s*[:：·.、\- ]*([^\s。；：:，,、]{2,40})/.exec(ln)
         ||/^(\d+(?:\.\d+)+)\s+([^\s].{1,40})$/.exec(ln)
         ||/^(\d{1,3})[、.．]\s*(.{2,40})$/.exec(ln);
       if(!m)continue;
-      const t=kgValidTitle(m[2]); // P0-1
+      const t=kgValidTitle(m[2]);
       if(!t)continue;
       if(KG_STOP[t.toLowerCase()])continue;
       TM.push({i:i,title:t.slice(0,40),level:m[1].indexOf("第")===0?1:2,ord:parseInt(m[1].replace(/[^\d]/g,""),10)||TM.length+1});
@@ -198,7 +189,7 @@ function extractOutlineV2(text,maxCh,tocMode){
     if(inner.length>=3){
       const U=[];const seenT={};
       for(let k=0;k<inner.length;k++){
-        const t=kgValidTitle(inner[k].title); // P0-1
+        const t=kgValidTitle(inner[k].title);
         if(!t||KG_STOP[t.toLowerCase()])continue;
         if(seenT[t])continue;seenT[t]=1;
         inner[k].title=t;
@@ -218,7 +209,7 @@ function extractOutlineV2(text,maxCh,tocMode){
   }
   function add(i,title,level,ord){
     title=String(title||"").replace(/\s+/g," ").trim();
-    const _vt=kgValidTitle(title);if(!_vt)return; // P0-1
+    const _vt=kgValidTitle(title);if(!_vt)return;
     title=_vt;
     if(title.length<2||title.length>46)return;
     if(/^[=\-–—_*]{2,}$/.test(title))return;
@@ -251,7 +242,7 @@ function extractOutlineV2(text,maxCh,tocMode){
     else if(m.i>uniq[uniMap[m.title]].i){uniq[uniMap[m.title]]=m;}
   }
   if(uniq.length<2){
-    return kgChunkChapters(String(text),maxCh); // P0-2：句子聚合兜底分章（此前整本书塌成 1 章）
+    return kgChunkChapters(String(text),maxCh); // 空行分段失败时用句子聚合，不然整本书会塌成一章
   }
   const chs=[];
   for(let k2=0;k2<uniq.length;k2++){
@@ -268,7 +259,7 @@ function extractTermsWeighted(text,chapters,limit){
   const sc={};
   for(const k2 in tr){
     const t2=k2;
-    if(!kgValidTitle(t2))continue; // P0-1：碎片术语拦截
+    if(!kgValidTitle(t2))continue;  // 挡掉碎片术语
     if(t2.length<2||KG_STOP[t2.toLowerCase()])continue;
     if(/^[A-Z\s]+$/.test(t2)&&t2.length>4)continue;   // 纯大写噪声
     if(/^第[0-9一二三四五六七八九十百千]+[章节篇讲回]$/.test(t2))continue; // 目录行噪声（第X章）

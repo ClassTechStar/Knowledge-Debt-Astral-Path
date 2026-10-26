@@ -7,15 +7,15 @@ using Xunit;
 namespace AstralPath.Api.Tests;
 
 /// <summary>
-/// §44 受约束智能体 / §45 知识库 / §46 用户画像 的端到端用例。
-/// 覆盖：正常路径、权限与越权（含 consent 闸门）、状态机冲突、诚实 501 延后项。
+/// 智能体、知识库、用户画像三块接口的端到端用例。
+/// 覆盖正常流程、越权访问、状态机冲突，以及没实现的能力要如实报错而不是假装成功。
 /// </summary>
 public class AgentKbProfileTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly WebApplicationFactory<Program> _factory;
 
     public AgentKbProfileTests(WebApplicationFactory<Program> factory)
-        => _factory = factory.WithWebHostBuilder(b => b.UseSetting("Security:RequireAuth", "false")); // 测试明确退出鉴权（生产默认开启）
+        => _factory = factory.WithWebHostBuilder(b => b.UseSetting("Security:RequireAuth", "false")); // 测试里关掉鉴权，生产默认是开着的
 
     private HttpClient Client() => _factory.CreateClient();
 
@@ -33,7 +33,7 @@ public class AgentKbProfileTests : IClassFixture<WebApplicationFactory<Program>>
             ? c.GetString() : null;
     }
 
-    // ═══════════════════════ §44 智能体 ═══════════════════════
+    // 智能体
 
     [Fact]
     public async Task Agent_Turn_Routes_To_Intent_And_Tracks_Session()
@@ -96,7 +96,7 @@ public class AgentKbProfileTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 
-    // ═══════════════════════ §45 知识库 ═══════════════════════
+    // 知识库
 
     [Fact]
     public async Task Kb_Lifecycle_Create_Version_Publish_Rollback_Archive()
@@ -201,7 +201,7 @@ public class AgentKbProfileTests : IClassFixture<WebApplicationFactory<Program>>
         var otherTeacher = await client.GetAsync($"/v1/kb/documents/{docId}?userId=demo-teacher-2&role=teacher");
         Assert.Equal(HttpStatusCode.NotFound, otherTeacher.StatusCode);
 
-        // 该教师获得有效授权后可见（consent 闸门生效）
+        // 该教师拿到授权后才可见（授权检查生效）
         var grant = await client.PostAsJsonAsync("/v1/consents/demo-student-a/grant",
             new { teacherId = "demo-teacher", purpose = "kb_read" });
         Assert.True(grant.IsSuccessStatusCode, await grant.Content.ReadAsStringAsync());
@@ -249,7 +249,7 @@ public class AgentKbProfileTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Equal(HttpStatusCode.UnprocessableEntity, bad.StatusCode);
     }
 
-    // ═══════════════════════ §46 用户画像 ═══════════════════════
+    // 用户画像
 
     [Fact]
     public async Task Profile_Features_Radar_Timeline_For_Demo_Student()
@@ -297,19 +297,19 @@ public class AgentKbProfileTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.True(tags.GetProperty("optOut").GetBoolean(), "opt-out 应被记录并随画像返回");
     }
 
-    // ═══════════════════════ 延后项与模块自检 ═══════════════════════
+    // 延后项与模块自检
 
     [Fact]
     public async Task Kb_Capabilities_Are_Implemented_And_Validate_Input()
     {
-        // 原为 501 延后项；现已实现分片直传与片段读取（见 ExtensionServicesTests）
+        // 以前这里是 501 没实现；现在分片直传和片段读取都有了，见 ExtensionServicesTests
         var client = Client();
         var uploads = await client.PostAsJsonAsync("/v1/kb/uploads", new { ownerUserId = "demo-student-a" });
-        Assert.Equal(HttpStatusCode.BadRequest, uploads.StatusCode);       // title 缺失 → 400，而非 501
+        Assert.Equal(HttpStatusCode.BadRequest, uploads.StatusCode);       // 缺 title 应该 400，不能是 501
         Assert.Equal("VALIDATION_ERROR", await ErrorCode(uploads));
 
         var chunks = await client.GetAsync("/v1/kb/chunks/ck-1");
-        Assert.Equal(HttpStatusCode.BadRequest, chunks.StatusCode);        // docId 缺失 → 400
+        Assert.Equal(HttpStatusCode.BadRequest, chunks.StatusCode);        // 缺 docId 应该 400
         Assert.Equal("VALIDATION_ERROR", await ErrorCode(chunks));
     }
 

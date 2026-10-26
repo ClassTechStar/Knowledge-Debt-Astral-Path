@@ -21,8 +21,8 @@ public sealed record ExamSection(string Title, int Items);
 public sealed record ExamStructure(IReadOnlyList<ExamItem> Items, IReadOnlyList<ExamSection> Sections);
 
 /// <summary>
-/// 试卷 / 作业 / 错题本地结构化（P2 迁移，源：Astralpath structureExamText + 辅助函数，L3501-3634）。
-/// 确定性规则、不依赖模型：板块识别 → 题头切分 → 选项切分 → 答案批量分发 → 题型推断。
+/// 试卷 / 作业 / 错题的本地结构化，确定性规则、不靠模型：
+/// 板块识别 → 题头切分 → 选项切分 → 答案批量分发 → 题型推断。
 /// 单卷题目上限 300。
 /// </summary>
 public static class ExamParser
@@ -35,7 +35,7 @@ public static class ExamParser
     public static string QTypeLabel(string? t)
         => t == "choice" ? "选择题" : t == "blank" ? "填空题" : t == "judge" ? "判断题" : t == "solve" ? "解答题" : "题目";
 
-    /// <summary>行预处理：统一换行、剥离 [page N]/[slide N]/[image N]/[media N]/[备注 N] 标记（源 t10ExamLines，L3509-3513）。</summary>
+    /// <summary>行预处理：统一换行、剥离 [page N]/[slide N]/[image N]/[media N]/[备注 N] 标记。</summary>
     public static IReadOnlyList<string> ExamLines(string? text)
     {
         return (text ?? "").Replace("\r\n", "\n").Replace("\r", "\n").Split('\n')
@@ -44,7 +44,7 @@ public static class ExamParser
             .ToList();
     }
 
-    /// <summary>板块标题识别（源 t10SectionOf，L3515-3532）。</summary>
+    /// <summary>板块标题识别。</summary>
     public static string? SectionOf(string? line)
     {
         var s = (line ?? "").Trim();
@@ -64,7 +64,7 @@ public static class ExamParser
         return null;
     }
 
-    /// <summary>题头识别（源 t10QuestionHead，L3534-3543）：1. / 1、/ 1）/ (1) / 第1题。
+    /// <summary>题头识别：1. / 1、/ 1）/ (1) / 第1题。
     /// 注：元素名用 Body 而非 Rest——Rest 是 ValueTuple 第 8 元素的保留字段名，命名会触发 CS8126。</summary>
     public static (int No, string Body)? QuestionHead(string? line)
     {
@@ -78,7 +78,7 @@ public static class ExamParser
         return null;
     }
 
-    /// <summary>答案行解析（源 t10AnswerOf，L3545-3559）：支持 "1.A 2.C" 批量分发。</summary>
+    /// <summary>答案行解析，支持 "1.A 2.C" 批量分发。</summary>
     public static IReadOnlyList<(int? No, string Text)> AnswerOf(string? line)
     {
         var s = (line ?? "").Trim();
@@ -101,7 +101,7 @@ public static class ExamParser
         return new[] { ((int?)null, body) };
     }
 
-    /// <summary>同行内联选项切分（源 t10InlineOptions，L3561-3568）。</summary>
+    /// <summary>同行内联选项切分。</summary>
     public static (string Head, IReadOnlyList<string> Options)? InlineOptions(string? stem)
     {
         var s = stem ?? "";
@@ -114,7 +114,7 @@ public static class ExamParser
         return (parts[0], options);
     }
 
-    /// <summary>题型推断（源 t10QType，L3569-3576）。</summary>
+    /// <summary>题型推断。</summary>
     public static string QType(ExamItem item, string? section)
     {
         var s = (section ?? "") + " " + (item.Stem ?? "").Substring(0, Math.Min(40, (item.Stem ?? "").Length));
@@ -126,7 +126,7 @@ public static class ExamParser
     }
 
     /// <summary>
-    /// 结构化主流程（源 structureExamText，L3577-3634）。
+    /// 结构化主流程。
     /// 逐行扫描：板块 → 题头（flush 当前题）→ 选项 → 答案（单题归属或入池）→ 正文续行；
     /// 收尾：无选项题目做内联选项补切 → 题型推断 → 答案池按编号匹配 → 顺序兜底分发。
     /// </summary>
@@ -205,8 +205,8 @@ public static class ExamParser
         }
         Flush();
 
-        // 硬上限：循环条件在 Flush 前判定，末题可能越界一条（源 JS 同为 301 行为）；
-        // 此处按业务约束（附录 A.3「单卷题目上限三百」）最终截断，保证真实 ≤ MaxItems
+        // 硬上限：循环条件在 Flush 前判定，末题可能多越界一条（老 JS 也是这个行为）；
+        // 这里最后再截一刀，保证实际条数 ≤ MaxItems
         if (items.Count > MaxItems) items = items.Take(MaxItems).ToList();
 
         // 内联选项补切（无独立选项行的题目）
@@ -260,7 +260,7 @@ public static class ExamParser
     }
 
     /// <summary>
-    /// 知识点匹配（源 matchExamKps，L3661-3687）：长词优先 + 位置不重叠贪心，单题上限默认 4（T10.1 同题不重复命中）。
+    /// 知识点匹配：长词优先 + 位置不重叠贪心，单题上限默认 4，同一题里一个词不重复命中。
     /// </summary>
     public static IReadOnlyList<ExamKpEntry> MatchKps(string? text, IReadOnlyList<ExamKpEntry> lex, int limit = 4)
     {
@@ -293,7 +293,7 @@ public static class ExamParser
     }
 }
 
-/// <summary>知识点词库条目（源 examKpLexicon 条目结构）。</summary>
+/// <summary>知识点词库条目。</summary>
 public sealed record ExamKpEntry(
     string Title,
     double W,

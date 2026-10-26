@@ -26,7 +26,7 @@ CHAPTER_RES = [
     re.compile(r"(第\s*([0-9]+|[一二三四五六七八九十百零]+)\s*章\s*[^\n]{0,60})"),
     re.compile(r"(Chapter\s+(\d+)\s+[^\n]{0,50})", re.I),
     re.compile(r"(第\s*([0-9]+|[一二三四五六七八九十百零]+)\s*部分\s*[^\n]{0,40})"),
-    # P2-12：篇/阶段/讲、行首"步骤N"、Part/Unit/Lesson/Stage N（自制框架/强化学习等书的章节形态）
+    # 篇/阶段/讲、行首"步骤N"、Part/Unit/Lesson/Stage N（自制框架/强化学习等书的章节形态）
     re.compile(r"(第\s*([0-9]+|[一二三四五六七八九十百零]+)\s*(?:篇|阶段|讲)\s*[^\n]{0,40})"),
     re.compile(r"(?m)^\s*(步骤\s*\d+[^\n]{2,48})$"),
     re.compile(r"(?m)^\s*((?:Part|Unit|Lesson|Stage)\s+\d+[^\n]{2,48})$", re.I),
@@ -157,7 +157,7 @@ def extract_full_toc(text: str, max_chapters: int = 80, max_sections: int = 240)
 
     chapters.sort(key=lambda x: (x["chapterNum"] if x["chapterNum"] is not None else 999, x["offset"]))
     sections.sort(key=lambda x: (x.get("chapterNum") or 999, x["offset"], x.get("sectionCode") or ""))
-    # P5-4：截断显式化——总数在截断前记录，随 toc 返回（此前 sec=240 静默截断无人知晓）
+    # 截断显式化——总数在截断前记录，随 toc 返回（此前 sec=240 静默截断没人知道）
     chapters_total, sections_total = len(chapters), len(sections)
     chapters = chapters[:max_chapters]
     sections = sections[:max_sections]
@@ -386,7 +386,7 @@ def generate_chapter_questions(
             "why": "来自本章正文细节",
         })
 
-    # K-07/P6-6：正确答案不再恒在 A 位——以题目 id（内容哈希）为种子的确定性洗牌。
+    # 正确答案不再恒在 A 位——以题目 id（内容哈希）为种子的确定性洗牌。
     # 同内容重跑 correctIndex 稳定（幂等）；跨题/跨章位置分布均匀，杜绝「两题即会选 A」。
     for q in qs:
         opts = q.get("options") or []
@@ -445,7 +445,7 @@ def build_deep_chapter_payload(
             body = f"小节「{sec['title']}」位于本教材中，建议结合所属章节复习。"
         q = generate_chapter_questions(sec["title"], body, material_title, n=1)
         sec_out.append({
-            **sec,
+             * *sec,
             "charCount": len(body),
             "content": body[:2500],
             "questions": q[:1],
@@ -464,7 +464,7 @@ def build_deep_chapter_payload(
             "sectionCount": len(sec_out),
             "questionCount": total_q,
             "textChars": len(text),
-            # P5-4：截断透明度——抽到的总数 vs 入库数（sectionsCapped=True 表示被 240 上限截断）
+            # 截断透明度——抽到的总数 vs 入库数（sectionsCapped=True 表示被 240 上限截断）
             "chaptersTotal": toc.get("chaptersTotal", len(bodies)),
             "sectionsTotal": toc.get("sectionsTotal", len(sec_out)),
             "sectionsCapped": toc.get("sectionsTotal", len(sec_out)) > len(sec_out),

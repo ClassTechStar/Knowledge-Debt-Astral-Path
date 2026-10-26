@@ -1,6 +1,5 @@
 /**
- * exam_runner.js —— shared/exam.js 黄金用例（供 verify_all / CI 调用）
- * ===========================================================
+ * exam_runner.js —— shared/exam.js 用例（verify_all / CI 调用）
  * 覆盖：四类题型（选择/填空/判断/解答）、答案批量分发、题号连续、空输入、
  *       单卷上限。输出 JSON：{passed, failed, results:[{id,name,ok,detail}]}
  */

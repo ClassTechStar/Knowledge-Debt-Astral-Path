@@ -3,7 +3,7 @@
 """
 naming_consistency.py —— 项目命名一致性检查与修复工具
 
-依据《技术方案》首部「项目名称规范」与《四人团队分工方案》§8.2：
+命名规范来自《技术方案》首部「项目名称规范」与《四人团队分工方案》§8.2：
 
 | 形态     | 取值                                          | 使用场景 |
 |----------|-----------------------------------------------|----------|
@@ -11,16 +11,16 @@ naming_consistency.py —— 项目命名一致性检查与修复工具
 | 中文简称 | 知债：星穹学途                                 | 正文叙述、章节标题、图表标签 |
 | 英文标识 | AstralPath                                     | 代码命名空间、解决方案名、包名、镜像名、数据库名、域名 |
 
-禁止再出现旧名：知债图 / ZhiZhaiTu / zhizhaitu，以及由旧名派生的
+旧名禁止再出现：知债图 / ZhiZhaiTu / zhizhaitu，以及旧名派生的
 ZhiZhai* 类型名、ZZ_* 环境变量、zz_* 临时前缀。
 
 用法：
-    python scripts/naming_consistency.py --check            # 只扫描（CI 门禁；残留 0 才返回 0）
+    python scripts/naming_consistency.py --check            # 只扫描（CI 用；残留 0 才返回 0）
     python scripts/naming_consistency.py --apply            # 就地修复（文本 + 文件改名）
     python scripts/naming_consistency.py --report out.md    # 输出 Markdown 残留扫描报告
 
-注意：本文件与生成的报告位于 SELF_EXEMPT_NAMES，**不参与** --apply，
-      因为它们需要原样保留旧名字面量作为检测依据（开发期已复现自指误报缺陷）。
+注意：本文件和生成的报告在 SELF_EXEMPT_NAMES 里，**不参与** --apply，
+      因为要原样留着旧名字面量当检测依据（开发期就复现过自指误报）。
 """
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# ── 规范取值（单一事实来源）───────────────────────────────────────────────
+# 规范取值（只维护这一份）
 FULL_NAME = "知债：星穹学途（Knowledge Debt: Astral Path）"
 SHORT_NAME = "知债：星穹学途"
 ENGLISH_ID = "AstralPath"
@@ -54,11 +54,11 @@ LEGACY_ZH = "知债图"          # 旧中文名
 LEGACY_PASCAL = "ZhiZhai"     # 旧 Pascal 前缀（ZhiZhaiTu / ZhiZhaiStore …）
 LEGACY_LOWER = "zhizhaitu"    # 旧小写名
 
-# ── 修复规则（顺序重要：先具体后通用）──────────────────────────────────────
+# 修复规则（顺序重要：先具体后通用）
 RULES: list[tuple[str, str]] = [
     # 1) 环境变量：旧名 ZZ_* → 规范前缀 ASTRALPATH_*（C# 侧保留旧名兼容读取）
     ("ZZ_", "ASTRALPATH_"),
-    # 2) 临时文件前缀 zz_tess* → astralpath_tess*
+    # 2) 临时文件旧前缀 zz_tess* → astralpath_tess*
     ("zz_tess_p", "astralpath_tess_p"),
     ("zz_tess_", "astralpath_tess_"),
     # 3) 旧类型名 ZhiZhai* → AstralPath*
@@ -73,7 +73,7 @@ RULES: list[tuple[str, str]] = [
     (r"C:\Users\18948\XiaomiMiMoProjects\AstralPath", str(ROOT)),
 ]
 
-# ── 残留检测模式（--check 判定用；本文件需保留这些旧名字面量）───────────────
+# 残留检测模式（--check 判定用；这些旧名字面量要原样留着当检测依据）
 RESIDUAL_PATTERNS: list[tuple[str, str]] = [
     (f"旧中文名：{LEGACY_ZH}", LEGACY_ZH),
     (f"旧帕斯卡名：{LEGACY_PASCAL}Tu", f"{LEGACY_PASCAL}Tu"),
@@ -104,12 +104,12 @@ def read_text(p: Path) -> str | None:
         return None
 
 
-# 「政策声明」语境标记：出现这些词的行是在**声明禁用/废弃**旧名，属于必要引用，
-# 不算实际使用。没有这层判断，README 里"禁止再使用旧名…"这样的政策文字会被误报
-# （本工具开发期已复现该误报）。
+# 「政策声明」语境标记：出现这些词的行是在声明禁用/废弃旧名，属于必要引用，
+# 不算实际使用。没这层判断，README 里"禁止再使用旧名…"这种政策文字会被误报
+# （开发期就复现过这个误报）。
 POLICY_CONTEXT = ("禁止", "旧名", "不得", "不再", "废弃", "停用", "已统一替换", "禁用", "残留", "legacy", "Legacy")
 
-# 「检测/清单」语境标记：验收清单与扫描命令本身必须原样引用旧名字面量作为**检测依据**，
+# 「检测/清单」语境标记：验收清单和扫描命令本身就得原样引用旧名字面量当检测依据，
 # 属于自指引用。缺这层判断，"- [ ] 全仓搜 知债图|ZhiZhaiTu → 零命中" 这类清单会被误报。
 DETECTION_CONTEXT = (
     "全仓搜", "零命中", "全仓无", "无残留", "为 0",

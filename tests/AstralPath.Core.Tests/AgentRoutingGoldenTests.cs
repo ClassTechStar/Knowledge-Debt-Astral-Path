@@ -5,10 +5,9 @@ using Xunit;
 namespace AstralPath.Core.Tests;
 
 /// <summary>
-/// 意图路由金样（P2：JS/C# 双实现消费同一张 tools/agent-intents.json 锚点表）。
-/// 表一致性由 scripts/verify_agent_intents.py 三方对拍；本测试锁 **C# 路由行为**：
-/// 危机词最高优先、负例占比 ≥60% 才落（A4 回归）、多锚点加分（A34）、
-/// 22 个意图的归属与文档（P1 提示词 §4.3 / P5-1 登记表=运行时表）一致。
+/// 意图路由用例：JS/C# 两端共用 tools/agent-intents.json 的锚点表，表本身由
+/// scripts/verify_agent_intents.py 三方比对；这里只守 C# 的路由行为——危机词优先、
+/// 负例占够才落兜底、多锚点加分，以及登记的意图和运行时表保持一致。
 /// </summary>
 public class AgentRoutingGoldenTests
 {
@@ -27,7 +26,7 @@ public class AgentRoutingGoldenTests
     {
         get
         {
-            // 环境变量 → 常规候选 → 从测试输出目录逐级向上回溯（不硬编码机器特定路径）
+            // 先看环境变量，再试常规位置，最后从测试输出目录逐级往上找（不写死机器路径）
             var env = Environment.GetEnvironmentVariable("ASTRALPATH_GOLDEN_DIR");
             if (!string.IsNullOrWhiteSpace(env) && Directory.Exists(env)) return env;
             var candidates = new[]
@@ -95,7 +94,7 @@ public class AgentRoutingGoldenTests
         Assert.Equal(expected, DefaultAgentIntents.Table.Select(i => i.IntentId).ToArray());
     }
 
-    /// <summary>P2 扩容的 4 个意图须真实可达（锚点命中即路由到对应意图）。</summary>
+    /// <summary>后加的 4 个意图要真能路由到：锚点命中就得落到对应意图。</summary>
     [Theory]
     [InlineData("切换教材到Python", "material.switch")]
     [InlineData("教材列表", "material.list")]

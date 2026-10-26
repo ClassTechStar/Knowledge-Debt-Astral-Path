@@ -7,21 +7,18 @@ namespace AstralPath.Core.Ocr;
 /// 中文软断行合并（带分栏与列表保护）/ TSV 置信度重建 / 多配置模糊投票 / 质量评分。
 /// 纯函数，可单测；不依赖 IO / 网络。
 ///
-/// 相对 v2 的关键修复：
-/// ① FixConfusions 的 0→O / 1→l / 5→S / 8→B 是「无差别替换」，
-///    "Win10"→"WinlO"、"ISO9001"→"ISO9OOl"，把真实标识符直接腐蚀。
-///    v3 先做「标识符/版本号/代码」识别，命中就跳过替换。
-/// ② 新增 RemoveRepeatedBoilerplate：跨页重复的页眉页脚自动去除（教材 OCR 最大噪声源）
-/// ③ 新增 Dehyphenate：英文行末断字还原（inter-national → international）
-/// ④ ReconstructCjkLines 增加保护：不合并列表项 / 编号行 / 疑似标题
-/// ⑤ ReconstructFromTsvWords：v2 拿「本行第一个词的 Y」做聚类基准，
-///    遇到基线漂移（扫描歪斜）就串行；v3 改为按 Y 排序后的「间隙聚类」
-/// ⑥ VotePasses：v2 用整行精确匹配投票，三路 PSM 稍有差异就全部投不中；
-///    v3 先归一化（去空白/全角）再分组投票，并用 HashSet 修掉 O(n²) 的 Contains
+/// 相比 v2 修了这些：FixConfusions 的 0→O / 1→l / 5→S / 8→B 原来是无差别替换，
+/// "Win10"→"WinlO"、"ISO9001"→"ISO9OOl"，把真实标识符都腐蚀了，现在先认标识符/版本号/代码，命中就跳过替换；
+/// 跨页重复的页眉页脚是教材 OCR 最大噪声源，加了 RemoveRepeatedBoilerplate 自动去掉；
+/// 加了 Dehyphenate 还原英文行末断字（inter-national → international）；
+/// ReconstructCjkLines 不再合并列表项 / 编号行 / 疑似标题；
+/// ReconstructFromTsvWords 的聚类基准原来取「本行第一个词的 Y」，扫描一歪就串行，改成按 Y 排序后的间隙聚类；
+/// VotePasses 原来整行精确匹配投票，三路 PSM 稍有差异就全投不中，现在先归一化（去空白/全角）再分组投票，
+/// 还用 HashSet 修掉 O(n²) 的 Contains。
 /// </summary>
 public static class OcrTextEngine
 {
-    // ── 1. 混淆修复（带保护）────────────────────────────
+    // 1. 混淆修复（带保护）
     private static readonly (string Bad, string Good)[] FullWidthPairs =
     {
         ("（", "("), ("）", ")"), ("［", "["), ("］", "]"),
@@ -68,7 +65,7 @@ public static class OcrTextEngine
         return s;
     }
 
-    // ── 2. 页眉页脚（跨页重复行）────────────────────────
+    // 2. 页眉页脚（跨页重复行）
     private static readonly string[] PageSeparators = { "\f", "\u000c" };
 
     /// <summary>
@@ -125,7 +122,7 @@ public static class OcrTextEngine
             yield return src.Skip(i).Take(size).ToArray();
     }
 
-    // ── 3. 英文断字还原 ─────────────────────────────────
+    // 3. 英文断字还原
     /// <summary>行末连字符 + 下一行小写开头 → 合并并去掉连字符（inter-/national）。</summary>
     public static string Dehyphenate(string text)
     {
@@ -152,7 +149,7 @@ public static class OcrTextEngine
         return string.Join("\n", outLines);
     }
 
-    // ── 4. 中文软断行合并（带保护）──────────────────────
+    // 4. 中文软断行合并（带保护）
     private static bool IsMostlyCjk(string s)
     {
         if (s.Length == 0) return false;
@@ -217,7 +214,7 @@ public static class OcrTextEngine
         return string.Join("\n", outLines);
     }
 
-    // ── 5. 噪声过滤 ─────────────────────────────────────
+    // 5. 噪声过滤
     private static readonly HashSet<string> NoiseExact = new(StringComparer.OrdinalIgnoreCase)
     {
         "page", "ocr", "tesseract", "scanned by", "copyrighted material",
@@ -238,7 +235,7 @@ public static class OcrTextEngine
             if (NoiseExact.Contains(s)) continue;
             if (Regex.IsMatch(s, @"^scanned by .{0,24}$", RegexOptions.IgnoreCase)) continue;
             // v3：装饰性页码 "- 37 -" / "·37·" / "第 37 页"
-            // 注意：纯数字行（"37"）必须保留——它可能是公式或题号（金样 OC03）
+            // 注意：纯数字行（"37"）必须保留——它可能是公式或题号（OC03 用例盯着）
             if (Regex.IsMatch(s, @"^[-–—~·*|]{1,3}\s*\d{1,4}\s*[-–—~·*|]{1,3}$")) continue;
             if (Regex.IsMatch(s, @"^第\s*\d{1,4}\s*页$")) continue;
             // 全大写长页眉
@@ -249,7 +246,7 @@ public static class OcrTextEngine
         return string.Join("\n", kept);
     }
 
-    // ── 6. 置信度加权重建 ───────────────────────────────
+    // 6. 置信度加权重建
     public sealed record WordTok(string Text, double Confidence, double X, double Y);
 
     /// <summary>
@@ -286,7 +283,7 @@ public static class OcrTextEngine
         return string.Join("\n", lines);
     }
 
-    // ── 7. 多配置投票（模糊）────────────────────────────
+    // 7. 多配置投票（模糊）
     /// <summary>投票用的归一化键：去空白、全角转半角、小写化。</summary>
     internal static string VoteKey(string line)
     {
@@ -366,7 +363,7 @@ public static class OcrTextEngine
         return string.Join("\n", order);
     }
 
-    // ── 8. 质量评分 ─────────────────────────────────────
+    // 8. 质量评分
     public sealed record QualityReport(
         double MeanConf,
         double CjkRatio,
@@ -389,7 +386,7 @@ public static class OcrTextEngine
             Math.Round(noiseRatio, 4), lines.Length, grade);
     }
 
-    // ── 9. 一站式 ───────────────────────────────────────
+    // 9. 一站式
     /// <summary>
     /// 一站式清洗：混淆修复 → 噪声过滤 → 页眉页脚去除 → 断字还原 → 中文断行合并。
     /// </summary>

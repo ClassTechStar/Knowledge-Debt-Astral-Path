@@ -18,23 +18,13 @@ public sealed record DiagEntry(DateTimeOffset At, string Scope, string Kind, str
 }
 
 /// <summary>
-/// 轻量诊断器（方案 P13）：把「被吞掉的错误」变成可观测记录。
-/// <para>
-/// 背景：全仓曾有 40 处 <c>catch { }</c> 完全空吞——线上出问题时只能猜。本类型提供
-/// 一个**零依赖、不抛异常、有界内存**的出口：
-/// <list type="bullet">
-/// <item>环形缓冲固定 50 条，不随运行时长增长（避免日志噪声把内存吃掉）；</item>
-/// <item>调用点由 <see cref="CallerMemberNameAttribute"/> / <see cref="CallerLineNumberAttribute"/>
-/// 自动注入，所以每个 catch 只需写 <c>Diag.Recover(ex)</c>，不产生「scope 字符串手抄不一致」；</item>
-/// <item>纯内存实现，不写文件、不发网络——符合「纯前端+本地优先」的隐私约束。</item>
-/// </list>
-/// </para>
-/// <para>
-/// 使用约定（分类处置）：
-/// 可恢复 → <see cref="Recover"/>（记录后继续，降级路径照旧）；
-/// 不可恢复 → <see cref="Fail"/>（记录 + 交由上层返回 ProblemDetails / 用户提示）；
-/// 纯说明 → <see cref="Note"/>。
-/// </para>
+/// 轻量诊断器：把被吞掉的错误变成能看见的记录。以前全仓有 40 处空 catch，线上出问题只能猜，
+/// 所以弄了这个零依赖、不抛异常、内存有界的出口。环形缓冲固定 50 条，跑再久也不涨内存；
+/// 调用点靠 <see cref="CallerMemberNameAttribute"/> / <see cref="CallerLineNumberAttribute"/> 自动注入，
+/// catch 里写一行 <c>Diag.Recover(ex)</c> 就行，不用手抄 scope 字符串。纯内存，不写文件不发网络，
+/// 符合本地优先的隐私要求。
+/// 用法：可恢复走 <see cref="Recover"/>（记完继续降级路径），不可恢复走 <see cref="Fail"/>
+/// （记完交给上层出 ProblemDetails / 提示），纯说明走 <see cref="Note"/>。
 /// </summary>
 public static class Diag
 {
@@ -47,7 +37,7 @@ public static class Diag
     /// <summary>累计记录条数（含已被挤出缓冲的），用于判断「发生过多少次」而非「最近几次」。</summary>
     public static long Total => Interlocked.Read(ref _total);
 
-    /// <summary>可恢复错误：记录后继续执行降级路径。绝不抛异常。</summary>
+    /// <summary>可恢复错误：记一笔然后继续走降级路径，不往外抛异常。</summary>
     public static void Recover(
         Exception? ex = null,
         string? note = null,
@@ -99,7 +89,7 @@ public static class Diag
         }
         catch
         {
-            // 诊断器自身绝不允许影响主流程：这里刻意吞掉——它已是最后一道防线。
+            // 诊断器自己不能再把主流程搞挂，这里只能吞掉，它已经是最后一道防线了。
         }
     }
 

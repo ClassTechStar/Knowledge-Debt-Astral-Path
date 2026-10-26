@@ -6,10 +6,9 @@ using Xunit;
 namespace AstralPath.Core.Tests;
 
 /// <summary>
-/// P2 迁移验证：试卷作业错题结构化与知识点层级图谱 golden 契约（eval/golden/exam_parse.json）。
-/// 覆盖板块识别、题头多形态、选项切分（独立行/内联）、答案分配（单题归属/编号批量/顺序兜底）、
-/// 题型推断、页标记剥离、知识点匹配（长词优先+位置不重叠+单题上限）、
-/// 三层节点图谱（主题/知识点/题目 + attach/tested/related/prerequisite 四类边 + 清环）。
+/// 试卷错题结构化与知识点图谱的用例（eval/golden/exam_parse.json）。
+/// 覆盖板块识别、题头各种写法、选项切分、答案分配、题型推断、页标记剥离、
+/// 知识点匹配（长词优先、位置不重叠、单题上限），以及主题/知识点/题目三层图谱的建边与清环。
 /// </summary>
 public class GoldenExamParseTests
 {

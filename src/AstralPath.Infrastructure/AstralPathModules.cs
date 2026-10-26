@@ -482,9 +482,9 @@ public sealed class AstralPathModules
 
     public object AgentTurns() { lock (_gate) return _agentTurns.ToList(); }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  §44 智能体：会话状态机与工具清单（补齐 §4.0 接口目录所需能力）
-    // ══════════════════════════════════════════════════════════════════════
+
+    // §44 智能体：会话状态机与工具清单（补齐 §4.0 接口目录所需能力）
+
 
     private readonly Dictionary<string, Dictionary<string, object?>> _sessions = new(StringComparer.OrdinalIgnoreCase);
 
@@ -569,9 +569,9 @@ public sealed class AstralPathModules
         || roleMask.Contains(role, StringComparison.OrdinalIgnoreCase)
         || roleMask.Contains("all", StringComparison.OrdinalIgnoreCase);
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  §45 知识库：文档生命周期（版本 / 发布 / 回滚 / 归档 / 标签树）
-    // ══════════════════════════════════════════════════════════════════════
+
+    // §45 知识库：文档生命周期（版本 / 发布 / 回滚 / 归档 / 标签树）
+
 
     private readonly Dictionary<string, List<KbVersion>> _kbVersions = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> _kbPublished = new(StringComparer.OrdinalIgnoreCase);
@@ -735,7 +735,7 @@ public sealed class AstralPathModules
     private static bool CanEdit(KbDocument doc, string userId, string role) =>
         role == "admin" || doc.OwnerUserId == userId;
 
-    // ── 分片直传与证据片段（原为 501 延后项，现补齐）────────────────────
+    // 分片直传与证据片段（原为 501 延后项，现补齐）
     private readonly Dictionary<string, KbUploadTicket> _kbUploads = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, List<string>> _kbUploadParts = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, List<KbChunk>> _kbChunks = new(StringComparer.OrdinalIgnoreCase);
@@ -829,12 +829,12 @@ public sealed class AstralPathModules
         return chunks;
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  §46 用户画像：特征 / 六维雷达 / 快照时间线
-    //  说明：本演示版特征由**已落库的事实**（attempts / mastery / debt_edges）直接派生，
-    //        等价于 §46.2 八项纯函数在「行为信号已就绪」前提下的取值；
-    //        完整版需按 §46.1 采集管道接入原始行为信号（见 §48 与分工方案 §8.6）。
-    // ══════════════════════════════════════════════════════════════════════
+
+    // §46 用户画像：特征 / 六维雷达 / 快照时间线
+    // 说明：本演示版特征由**已落库的事实**（attempts / mastery / debt_edges）直接派生，
+    // 等价于 §46.2 八项纯函数在「行为信号已就绪」前提下的取值；
+    // 完整版需按 §46.1 采集管道接入原始行为信号（见 §48 与分工方案 §8.6）。
+
 
     public object? ProfileOverview(IAstralPathStore store, string studentId, bool teacherSide)
     {
@@ -997,12 +997,12 @@ public sealed class AstralPathModules
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    //  运行时状态快照（P1：重启不丢）
-    //  只导出「用户创造的数据」：知识库文档与正文、画像、智能体轮次、版本/发布/归档。
-    //  分片（_kbChunks）、上传票据（_kbUploads）、会话句柄（_sessions）、CSR 缓存
-    //  属瞬态或可重建数据，不落盘。
-    // ══════════════════════════════════════════════════════════════════════
+
+    // 运行时状态快照（P1：重启不丢）
+    // 只导出「用户创造的数据」：知识库文档与正文、画像、智能体轮次、版本/发布/归档。
+    // 分片（_kbChunks）、上传票据（_kbUploads）、会话句柄（_sessions）、CSR 缓存
+    // 属瞬态或可重建数据，不落盘。
+
 
     /// <summary>导出可持久化的模块状态。</summary>
     public ModuleStateDto ExportState()

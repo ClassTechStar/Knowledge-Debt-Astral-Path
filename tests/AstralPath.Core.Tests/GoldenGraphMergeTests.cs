@@ -5,8 +5,8 @@ using Xunit;
 namespace AstralPath.Core.Tests;
 
 /// <summary>
-/// P1 迁移验证：AI 增强构图 golden 契约（eval/golden/graph_merge.json）。
-/// 覆盖标题归一化、构图 JSON 解析、合并去重/自环跳过/清环、题池保留（T15）。
+/// AI 增强构图的用例（eval/golden/graph_merge.json）。
+/// 覆盖标题归一化、构图 JSON 解析、合并去重/自环跳过/清环，以及合并后题池里的旧题不丢。
 /// </summary>
 public class GoldenGraphMergeTests
 {

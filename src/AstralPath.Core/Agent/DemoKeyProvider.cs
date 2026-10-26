@@ -5,13 +5,12 @@ using System.Text.Json;
 namespace AstralPath.Core.Agent;
 
 /// <summary>
-/// 内置演示密钥（P0 迁移，源：Astralpath __AP_EMBED__ + getBuiltin，L6201/L6223-6241；T12 设计）。
-/// 密钥以 AES-256-GCM 密文形态随代码分发、运行时解密，明文不落源码；
-/// 用户另行配置自定义密钥时自定义优先。解密失败（环境不支持/密文损坏）返回 null，整体降级为未配置。
+/// 内置演示密钥。密钥是 AES-256-GCM 密文，随代码一起分发，运行时才解开，明文不进源码；
+/// 用户配了自定义 key 就优先用自定义的。解不开（环境不支持或密文坏了）就返回 null，当没配置处理。
 /// </summary>
 public static class DemoKeyProvider
 {
-    // AES-256-GCM 密文信封（与前端 window.__AP_EMBED__ 同源；明文密钥不出现于任何文件）
+    // AES-256-GCM 密文信封，和前端 window.__AP_EMBED__ 同源，明文 key 不落在任何文件里
     private const string P1 = "EBg9FIJi/bCyafZWyXyf8a";
     private const string P2 = "EWFpxaUt6rq6VYcPm7kIE=";
     private const string IV = "geJIbHcrK3OHQNtO";
@@ -21,7 +20,7 @@ public static class DemoKeyProvider
     private static MimoConfig? _cached;
     private static bool _resolved;
 
-    /// <summary>解析内置演示密钥（幂等缓存）；失败返回 null。</summary>
+    /// <summary>解析内置演示密钥，结果缓存住只算一次；失败返回 null。</summary>
     public static MimoConfig? Resolve()
     {
         lock (Gate)
@@ -61,7 +60,7 @@ public static class DemoKeyProvider
         }
         catch (Exception)
         {
-            return null; // 解密失败：静默降级为未配置，不影响主流程
+            return null; // 解不开就当没配置，不打扰主流程
         }
     }
 }

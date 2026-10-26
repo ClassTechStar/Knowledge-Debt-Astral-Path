@@ -1,6 +1,6 @@
 namespace AstralPath.Core.Formatting;
 
-/// <summary>三端统一数值格式化。score/impact 金样要求 F6。</summary>
+/// <summary>三端统一数值格式化。score/impact 的用例要求 F6。</summary>
 public static class NumberFormatter
 {
     public static string FormatScore(double score) => score.ToString("F6", System.Globalization.CultureInfo.InvariantCulture);

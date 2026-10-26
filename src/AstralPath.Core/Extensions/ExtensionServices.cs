@@ -3,17 +3,15 @@ using AstralPath.Core.Formula;
 namespace AstralPath.Core.Extensions;
 
 /// <summary>
-/// §19 扩展服务算法层（BASELINE 纯函数）。
-/// 全部为确定性计算：同样输入必得同样输出，可写金样、可 1e-6 复核。
-/// 引用口径：《技术方案》§19.1–§19.10；伦理口径见 §31 与《分工方案》附录 A。
+/// 扩展服务的算法层（BASELINE 纯函数）。
+/// 全是确定性计算：同样的输入必得同样的输出，好写用例、能按 1e-6 容差复核。
+/// 伦理相关的硬约束写在各服务自己的头部注释里。
 /// </summary>
 
-// ══════════════════════════════════════════════════════════════════════════
-//  §19.1 concept-diffusion-svc 知识点传播模拟（BASELINE · diff-v1）
-//  正向传播：b(0)_v = Δv (v∈S)，b(d)_v = Σ α·w(u,v)·b(d-1)_u
-//  反向传播：g(0)_v = impactSumIn(v)，g(d)_v = Σ α·w(v,c)·g(d-1)_c
-//  截断误差界：‖b(0)‖·α^(D+1)/(1-α)
-// ══════════════════════════════════════════════════════════════════════════
+// concept-diffusion-svc 知识点传播模拟（BASELINE · diff-v1）
+// 正向传播：b(0)_v = Δv (v∈S)，b(d)_v = Σ α·w(u,v)·b(d-1)_u
+// 反向传播：g(0)_v = impactSumIn(v)，g(d)_v = Σ α·w(v,c)·g(d-1)_c
+// 截断误差界：‖b(0)‖·α^(D+1)/(1-α)
 public sealed record DiffusionInput(
     IReadOnlyList<string> Nodes,
     IReadOnlyList<(string From, string To, double Weight)> Edges,
@@ -113,7 +111,7 @@ public static class ConceptDiffusion
         return new DiffusionResult(Version, alpha, depth, n, truncationBound, gains, ranking);
     }
 
-    /// <summary>债边影响预测（§19.1 impact 预测 BASELINE）：只模拟"修复后是否仍满足条件"。</summary>
+    /// <summary>债边影响预测：只模拟"修复后是否仍满足条件"。</summary>
     public static IReadOnlyList<(string From, string To, double Impact, double ImpactHat, bool StillDebt)> PredictImpact(
         DiffusionInput input, DiffusionResult diffusion)
     {
@@ -140,10 +138,8 @@ public static class ConceptDiffusion
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-//  §19.2 exam-impact-svc 考试影响预测
-//  口径：只读取债边与掌握度快照做线性响应，不重算 score 权威值。
-// ══════════════════════════════════════════════════════════════════════════
+// exam-impact-svc 考试影响预测
+// 只读债边和掌握度快照做线性响应，不重算 score 权威值。
 public sealed record ExamImpactInput(
     string ExamId, int DaysToExam, int DayBudgetMin,
     IReadOnlyList<(string KpId, double Score, double Impact, double Weight)> Debts);
@@ -190,10 +186,8 @@ public static class ExamImpact
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-//  §19.3 peer-cohort-svc 同辈对照（强伦理）
-//  铁律：k-匿名（默认 k=5）；不产出个体明细；不排名；不做能力定性。
-// ══════════════════════════════════════════════════════════════════════════
+// peer-cohort-svc 同辈对照（强伦理）
+// 铁律：k-匿名（默认 k=5）；不产出个体明细；不排名；不做能力定性。
 public sealed record CohortInput(int K, IReadOnlyList<(string StudentId, double Score)> Members);
 
 public sealed record CohortResult(int SampleCount, bool Suppressed, double? P25, double? P50, double? P75, string? Note);
@@ -225,10 +219,8 @@ public static class PeerCohort
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-//  §19.4 study-group-svc 学习小组匹配（强伦理）
-//  铁律：只用聚合标签匹配，不用分数明文/排名；规模 3–5 人。
-// ══════════════════════════════════════════════════════════════════════════
+// study-group-svc 学习小组匹配（强伦理）
+// 铁律：只用聚合标签匹配，不用分数明文/排名；规模 3–5 人。
 public sealed record GroupMemberInput(string StudentId, IReadOnlyList<string> Tags);
 public sealed record GroupResult(IReadOnlyList<IReadOnlyList<string>> Groups, string Note);
 
@@ -271,10 +263,8 @@ public static class StudyGroup
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-//  §19.5 micro-lesson-svc 微课装配
-//  铁律：不产出数字与结论（禁编造）；只装配资源清单与时长。
-// ══════════════════════════════════════════════════════════════════════════
+// micro-lesson-svc 微课装配
+// 铁律：不产出数字与结论（禁编造）；只装配资源清单与时长。
 public sealed record MicroLessonInput(string KpId, string KpName, IReadOnlyList<string> Resources, int Minutes);
 
 public sealed record MicroLessonResult(
@@ -283,7 +273,7 @@ public sealed record MicroLessonResult(
 
 public static class MicroLesson
 {
-    // 门禁只拦截**结论性数字**：分数（N 分，不含"分钟"）、百分比、个百分点。
+    // 检查只拦**结论性数字**：分数（N 分，不含"分钟"）、百分比、个百分点。
     // 时长（N 分钟）属于排期事实，不是编造的学业结论，故放行。
     private static readonly System.Text.RegularExpressions.Regex NumberPattern =
         new(@"\d+(\.\d+)?\s*(%|个百分点)|\d+(\.\d+)?\s*分(?!钟)", System.Text.RegularExpressions.RegexOptions.Compiled);
@@ -301,10 +291,8 @@ public static class MicroLesson
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-//  §19.6 learning-velocity-svc 学习速度建模（禁黑盒）
-//  口径：只用可解释的指数平滑 + 线性回归斜率；不引入不可解释模型。
-// ══════════════════════════════════════════════════════════════════════════
+// learning-velocity-svc 学习速度建模（禁黑盒）
+// 只用可解释的指数平滑 + 线性回归斜率，不引入说不清的模型。
 public sealed record VelocityInput(IReadOnlyList<(DateTime At, double Score)> Series, double Alpha = 0.3);
 public sealed record VelocityResult(double Smoothed, double SlopePerDay, string Trend, string Note);
 
@@ -333,10 +321,8 @@ public static class LearningVelocity
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-//  §19.7 spaced-review-svc 间隔重复调度（建议态）
-//  铁律：只产出建议队列，不直接写 mastery / cleared。
-// ══════════════════════════════════════════════════════════════════════════
+// spaced-review-svc 间隔重复调度（建议态）
+// 铁律：只产出建议队列，不直接写 mastery / cleared。
 public sealed record ReviewItem(string KpId, int Lapses, double LastScore, DateTime? LastReviewAt);
 
 public sealed record ReviewPlanItem(string KpId, DateTime DueAt, int IntervalDays, string Reason);
@@ -362,10 +348,8 @@ public static class SpacedReview
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-//  §19.8 prerequisite-simulator-svc 先修补全模拟器
-//  口径：只做"若补齐某先修，债边会如何变化"的只读推演，不写生产 debt_edges。
-// ══════════════════════════════════════════════════════════════════════════
+// prerequisite-simulator-svc 先修补全模拟器
+// 只做"若补齐某先修，债边会如何变化"的只读推演，不写生产 debt_edges。
 public sealed record PrereqSimInput(
     IReadOnlyList<(string From, string To, double Weight)> Edges,
     IReadOnlyDictionary<string, double> Score,
@@ -394,10 +378,8 @@ public static class PrerequisiteSimulator
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-//  §19.9 knowledge-forecast-svc 学业预警预测（强伦理）
-//  铁律：只输出**区间与建议**，不输出"不及格概率"等可当处分的定性；fail-closed。
-// ══════════════════════════════════════════════════════════════════════════
+// knowledge-forecast-svc 学业预警预测（强伦理）
+// 铁律：只输出**区间与建议**，不输出"不及格概率"等可当处分的定性；fail-closed。
 public sealed record ForecastInput(
     double CurrentScore, double SlopePerDay, int DaysAhead, double OpenDebtImpact);
 
@@ -426,10 +408,8 @@ public static class KnowledgeForecast
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-//  §19.10 lab-bench-svc 算法实验台（内部）
-//  口径：只做候选公式注册、回归对比与双人审批，不触碰生产写路径。
-// ══════════════════════════════════════════════════════════════════════════
+// lab-bench-svc 算法实验台（内部）
+// 只做候选公式注册、回归对比与双人审批，不碰生产写路径。
 public sealed record LabExperiment(string Id, string Name, string CandidateVersion, double Tolerance);
 public sealed record LabRunResult(string ExperimentId, int Cases, int Passed, double MaxDelta, bool RegressionOk);
 
@@ -454,6 +434,6 @@ public static class LabBench
         return (true, $"公式版本 {version} 已由 {proposer} 提议、{approver} 审批通过");
     }
 
-    /// <summary>与 BASELINE 权重版本对齐（§19.10 回归基准）。</summary>
+    /// <summary>和 BASELINE 权重版本对齐，当回归基准用。</summary>
     public static string BaselineFormulaVersion => FormulaWeights.WeightVersion;
 }

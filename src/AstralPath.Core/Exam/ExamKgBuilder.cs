@@ -18,7 +18,7 @@ public sealed record ExamNode(
 /// <summary>试卷图谱边（四类：attach 归属 / tested 考查 / related 同题共现 / prerequisite 先修）。</summary>
 public sealed record ExamEdge(string From, string To, double W, string EType, bool Tg, double Conf);
 
-/// <summary>三元组（源 t10Triples）。</summary>
+/// <summary>三元组。</summary>
 public sealed record ExamTriple(string Subject, string Relation, string Object, double Weight, double? Confidence);
 
 /// <summary>图谱统计。</summary>
@@ -35,17 +35,17 @@ public sealed record ExamKg(
 public sealed record BookEdge(string From, string To, bool Tg);
 
 /// <summary>
-/// 试卷知识点层级图谱（P2 迁移，源：Astralpath buildExamKG + t10Triples，L3688-3799）。
-/// 三层节点：主题（教材章节归属优先，否则试卷板块）→ 知识点（词库匹配）→ 题目（上限 120）；
+/// 试卷知识点层级图谱。
+/// 三层节点：主题（优先挂教材章节，没有就用试卷板块）→ 知识点（词库匹配）→ 题目（最多 120）；
 /// 四类边：attach 归属 / tested 考查 / related 同题共现 / prerequisite 继承教材先修；
-/// 构图后按拓扑序清环。全部为确定性规则，不依赖模型。
+/// 建完按拓扑序清环。全程确定性规则，不靠模型。
 /// </summary>
 public static class ExamKgBuilder
 {
-    /// <summary>题目节点上限（源 L3752：shown = min(items, 120)）。</summary>
+    /// <summary>题目节点上限：shown = min(items, 120)。</summary>
     public const int MaxItemNodes = 120;
 
-    /// <summary>单题知识点上限（源 L3710：matchExamKps limit=4）。</summary>
+    /// <summary>单题知识点上限，词库匹配那边 limit=4。</summary>
     public const int MaxKpsPerItem = 4;
 
     public static ExamKg Build(
@@ -77,7 +77,7 @@ public static class ExamKgBuilder
             return id;
         }
 
-        // ① 题目 → 知识点（词库匹配，源 L3709-3712）
+        // 先给每道题配知识点（词库匹配）
         var itemKps = new List<List<string>>();
         foreach (var it in items)
         {
@@ -91,14 +91,14 @@ public static class ExamKgBuilder
             foreach (var k in kps)
                 if (kpSeen.Add(k)) kpTitles.Add(k);
 
-        // ② 兜底：词库未命中时用试卷自身抽取的知识点（源 L3718-3725）
+        // 词库一个都没命中时，用试卷自己抽出来的知识点兜底
         if (kpTitles.Count == 0 && fallbackKps != null)
         {
             foreach (var t in fallbackKps)
                 if (!string.IsNullOrWhiteSpace(t) && kpSeen.Add(t)) kpTitles.Add(t);
         }
 
-        // ③ 知识点节点（源 L3727-3733）
+        // 建知识点节点
         for (var i = 0; i < kpTitles.Count; i++)
         {
             var k = kpTitles[i];
@@ -108,7 +108,7 @@ public static class ExamKgBuilder
             nodes.Add(new ExamNode(id, k, "kp", 2, paperName, ""));
         }
 
-        // ④ 主题节点：优先教材章节归属，否则试卷板块（源 L3735-3750）
+        // 主题节点：优先归到教材章节，不行就用试卷板块
         var topicByKey = new Dictionary<string, string>(StringComparer.Ordinal);
         string TopicFor(string k, ExamKpEntry? lexEntry)
         {
@@ -138,7 +138,7 @@ public static class ExamKgBuilder
             edges.Add(new ExamEdge(tid, kpMap[k].Id, 0.6, "attach", false, 0.8));
         }
 
-        // ⑤ 题目节点（上限 120，源 L3752-3761）
+        // 题目节点，最多 120 个
         var shown = Math.Min(items.Count, MaxItemNodes);
         for (var i = 0; i < shown; i++)
         {
@@ -153,7 +153,7 @@ public static class ExamKgBuilder
                     edges.Add(new ExamEdge(kpMap[k].Id, id, 0.5, "tested", false, 0.7));
         }
 
-        // ⑥ 知识点间关联：同题共现（源 L3763-3777）
+        // 知识点之间的关联：同一道题里共现过就算
         var co = new Dictionary<string, int>(StringComparer.Ordinal);
         foreach (var kps in itemKps)
         {
@@ -175,7 +175,7 @@ public static class ExamKgBuilder
             edges.Add(new ExamEdge(kpMap[p[0]].Id, kpMap[p[1]].Id, Math.Min(0.4 + kv.Value * 0.2, 1.2), "related", false, 0.6));
         }
 
-        // 继承教材先修边（源 L3778-3791）
+        // 教材先修边直接继承过来
         if (bookEdges != null)
         {
             foreach (var e in bookEdges)
@@ -193,7 +193,7 @@ public static class ExamKgBuilder
             }
         }
 
-        // 清环（源 L3792，泛型复用 P1 清环语义）
+        // 清环，复用 AiGraphMerger 的通用清环逻辑
         var cleaned = AiGraphMerger.RemoveCyclesTopo(nodes, edges, n => n.Id, e => e.From, e => e.To);
         var finalEdges = cleaned.Edges;
         var triples = ToTriples(nodes, finalEdges);
@@ -201,7 +201,7 @@ public static class ExamKgBuilder
         return new ExamKg(nodes, finalEdges, triples, stats);
     }
 
-    /// <summary>三元组派生（源 t10Triples，L3688-3696）：关系标签 attach→归属 / tested→考查 / related→同题共现 / prerequisite→先修于。</summary>
+    /// <summary>从边派生三元组：attach→归属 / tested→考查 / related→同题共现 / prerequisite→先修于。</summary>
     public static IReadOnlyList<ExamTriple> ToTriples(IReadOnlyList<ExamNode> nodes, IReadOnlyList<ExamEdge> edges)
     {
         var titles = new Dictionary<string, string>(StringComparer.Ordinal);

@@ -20,7 +20,7 @@ public sealed record NarrativeResult(
     bool DegradedTemplate,
     string? ModelVer);
 
-/// <summary>禁词门禁 + 槽位校验 + 模板降级（narrative-svc / ModelService）。</summary>
+/// <summary>禁词检查 + 槽位校验 + 模板降级（narrative-svc / ModelService）。</summary>
 public static class NarrativeGuard
 {
     public static IReadOnlyList<string> ScanBanned(string text)

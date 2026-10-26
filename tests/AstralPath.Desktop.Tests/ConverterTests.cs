@@ -9,8 +9,8 @@ using Xunit;
 namespace AstralPath.Desktop.Tests;
 
 /// <summary>
-/// 转换器与可访问性配色（方案 §12.2 / 附录 X）。
-/// 颜色需要 <c>Application.Current</c> 的资源字典，因此用 <see cref="AvaloniaFactAttribute"/>。
+/// 转换器与可访问性配色的用例。
+/// 颜色要读 <c>Application.Current</c> 的资源字典，所以用 <see cref="AvaloniaFactAttribute"/>。
 /// </summary>
 public sealed class ConverterTests
 {
@@ -37,7 +37,7 @@ public sealed class ConverterTests
     [Fact]
     public void 债边状态除颜色外还有线型编码()
     {
-        // 不靠颜色单独表意：四种状态必须给出互不相同的线型（cleared 为实线 = null）
+        // 不靠颜色单独表意：四种状态的线型要互不相同（cleared 为实线 = null）
         var dashes = new[] { "open", "repairing", "cleared", "dropped" }
             .Select(s => Convert(AppConverters.StatusToDash, s) as string)
             .ToList();

@@ -1,6 +1,6 @@
 namespace AstralPath.Core.Graph;
 
-/// <summary>CSR 邻接（§48.1）：offsets + dst + type，段内按 (type, dst) 排序。</summary>
+/// <summary>CSR 邻接：offsets + dst + type，段内按 (type, dst) 排序。</summary>
 public sealed class CsrGraph
 {
     public int NodeCount { get; }
@@ -125,7 +125,7 @@ public sealed class CsrGraph
         return set.ToList();
     }
 
-    /// <summary>对象图结果与 CSR 结果逐节点等价（§48 GO-C1）。</summary>
+    /// <summary>对象图结果和 CSR 结果逐节点等价。</summary>
     public static bool EquivalentTo(
         IEnumerable<(string From, string To, string EdgeType)> edges,
         IEnumerable<string> nodes)
@@ -151,7 +151,7 @@ public sealed class CsrGraph
     }
 }
 
-/// <summary>知识库文档（§45）。</summary>
+/// <summary>知识库文档。</summary>
 public sealed record KbDocument(
     string Id,
     string Title,
@@ -166,7 +166,7 @@ public sealed record KbDocument(
     DateTime UpdatedAt,
     string? Error = null);
 
-/// <summary>用户学习画像（§46）。</summary>
+/// <summary>用户学习画像。</summary>
 public sealed record UserProfileTag(
     string StudentId,
     string Tag,

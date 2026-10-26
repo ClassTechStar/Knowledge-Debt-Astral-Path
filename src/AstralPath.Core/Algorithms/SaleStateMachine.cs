@@ -83,7 +83,7 @@ public static class SaleCompat
         return new SaleResult(saleable, streak, need);
     }
 
-    /// <summary>仅 progress-svc 可写 cleared（§6.3）。</summary>
+    /// <summary>只有 progress-svc 可以写 cleared。</summary>
     public static bool CanWriteCleared(string serviceId)
         => string.Equals(serviceId, "progress-svc", StringComparison.OrdinalIgnoreCase);
 }

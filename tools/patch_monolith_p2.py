@@ -24,12 +24,12 @@ if old in c:
 else:
     print("home quality miss")
 
-# P3-4/P3-5: cache clear + status strip near system status
+# cache clear + status strip near system status
 old = '''function setMatStatus(kind,msg){'''
 new = '''function setMatStatus(kind,msg){'''
 # insert helpers before setMatStatus
 helper = '''
-/* ── P2-4 运行状态 · P3-4/3-5 缓存治理 ── */
+/* P2-4 运行状态 · P3-4/3-5 缓存治理 ── */
 function apOnline(){return (typeof navigator!=="undefined"&&navigator.onLine!==false);}
 function refreshNetBadge(){
   const el=$("netBadge");if(!el)return;
@@ -97,7 +97,7 @@ refreshNetBadge();
         else:
             print("renderAll miss")
 
-# P2-1 onboarding: ensure sample import hint is friendly (already has 示例)
+# onboarding: ensure sample import hint is friendly (already has 示例)
 # add quality note in detail
 old = '"<span class=\\"badge\\">"+(m.qs||[]).length+" 题</span>"'
 new = '"<span class=\\"badge\\">"+(m.qs||[]).length+" 题</span>"+(m.quality?("<span class=\\"badge\\">质量"+(m.quality==="good"?"优":m.quality==="fair"?"中":"弱")+"</span>"):"")'

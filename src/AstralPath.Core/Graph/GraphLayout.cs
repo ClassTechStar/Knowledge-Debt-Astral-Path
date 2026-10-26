@@ -5,10 +5,8 @@ namespace AstralPath.Core.Graph;
 ///   x = 拓扑层；同层顺序用「重心法多趟迭代」——下扫（看前驱）+ 上扫（看后继）交替，
 ///   每趟算真实交叉数，保留交叉最少的一套顺序。
 ///
-/// v2 的三个问题：
-///   ① 只做单趟下扫，交叉数明显偏高
-///   ② edges.ToLookup 写在循环里 → 每层重建一次，O(层×边)
-///   ③ 没有「择优」机制，扫完什么样就什么样
+/// v2 只做单趟下扫，交叉数偏高，edges.ToLookup 还写在循环里每层重建一次（O(层×边)），
+/// 而且扫完什么样就什么样，没有择优，这几处 v3 都改了。
 /// </summary>
 public static class GraphLayout
 {
@@ -53,7 +51,7 @@ public static class GraphLayout
             .Select(g => g.OrderBy(n => n, StringComparer.Ordinal).ToList())
             .ToList();
 
-        // ── 初始化顺序 ──────────────────────────────────
+        // 初始化顺序
         var pos = new Dictionary<string, int>(StringComparer.Ordinal);
         foreach (var g in byLayer)
             for (var i = 0; i < g.Count; i++) pos[g[i]] = i;
@@ -119,7 +117,7 @@ public static class GraphLayout
             if (bestCross == 0) break; // 已最优，提前收敛
         }
 
-        // ── 输出坐标 ────────────────────────────────────
+        // 输出坐标
         var result = new List<Placed>(nodes.Count);
         for (var li = 0; li < bestOrder.Count; li++)
         {
@@ -146,7 +144,7 @@ public static class GraphLayout
         return Crossings(edges, map);
     }
 
-    /// <summary>边交叉数（几何判定，用于评估布局质量；保留 v2 契约）。</summary>
+    /// <summary>边交叉数（几何判定，用来评估布局质量；和 v2 的行为保持一致）。</summary>
     public static int Crossings(
         IReadOnlyList<(string From, string To)> edges,
         IReadOnlyDictionary<string, Placed> pos)

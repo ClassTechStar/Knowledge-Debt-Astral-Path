@@ -5,16 +5,15 @@ using Xunit;
 namespace AstralPath.Core.Tests;
 
 /// <summary>
-/// v3 优化回归：用户画像（波动归一化 / ECE / 时间衰减 / 真 k-匿名 / Laplace）
-/// 与智能体（阈值启用 / 多锚点累加 / 负例修复 / 槽位收敛 / 话题切换 / 省略指代）。
-/// 每条对应 v2 的一个具体缺陷。
+/// 画像与智能体路由在 v3 修掉的那些老毛病：波动归一化、ECE、时间衰减、k-匿名、Laplace 噪声，
+/// 以及阈值启用、多锚点累加、负例修复、槽位收敛、话题切换、省略指代。每条都对着 v2 的一个具体缺陷。
 /// </summary>
 public class ProfileAgentV3Tests
 {
     private static AttemptSignal A(int conf, bool ok, int diff = 3, long ms = 8000, int hints = 0, string kp = "N1", int dayOffset = 0)
         => new(DateTime.UtcNow.Date.AddDays(-dayOffset), kp, ok, conf, ms, diff, hints);
 
-    // ── 画像 · 超额波动 ─────────────────────────────────
+    // 画像 · 超额波动
     [Fact]
     public void P31_ExcessVolatility_RemovesAccuracyConfound()
     {
@@ -34,7 +33,7 @@ public class ProfileAgentV3Tests
         Assert.True(fa.Volatility > fb.Volatility);
     }
 
-    // ── 画像 · ECE 揭示被 Brier 平均掉的系统偏差 ─────────
+    // 画像 · ECE 揭示被 Brier 平均掉的系统偏差
     [Fact]
     public void P32_Ece_SurfacesSystematicBias()
     {
@@ -50,7 +49,7 @@ public class ProfileAgentV3Tests
         Assert.True(curve[0].Gap < -0.3, "该档位系统性低估");
     }
 
-    // ── 画像 · 主题兴趣时间衰减 ─────────────────────────
+    // 画像 · 主题兴趣时间衰减
     [Fact]
     public void P33_Topics_RecencyDecay_PrefersRecent()
     {
@@ -66,7 +65,7 @@ public class ProfileAgentV3Tests
         Assert.Equal("NEW", topics[0].KpId);
     }
 
-    // ── 画像 · 真 k-匿名 ────────────────────────────────
+    // 画像 · 真 k-匿名
     [Fact]
     public void P34_TeacherViewAnonymized_PerTagSuppression()
     {
@@ -86,7 +85,7 @@ public class ProfileAgentV3Tests
         Assert.Contains("crisis", suppressed);
     }
 
-    // ── 画像 · Laplace 噪声 ─────────────────────────────
+    // 画像 · Laplace 噪声
     [Fact]
     public void P35_PrivacyNoise_ValueIndependent_And_Reproducible()
     {
@@ -103,7 +102,7 @@ public class ProfileAgentV3Tests
         Assert.InRange(clamped, 0.0, 1.0);
     }
 
-    // ── 画像 · 软提示判据 ───────────────────────────────
+    // 画像 · 软提示判据
     [Fact]
     public void P36_SoftNudge_UsesCalibrationBias()
     {
@@ -131,7 +130,7 @@ public class ProfileAgentV3Tests
         Assert.False(string.IsNullOrWhiteSpace(p.Nudge));
     }
 
-    // ── 智能体 ──────────────────────────────────────────
+    // 智能体
     private static AgentRouter Router() => AgentRouter.CreateDefault();
 
     [Fact]

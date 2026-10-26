@@ -3,9 +3,8 @@ using System.Text.Json;
 namespace AstralPath.Core.Agent;
 
 /// <summary>
-/// 结构化输出容错解析（P0 迁移，源：Astralpath index.html parseJsonLoose，L6378-6387）。
-/// 依次尝试：剥代码围栏后直接解析 → 截取首尾大括号解析 → 截取首尾方括号解析；均失败返回 null。
-/// 构图/出题/计划等结构化任务共用，抗模型输出格式漂移。
+/// 结构化输出的宽松解析：先剥掉代码围栏直接试，不行就截首尾大括号，再不行截首尾方括号，都失败返回 null。
+/// 构图/出题/计划都用它，模型输出格式不老实也能救回来。
 /// </summary>
 public static class JsonLoose
 {

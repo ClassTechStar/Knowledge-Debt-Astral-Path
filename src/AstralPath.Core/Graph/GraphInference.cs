@@ -6,20 +6,19 @@ namespace AstralPath.Core.Graph;
 /// 从文本构图 v3：共现 NPMI（平滑+归一化）边 + 依赖句式边 + TextRank 重要性
 /// + 就近章节锚定 + 子词去重 + DAG 收尾。
 ///
-/// 相对 v2 的关键修复：
-/// ① TextRank 由稠密 V×V 矩阵改为稀疏邻接（78 万字的书不再爆内存 / O(V²)）
-/// ② 术语→章节锚定：v2 里所有术语都被挂到「同一个」章节（FirstOrDefault 恒定值），
-///    现改为按「术语首次出现位置」落在其所属章节区间内
-/// ③ 依赖句式正则：v2 每个概念现场 new Regex，现改为一次编译 + 静态复用，并扩充句式
-/// ④ PMI 低频偏置：加最小词频门槛 + 加一平滑 + 归一化 NPMI（∈[-1,1]）
-/// ⑤ 子词去重：避免「网络 / 神经网络」这类重复概念各建一个节点
-/// ⑥ DAG 收尾：成环时按置信度丢弃最弱的一条边，保证拓扑排序不会失败
+/// 相对 v2 修了这些：
+/// TextRank 由稠密 V×V 矩阵改成稀疏邻接，78 万字的书不再爆内存；
+/// 术语按首次出现位置落在所属章节区间内（v2 里 FirstOrDefault 取的是恒定值，所有术语都挂同一个章节）；
+/// 依赖句式正则一次编译静态复用，句式也扩充了；
+/// PMI 加最小词频门槛 + 加一平滑，输出归一化 NPMI（∈[-1,1]）；
+/// 子词去重，免得「网络 / 神经网络」这类重复概念各建一个节点；
+/// DAG 收尾：成环时按置信度丢掉最弱的一条边，拓扑排序不会失败。
 /// </summary>
 public static class GraphInference
 {
     public sealed record Concept(string Id, string Title, string Kind);
 
-    // ── 分词 ────────────────────────────────────────────
+    // 分词
     private static readonly Regex TokenRe = new(
         @"[一-鿿]{2,8}|[A-Za-z][A-Za-z0-9_\.]{1,20}",
         RegexOptions.Compiled);
@@ -27,7 +26,7 @@ public static class GraphInference
     public static string[] Tokenize(string text)
         => TokenRe.Matches(text).Select(m => m.Value).Where(t => t.Length >= 2).ToArray();
 
-    // ── 1. TextRank（稀疏邻接版）────────────────────────
+    // TextRank（稀疏邻接版）
     /// <summary>
     /// TextRank：共现图为边，迭代节点重要性。v3 改为稀疏存储 + 词表上限，
     /// 数学语义与 v2 一致（同样的 1/(j-i) 权重、阻尼、迭代次数），仅做归一化输出。
@@ -100,8 +99,8 @@ public static class GraphInference
         return result;
     }
 
-    // ── 2. PMI ──────────────────────────────────────────
-    /// <summary>经典 PMI（保留 v2 契约，金样 KG10 依赖此签名与口径）。</summary>
+    // PMI
+    /// <summary>经典 PMI，签名和算法跟 v2 保持一致，KG10 用例指着它。</summary>
     public static double Pmi(int co, int a, int b, int total)
     {
         if (co <= 0 || a <= 0 || b <= 0 || total <= 0) return 0;
@@ -142,7 +141,7 @@ public static class GraphInference
         return Math.Clamp(pmi / norm, -1.0, 1.0);
     }
 
-    // ── 3. 依赖句式 ─────────────────────────────────────
+    // 依赖句式
     // v2：每个概念现场 new Regex（O(概念数) 次编译）。v3：静态编译一次。
     private static readonly Regex SequentialRe = new(
         @"(?:基于|先学|掌握|了解|学习|先修|有了|学过)\s*(?<a>[一-鿿A-Za-z0-9_·、]{2,12})\s*" +
@@ -170,8 +169,8 @@ public static class GraphInference
     }
 
     /// <summary>
-    /// 依赖句式抽取边 v3（三类句式）：
-    ///   ①「基于 X 之后才能 Y」②「X 是 Y 的基础/前提」③「Y 依赖/需要 X」
+    /// 依赖句式抽边，三类句式：
+    ///   「基于 X 之后才能 Y」「X 是 Y 的基础/前提」「Y 依赖/需要 X」
     /// 统一返回 (先修 from, 后继 to)。
     /// </summary>
     public static IEnumerable<(string From, string To)> DependencyPatterns(string text, IEnumerable<string> concepts)
@@ -191,7 +190,7 @@ public static class GraphInference
             }
     }
 
-    // ── 4. 一键构图 ─────────────────────────────────────
+    // 4. 一键构图
     /// <summary>
     /// 一键构图 v3：章节作 backbone，概念按 TextRank 挑选（去子词），
     /// 边 = 平滑 NPMI 共现 ∪ 依赖句式，术语按首次出现位置锚定到所属章节，
@@ -245,7 +244,7 @@ public static class GraphInference
         for (var i = 0; i < chapters.Count - 1; i++)
             kg.AddEdge(chapters[i].Id, chapters[i + 1].Id, "prerequisite", 0.8, 0.7);
 
-        // ── 共现 NPMI 边 ────────────────────────────────
+        // 共现 NPMI 边
         var co = new Dictionary<(string, string), int>();
         var cnt = top.ToDictionary(t => t, _ => 0, StringComparer.Ordinal);
         var window = 8;
@@ -276,7 +275,7 @@ public static class GraphInference
             kg.AddEdge(idA, idB, "related", 0.2 + 1.8 * Math.Clamp(npmi, 0, 1), Math.Clamp(npmi, 0.05, 1.0));
         }
 
-        // ── 依赖句式 → prerequisite ─────────────────────
+        // 依赖句式 → prerequisite
         foreach (var (fromTitle, toTitle) in DependencyPatterns(text, top))
         {
             var idA = NodeIdOf(kg, fromTitle);
@@ -285,10 +284,10 @@ public static class GraphInference
             kg.AddEdge(idA, idB, "prerequisite", 1.3, 0.9);
         }
 
-        // ── 术语锚定（v2 最大 bug 修复点）────────────────
-        // v2：chapters.FirstOrDefault(c => text.IndexOf(c.Title) >= 0) → 恒定同一章，
-        //     所有术语挂到同一个父节点，图谱退化成星型。
-        // v3：按术语首次出现位置，落在「起点不晚于它」的最后一个章节。
+        // 术语锚定，v2 在这里有个大 bug：
+        // v2 用 chapters.FirstOrDefault(c => text.IndexOf(c.Title) >= 0) 找章节，取到的恒定是同一章，
+        // 所有术语挂到同一个父节点，图谱退化成星型。
+        // v3 按术语首次出现位置，落在「起点不晚于它」的最后一个章节。
         var known = new List<(string Id, int Pos)>();
         foreach (var c in chapters)
         {

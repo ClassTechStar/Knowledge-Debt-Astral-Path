@@ -4,10 +4,8 @@ using Xunit;
 namespace AstralPath.Desktop.Tests;
 
 /// <summary>
-/// OcrHost 路径解析冒烟（P2 审计 M6 下沉后的回归锁）：
-/// ① 开发态必须能从测试输出目录向上回溯找到仓库 tools\ocr_pipeline.py；
-/// ② 解析结果**不得**包含任何机器特定路径（C4 回归哨兵）；
-/// ③ Python 解析永远有回退值，不抛异常。
+/// OcrHost 路径解析的冒烟用例：开发态要能从测试输出目录往上找到仓库的 tools\ocr_pipeline.py；
+/// 解析结果里不能再出现写死的机器路径；Python 路径永远有回退值，不能抛异常。
 /// </summary>
 public class OcrHostTests
 {
@@ -23,9 +21,8 @@ public class OcrHostTests
     [Fact]
     public void ResolveScript_Never_Uses_Hardcoded_Machine_Fallbacks()
     {
-        // 注意：开发态回溯出的仓库路径本身就位于用户目录下（C:\Users\<user>\Documents\...），
-        // 含用户名是**合法的运行时事实**；这里锁的是「代码里不再有硬编码的机器特定回退」——
-        // 即曾写死的 MiMo 工程目录绝不能再出现在解析结果中（C4 回归哨兵）。
+        // 说明：回溯出来的仓库路径本来就在用户目录下（C:\Users\<user>\Documents\...），带用户名是正常的。
+        // 这里守的是代码里别再写死机器路径：以前写死的 MiMo 工程目录不能再出现在解析结果里。
         var script = OcrHost.ResolveScript() ?? "";
         Assert.DoesNotContain("XiaomiMiMo", script);
         Assert.DoesNotContain("Knowledge Debt Astral Path", script);

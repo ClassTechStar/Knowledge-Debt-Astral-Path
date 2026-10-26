@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-"""shared/core.js 行为等价门禁（方案 P2 的「双跑对比」灰度策略）
-============================================================
-把收编前的旧实现（index.html 内联 / p0 / p1 / p2）与新内核 shared/core.js
-在**同一组用例**上双跑对拍，输出不一致即判红。这样抽取期间任何行为漂移都会
-在合并前暴露，而不是等浏览器冒烟才发现。
+"""shared/core.js 行为等价检查：把收编前的旧实现（index.html 内联 / p0 / p1 / p2）
+与新内核 shared/core.js 在同一组用例上各跑一遍比对，输出不一致就判红。
+这样抽取期间的行为变化能在合并前暴露，不用等浏览器冒烟才发现。
 
 用法：python scripts/verify_core.py
-退出码：0 = 全部等价；1 = 出现漂移
+退出码：0 = 全部等价；1 = 出现不一致
 """
 import json
 import re
@@ -25,7 +23,7 @@ SOURCES = {
 }
 CORE = ROOT / "shared" / "core.js"
 
-# ── 用例（graph 用例只含**端点齐备**的边：graph-packs 门禁已保证无悬空边）──
+# 用例（graph 用例只放端点齐备的边，graph-packs 那边已保证没有悬空边）
 FIXTURES = {
     "normalize": [
         "  ＡＢＣ　 Ｄ ",
@@ -159,7 +157,7 @@ def main():
         print(f"FAILED: shared/core.js 与旧实现不等价（{len(failed)} 项）")
         sys.exit(1)
     print(f"ALL GREEN · shared/core.js 与 {checked} 份旧实现在 "
-          f"{sum(len(v) for v in FIXTURES.values())} 个用例上逐一对拍等价")
+          f"{sum(len(v) for v in FIXTURES.values())} 个用例上逐一比对等价")
 
 
 if __name__ == "__main__":

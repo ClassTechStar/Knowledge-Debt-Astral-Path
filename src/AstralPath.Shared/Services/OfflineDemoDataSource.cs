@@ -35,7 +35,7 @@ public sealed partial class OfflineDemoDataSource : IAppDataSource
 
     public string ModeLabel => "离线演示";
 
-    // ── 学生 ───────────────────────────────────────────────────
+    // 学生
 
     public IReadOnlyList<StudentSummary> Students => _store.Lock(() =>
         _store.Students.Values
@@ -49,7 +49,7 @@ public sealed partial class OfflineDemoDataSource : IAppDataSource
                 s.Mastery.Count == 0 ? 0 : Math.Round(s.Mastery.Values.Average(m => m.Score), 6)))
             .ToList());
 
-    // ── 图与诊断（对齐 StudentsController.GraphView / Diagnose） ──
+    // 图与诊断（对齐 StudentsController.GraphView / Diagnose） ──
 
     public GraphViewDto GetGraphView(string studentId) => _store.Lock(() =>
     {
@@ -126,7 +126,7 @@ public sealed partial class OfflineDemoDataSource : IAppDataSource
             .ToList();
     });
 
-    // ── 计划（复用 Core 权威规划器） ─────────────────────────────
+    // 计划（复用 Core 权威规划器）
 
     public PlanDto CreatePlan(string studentId, int dayBudgetMin = 35, int horizonDays = 14) => _store.Lock(() =>
     {
@@ -225,7 +225,7 @@ public sealed partial class OfflineDemoDataSource : IAppDataSource
             days, holder.CreatedAt, holder.ExpiresAt);
     });
 
-    // ── 今日任务（对齐 CoachProgressController.Today） ────────────
+    // 今日任务（对齐 CoachProgressController.Today）
 
     public TodayResponse GetToday(string studentId, int? day = null) => _store.Lock(() =>
     {
@@ -302,7 +302,7 @@ public sealed partial class OfflineDemoDataSource : IAppDataSource
             System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(stem)))
             .ToLowerInvariant();
 
-    // ── 作答与销账 ─────────────────────────────────────────────
+    // 作答与销账
 
     public AttemptDto SubmitAttempt(CreateAttemptRequest request) => _store.Lock(() =>
     {
@@ -391,7 +391,7 @@ public sealed partial class OfflineDemoDataSource : IAppDataSource
             sale.Streak, Math.Round(impact.Impact, 6), status);
     });
 
-    // ── What-if（对齐 TeacherConsentGraphController 的 what-if 分支） ──
+    // What-if（对齐 TeacherConsentGraphController 的 what-if 分支） ──
 
     public WhatIfResponse WhatIf(WhatIfRequest request) => _store.Lock(() =>
     {
@@ -414,7 +414,7 @@ public sealed partial class OfflineDemoDataSource : IAppDataSource
             impact.Impact, impact.Detected, impact.Recency);
     });
 
-    // ── 教师端与 consent（fail-closed + k-匿名） ─────────────────
+    // 教师端与 consent（fail-closed + k-匿名）
 
     private static string ConsentKey(string studentId, string teacherId, string purpose)
         => $"{studentId}:{teacherId}:{purpose}";

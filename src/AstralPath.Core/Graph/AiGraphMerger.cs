@@ -11,24 +11,24 @@ public sealed record GNode(string Id, string Title, string Body, int Ch, string 
 /// <summary>图谱边（合并管线通用）。</summary>
 public sealed record GEdge(string From, string To, double W, string EType, double? Conf, string Src);
 
-/// <summary>LLM 抽取结果（mergeGraphAI 入参同构）。</summary>
+/// <summary>LLM 抽取结果，和 mergeGraphAI 的入参同构。</summary>
 public sealed record AiGraphExtract(IReadOnlyList<AiConcept> Concepts, IReadOnlyList<AiPrereq> Prereqs);
 
 public sealed record AiConcept(string Title, int Ch, string Def);
 
 public sealed record AiPrereq(string From, string To, double W);
 
-/// <summary>合并结果（源 mergeGraphAI 返回 {addedN, addedE, cut}）。</summary>
+/// <summary>合并结果 {addedN, addedE, cut}。</summary>
 public sealed record AiGraphMergeResult(int AddedN, int AddedE, int Cut, IReadOnlyList<GNode> Nodes, IReadOnlyList<GEdge> Edges);
 
 /// <summary>
-/// AI 增强构图合并管线（P1 迁移，源：Astralpath mergeGraphAI，L4361-4400）。
+/// AI 增强构图的合并管线。
 /// 流程：LLM 概念/先修去重合并（src:"ai" 标记）→ Kahn 拓扑清环 → 重建派生结构由调用方处理。
-/// 关键约束（T15）：整池重建题池时必须保留 layer:"ai" 题——本类以 KeepAiQuestions 显式表达该约束。
+/// 注意：整池重建题池时必须保留 layer:"ai" 的题，这里用 KeepAiQuestions 把这条约束显式写出来。
 /// </summary>
 public static class AiGraphMerger
 {
-    /// <summary>标题归一化去重键（源 normalize + byT，L4364/L6637）。</summary>
+    /// <summary>标题归一化去重键。</summary>
     public static string NormalizeTitle(string? s)
     {
         if (string.IsNullOrEmpty(s)) return "";
@@ -44,7 +44,7 @@ public static class AiGraphMerger
     }
 
     /// <summary>
-    /// 合并 LLM 抽取结果进图谱（源 L4361-4396）。
+    /// 合并 LLM 抽取结果进图谱。
     /// 概念上限 20、先修上限 20；同名（归一化）跳过；自环/未知端点跳过；边去重 from&gt;to&gt;etype。
     /// 无任何新增返回 null（调用方保留原图谱）。
     /// </summary>
@@ -100,7 +100,7 @@ public static class AiGraphMerger
     }
 
     /// <summary>
-    /// Kahn 拓扑清环（源 removeCyclesTopo，L1536-1564）。
+    /// Kahn 拓扑清环。
     /// 无环 → 原样返回；有环 → 按拓扑位置裁剪回边（pa&lt;pb 保留），返回裁剪数。
     /// 与 GraphTopology.TopologicalOrder 不同：不抛异常，而是裁剪回边保证债网无环可传播。
     /// </summary>
@@ -151,7 +151,7 @@ public static class AiGraphMerger
     }
 
     /// <summary>
-    /// 题池重建约束（T15，源 L4394-4398）：保留 layer:"ai" 题置前，仅重建规则题，超限从头截断。
+    /// 题池重建的约束：layer:"ai" 的题置前保留，只重建规则题，超限从头截断。
     /// </summary>
     public static IReadOnlyList<Q> KeepAiQuestions<Q>(IEnumerable<Q> pool, IEnumerable<Q> rebuilt, Func<Q, string> layerOf, int cap = 300)
     {
@@ -161,8 +161,8 @@ public static class AiGraphMerger
     }
 
     /// <summary>
-    /// 泛型 Kahn 拓扑清环（P2 扩展）：供试卷知识图谱等异构节点/边结构复用同一清环语义，
-    /// 避免为每种图谱重复实现。语义与上重载完全一致（无环原样返回；有环按拓扑位置裁剪回边）。
+    /// 泛型 Kahn 拓扑清环：试卷知识图谱这类异构节点/边也能复用同一套清环，
+    /// 省得每种图谱写一遍。语义与上面的重载完全一致（无环原样返回；有环按拓扑位置裁剪回边）。
     /// </summary>
     public static (IReadOnlyList<TEdge> Edges, int Cut) RemoveCyclesTopo<TNode, TEdge>(
         IReadOnlyList<TNode> nodes,
@@ -217,8 +217,8 @@ public static class AiGraphMerger
 }
 
 /// <summary>
-/// 演示模式构图素材（P1 迁移，源：demoGraphAI，L4348-4357）。
-/// 无 Key 时从章节标题派生概念/先修，走同一合并管线，明确标注【演示模式】。
+/// 演示模式的构图素材。
+/// 没 Key 时从章节标题派生概念/先修，走同一套合并管线，明确标注「演示模式」。
 /// </summary>
 public static class DemoGraphAi
 {
@@ -242,7 +242,7 @@ public static class DemoGraphAi
 }
 
 /// <summary>
-/// 构图抽取 JSON 解析（源 btnGraphAI 的 parseJsonLoose 通道，L7269-7272）。
+/// 构图抽取的 JSON 解析，走宽松解析通道。
 /// 期望 {"concepts":[{"title","ch","def"}],"prereqs":[{"from","to","w"}]}。
 /// </summary>
 public static class AiGraphExtractParser
@@ -283,7 +283,7 @@ public static class AiGraphExtractParser
         return new AiGraphExtract(concepts, prereqs);
     }
 
-    /// <summary>构图系统提示词（源 btnGraphAI L7269）。</summary>
+    /// <summary>构图的系统提示词。</summary>
     public static string SystemPrompt =>
         "你是知识图谱构建器。严格输出 JSON：{\"concepts\":[{\"title\":\"概念名\",\"ch\":0,\"def\":\"不超过80字定义\"}],\"prereqs\":[{\"from\":\"概念A\",\"to\":\"概念B\",\"w\":1.2}]}。"
         + "concepts 给 8-15 个教材核心概念（不与已有术语重复），prereqs 给 5-12 条先修关系（from 为基础、to 建立在其上），"

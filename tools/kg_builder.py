@@ -16,7 +16,7 @@ from collections import defaultdict, deque
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
 
-# ───────────────────────── kg_opt: AhoCorasick ─────────────────────────
+# kg_opt: AhoCorasick
 class AhoCorasick:
     __slots__ = ("goto", "fail", "output", "max_len", "first_chars", "size", "lens")
 
@@ -146,11 +146,11 @@ def bounded_levenshtein(a: str, b: str, tau: int) -> int:
     return min(prev[n], tau + 1)
 
 
-# ───────────────────────── GraphInference: TextRank / PMI ─────────────────────────
+# GraphInference: TextRank / PMI
 _JIEBA = None
 _JIEBA_TRIED = False
 
-# K-04：正则 8 字窗口机械切片会把连续汉字切成无语义伪词；有 jieba 用 jieba，
+# 正则 8 字窗口机械切片会把连续汉字切成无语义伪词；有 jieba 用 jieba，
 # 没有则回退原口径（不引入硬依赖）。停用表滤掉分词后高频虚词与章节噪声。
 _CN_STOPWORDS = {
     "我们", "你们", "他们", "自己", "什么", "这个", "那个", "一个", "没有", "不是",
@@ -231,7 +231,7 @@ def pmi(co: int, a: int, b: int, total: int) -> float:
     return max(0.0, math.log2((co * total) / (a * b)))
 
 
-# ───────────────────────── 章节 / 实体 / 构图 ─────────────────────────
+# 章节 / 实体 / 构图
 def _para_title(body: str, idx: int) -> str:
     """兜底分章的标题：取段内 TextRank 最高分词，避免整本书退化成「段落 N」。
     取不到可用词时退回「第 N 节」——那是结构性编号，不是占位符。"""
@@ -391,7 +391,7 @@ def build_graph(text: str, book_name: str, max_terms=24):
         nodes.append({"id": nid, "title": e, "kind": "term", "course": book_name, "diff": min(5, 2 + int((ranks.get(e, 0) * 8))), "body": ""})
     edges = []
     edge_by_pair = {}
-    # K-14：同一节点对的边按类型强度保留最强（prerequisite > attach > related），
+    # 同一节点对的边按类型强度保留最强（prerequisite > attach > related），
     # 后到的强边替换先到的弱边（原先 sorted(a,b) 无向去重 + PMI 先插会静默顶掉先修边）。
     _ETYPE_RANK = {"prerequisite": 0, "attach": 1, "related": 2}
 
@@ -410,7 +410,7 @@ def build_graph(text: str, book_name: str, max_terms=24):
 
     for i in range(len(chapters) - 1):
         add(chapters[i]["id"], chapters[i + 1]["id"], False, 0.85, "prerequisite")
-    # 依赖句式（强边先插，K-14）
+    # 依赖句式（强边先插）
     for c in top_entities(entities, id_of, max_terms)[:12]:
         try:
             rx = re.compile(
@@ -444,7 +444,7 @@ def build_graph(text: str, book_name: str, max_terms=24):
         p = pmi(c, cnt[a], cnt[b], total)
         if p >= 1.0:
             add(id_of.get(a), id_of.get(b), False, min(p / 6, 2), "related")
-    # 词挂章节：K-14 归属按「出现次数最多的章」（定义性出现），不再取第一个包含它的章
+    # 词挂章节：归属按「出现次数最多的章」（定义性出现），不再取第一个包含它的章
     # （正文含目录/前言时老逻辑会把全书术语错挂第 1 章）
     for e in top:
         best = None
@@ -466,7 +466,7 @@ def top_entities(entities, id_of, max_terms):
     return [e for e in entities if e not in id_of or id_of.get(e, "").startswith("T")][:max_terms]
 
 
-# ───────────────────────── simple-mind-map 树 / Markdown ─────────────────────────
+# simple-mind-map 树 / Markdown
 def to_mindmap_tree(graph: dict) -> dict:
     """simple-mind-map 数据结构：root + children 逻辑树。"""
     root = {"data": {"text": graph["name"], "expand": True}, "children": []}

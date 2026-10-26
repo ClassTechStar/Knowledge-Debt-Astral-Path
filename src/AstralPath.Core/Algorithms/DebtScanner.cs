@@ -48,12 +48,12 @@ public static class DebtScanner
     {
         if (input.Freq <= 0) return 0.0;
         var impact = FormulaConstants.ImpactBase
-                     * Readiness(input.ScoreFrom)
-                     * Gap(input.ScoreTo)
-                     * Math.Max(input.Weight, 0)
-                     * CrossFactor(input.EdgeType)
-                     * Cascade(input.DownstreamCount)
-                     * Volume(input.Freq);
+                      * Readiness(input.ScoreFrom)
+                      * Gap(input.ScoreTo)
+                      * Math.Max(input.Weight, 0)
+                      * CrossFactor(input.EdgeType)
+                      * Cascade(input.DownstreamCount)
+                      * Volume(input.Freq);
         return impact;
     }
 
@@ -61,7 +61,7 @@ public static class DebtScanner
     public static bool IsHit(DebtInput input)
         => input.Freq > 0 && ComputeImpact(input) >= FormulaConstants.ImpactHitThreshold;
 
-    // ── v1 兼容 ─────────────────────────────────────────
+    // v1 兼容入口
     public static bool IsHit(double scoreFrom, double scoreTo, int freq)
         => IsHit(new DebtInput(scoreFrom, scoreTo, 1.0, EdgeType.Prerequisite, freq));
 
@@ -83,8 +83,8 @@ public static class DebtScannerCompat
 {
     public static ImpactResult ComputeImpactV1(ImpactInput input)
     {
-        var rec = 1.0 / (1.0 + input.DaysSinceLastError / 7.0); // v1 金样口径
-        // v1 BASELINE 门限（score 为 0–100）：sp<40 ∧ sc<50 ∧ freq>0
+        var rec = 1.0 / (1.0 + input.DaysSinceLastError / 7.0); // 和 v1 的老算法保持一致，别动
+        // v1 BASELINE 阈值（score 为 0–100）：sp<40 ∧ sc<50 ∧ freq>0
         var detected = input.ScoreP < 40.0 && input.ScoreC < 50.0 && input.Freq > 0;
         var impact = detected ? input.Freq * (50.0 - input.ScoreC) * rec * input.Weight : 0.0;
         return new ImpactResult(detected, impact, rec);

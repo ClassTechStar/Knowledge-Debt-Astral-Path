@@ -1,14 +1,14 @@
-/* ═══════════════════════════════════════════════════════════════════
- * P0 迁移：AI 调用层 + AI 智能出题链路（源：Astralpath index.html）
- * 注入位置：.cloudflare/pages/index.html 尾部 </body> 前
- * 对应开发方案 P0-1（模块 A）/ P0-2（模块 C）。
- * 依赖基准已有：esc / sanitizeText / activeBook / activeNodes / activeQs /
- *              title / scoreOf / save / $ / K
- * ═══════════════════════════════════════════════════════════════════ */
+/*
+  * P0 迁移：AI 调用层 + AI 智能出题链路（源：Astralpath index.html）
+  * 注入位置：.cloudflare/pages/index.html 尾部 </body> 前
+  * 对应开发方案的模块 A / 模块 C。
+  * 依赖基准已有：esc / sanitizeText / activeBook / activeNodes / activeQs /
+  * title / scoreOf / save / $ / K
+  * */
 (function () {
   "use strict";
 
-  // ── 1. JSON 容错解析（源 parseJsonLoose L6378）────────────────────────
+  // 1. JSON 容错解析（源 parseJsonLoose L6378）
   function jsonLoose(text) {
     var t = String(text || "").trim();
     t = t.replace(/^[\s\S]*?```(?:json)?\s*/i, "").replace(/```[\s\S]*$/, "").trim();
@@ -20,13 +20,13 @@
     return null;
   }
 
-  // ── 2. 故障冷却分类（源 __t13TxErr L7052）────────────────────────────
+  // 2. 故障冷却分类（源 __t13TxErr L7052）
   function isTransportError(e) {
     var m = String(e && e.message || e);
     return /HTTP \d|Failed to fetch|NetworkError|network error|abort|timeout|超时|load failed|connection|socket/i.test(m);
   }
 
-  // ── 3. 密钥信封 + 内置演示密钥（源 __AP_MIMO__ L6202-6265）───────────
+  // 3. 密钥信封 + 内置演示密钥（源 __AP_MIMO__ L6202-6265）
   var MIMO_LS = "astralpath_mimo_v1";
   var MIMO_IDB = "ap_mimo_dek";
   // 内置演示密钥（AES-256-GCM 密文，与前端 window.__AP_EMBED__ 同源；明文不落文件）
@@ -104,7 +104,7 @@
   function ready() { return !!(_cfg && _cfg.key); }
   function ensureCfg() { return getConfig(); }
 
-  // ── 4. 并发闸 + 完整 SSE/非流式补全（源 complete L6318-6376，T15 修复点）──
+  // 4. 并发闸 + 完整 SSE/非流式补全（源 complete L6318-6376，T15 修复点）──
   var _active = 0, _waiters = [];
   function _acquire() { if (_active < 2) { _active++; return Promise.resolve(); } return new Promise(function (res) { _waiters.push(res); }); }
   function _release() { var w = _waiters.shift(); if (w) w(); else _active--; }
@@ -191,7 +191,7 @@
     clear: function () { _cfg = null; _cfgLoaded = false; try { localStorage.removeItem(MIMO_LS); } catch (e) {} }
   };
 
-  // ── 5. AI 出题链路（源 aiGenQuestion L4401-4490 + loadQuiz/paintQuiz）──
+  // 5. AI 出题链路（源 aiGenQuestion L4401-4490 + loadQuiz/paintQuiz）──
   var QUIZ_LEVELS = ["概念理解", "因果分析", "对比辨析", "应用场景", "错误辨析"];
   function pickQuizLevel(book) {
     var n = (book.qs || []).filter(function (q) { return q.layer === "ai"; }).length;
@@ -288,7 +288,7 @@
     })(1);
   }
 
-  // ── 6. loadQuiz / paintQuiz 增强（AI 默认出题 + 垫题替换 + T15 状态清理）──
+  // 6. loadQuiz / paintQuiz 增强（AI 默认出题 + 垫题替换 + T15 状态清理）──
   var _origLoadQuiz = window.loadQuiz;
   window.loadQuiz = function (kp) {
     var b = activeBook();
@@ -360,7 +360,7 @@
     }
   };
 
-  // ── 7. 手动 AI 出题按钮（源 aiQuiz L6592，简化适配）────────────────────
+  // 7. 手动 AI 出题按钮（源 aiQuiz L6592，简化适配）
   function aiQuiz() {
     var M = window.__AP_MIMO__;
     if (!M || !M.ready()) {
@@ -388,7 +388,7 @@
   }
   window.aiQuiz = aiQuiz;
 
-  // ── 8. UI 接线：换一题按钮 + AI 出题按钮 ─────────────────────────────
+  // 8. UI 接线：换一题按钮 + AI 出题按钮
   document.addEventListener("DOMContentLoaded", function () {
     var nextBtn = document.getElementById("btnNextQ") || document.querySelector("[data-act='nextq']");
     if (nextBtn) {

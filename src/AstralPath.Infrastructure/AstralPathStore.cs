@@ -91,7 +91,7 @@ public sealed class AstralPathStore : IAstralPathStore
         return result;
     }
 
-    // ── 运行时状态快照（P1：重启不丢）────────────────────
+    // 运行时状态快照（P1：重启不丢）
     /// <summary>
     /// 导出可变业务状态。刻意只包含**需要持久化**的部分：
     /// 图与题库来自图包/种子（可重建），教师热点缓存是派生数据。

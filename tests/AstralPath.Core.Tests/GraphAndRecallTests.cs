@@ -40,7 +40,7 @@ public class GraphAndRecallTests
     [Fact]
     public void Recall_OnSeededDebts_IsAtLeast080()
     {
-        // 20 ground-truth debt edges for accounting pack Student A profile
+        // 会计图包学生 A 画像下人工标好的 20 条债边
         var groundTruth = new List<(string From, string To)>
         {
             ("K02", "K03"), ("K03", "K05"), ("K05", "K06"), ("K02", "K05"),
@@ -50,7 +50,7 @@ public class GraphAndRecallTests
             ("K02", "K30"), ("K29", "K31"), ("K05", "K19"), ("K04", "K05")
         };
 
-        // Simulate Student A scores on pack
+        // 模拟学生 A 在这个图包上的分数
         var pack = KnowledgeGraph.LoadFromDirectory(PackDir);
         var graph = new KnowledgeGraph(pack);
         var scores = new Dictionary<string, (double ScoreP, double ScoreC, int Freq, int Days, double Weight)>(StringComparer.Ordinal);
@@ -60,7 +60,7 @@ public class GraphAndRecallTests
         foreach (var edge in graph.Edges)
         {
             var isGt = gtSet.Contains((edge.From, edge.To));
-            // ground-truth debt edges are pre-seeded so BASELINE gate is satisfied
+            // 标准债边的分数故意设差，保证基线能查出来
             var scoreP = isGt ? 28.0 : 72.0;
             var scoreC = isGt ? 41.0 : 68.0;
             var freq = isGt ? 5 : 0;
@@ -68,7 +68,7 @@ public class GraphAndRecallTests
             {
                 scoreP = 30.0;
                 scoreC = 45.0;
-                freq = 2; // distractors that may lower precision but should not kill recall
+                freq = 2; // 干扰边：会拉低点精确率，但不该影响召回
             }
             inputs.Add((
                 edge.From, edge.To,
@@ -77,7 +77,7 @@ public class GraphAndRecallTests
                 scoreP, scoreC, freq, 0, edge.Weight));
         }
 
-        // evaluate recall on full scan (no aggressive topN cut for the metric)
+        // 全量扫一遍算召回（这里不做 topN 截断）
         var scanned = DebtScannerCompat.Scan(inputs, topN: 50);
         var predicted = scanned.Select(s => (s.FromKp, s.ToKp)).ToHashSet();
         var hits = groundTruth.Count(gt => predicted.Contains(gt));
@@ -89,7 +89,7 @@ public class GraphAndRecallTests
     [Fact]
     public void DualStudent_DemoExpectations()
     {
-        // A has debts, B should not under healthy scores
+        // A 应该查出债，B 分数健康不该有
         var pack = KnowledgeGraph.LoadFromDirectory(PackDir);
         var graph = new KnowledgeGraph(pack);
 

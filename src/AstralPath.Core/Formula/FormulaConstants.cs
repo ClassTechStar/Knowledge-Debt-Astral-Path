@@ -6,11 +6,11 @@ namespace AstralPath.Core.Formula;
 /// </summary>
 public static class FormulaConstants
 {
-    // ── 版本 ────────────────────────────────────────────
+    // 版本
     public const string ScoreVersion = "score-v2";
     public const string ImpactVersion = "impact-v2";
 
-    // ── 掌握度 score-v2 ─────────────────────────────────
+    // 掌握度 score-v2
     /// <summary>经验项权重（对题正误 + 信心的收缩估计）</summary>
     public const double WEmpirical = 0.50;
     /// <summary>记忆保持项权重（Ebbinghaus 遗忘）</summary>
@@ -32,7 +32,7 @@ public static class FormulaConstants
     /// <summary>信心归一化分母（1–5 → 0–1）</summary>
     public const double ConfScale = 5.0;
 
-    // ── 影响分 impact-v2 ────────────────────────────────
+    // 影响分 impact-v2
     public const double ImpactBase = 0.55;
     public const double TransferGapMultiplier = 1.15;
     /// <summary>软门限中心：parent 充分 / child 薄弱</summary>
@@ -47,7 +47,7 @@ public static class FormulaConstants
     /// <summary>错题体量：1 + β × ln(1+freq)</summary>
     public const double VolumeBeta = 0.08;
 
-    // ── 销账 sale-v2 ────────────────────────────────────
+    // 销账 sale-v2
     /// <summary>需要达标次数（近期窗口）</summary>
     public const int SaleStreakRequired = 2;
     /// <summary>窗口内至少作答次数（防止两题就清账）</summary>
@@ -57,12 +57,12 @@ public static class FormulaConstants
     public const double SaleAccMin = 0.7;
     public const int SaleConfMin = 3;
 
-    // ── 计划 ────────────────────────────────────────────
+    // 计划
     public const int DefaultHorizonDays = 14;
     public const int SpacingPasses = 3;
     public static readonly int[] SpacingOffsets = { 0, 2, 6 };
 
-    // ── 校验 ────────────────────────────────────────────
+    // 校验
     public const double GoldenTolerance = 1e-6;
 
     // 兼容 v1 字段（迁移期只读）

@@ -108,7 +108,7 @@ def _pin_ort_threads(intra: int):
     ort._astralpath_pinned = True
 
 
-# ── worker：每进程初始化一次引擎 ──
+# worker：每进程初始化一次引擎
 _ENGINE = None
 
 

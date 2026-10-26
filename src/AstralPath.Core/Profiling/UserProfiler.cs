@@ -14,29 +14,24 @@ public sealed record AttemptSignal(
 /// 画像 v3：从作答行为推断学习风格与主题画像。
 /// 纯函数 / 可选时间衰减 / 增量 EMA；禁止生成敏感域标签（sensitive/crisis/semantic）。
 ///
-/// 相对 v2 的关键修复：
-/// ① Volatility 只看「正误翻转率」，但翻转率的期望本来就随正确率变化
-///    （acc=0.5 时随机序列期望翻转率就是 0.5）→ v2 会把 acc≈0.5 的正常学生误判为"波动大"。
-///    v3 新增 ExcessVolatility = 实际翻转率 / 2·acc·(1−acc)，>1 才是真的比随机更抖。
-/// ② Brier 只有单一标量，无法区分「整体校准好」与「高低两端互相抵消」。
-///    v3 新增按信心分桶的校准曲线 + ECE（期望校准误差）。
-/// ③ Pace 用绝对中位耗时，难题本来就慢 → 慢 ≠ 差。
-///    v3 新增 PaceAdjusted：按难度归一后的耗时。
-/// ④ Persistence = 每组平均次数，与总题数强相关（做题多就"更坚持"）。
-///    v3 改用 RepeatRate = (总数−去重数)/总数，是真正的重复率。
-/// ⑤ Topics 的兴趣用 n/total 且无时间衰减；难度因子实际取值域只有 [0.75,1.0]，形同虚设。
-///    v3 加指数时间衰减，并把难度因子改成真正有区分度的目标难度曲线。
-/// ⑥ TeacherView 的 k 语义错了：k-匿名应是「该标签覆盖的学生数 ≥k」，
-///    而 v2 判断的是「标签个数 ≥k」。保留旧重载（改名为最小标签数），新增真 k-匿名重载。
-/// ⑦ PrivacyNoise 用同一个伪随机数决定符号和幅度 → 分布严重偏离 Laplace；
-///    且哈希基于 value，相同值永远加相同噪声，**不满足差分隐私**。
-///    v3 改为标准 Laplace 逆变换，噪声由 seed 驱动（不再由 value 驱动）。
+/// v2 修了这么几处：Volatility 只看正误翻转率，可翻转率的期望本来就随正确率变
+/// （acc=0.5 时随机序列期望翻转率就是 0.5），会把 acc≈0.5 的正常学生误判成"波动大"，
+/// 加了 ExcessVolatility = 实际翻转率 / 2·acc·(1−acc)，大于 1 才是真比随机还抖；
+/// Brier 只有一个标量，分不出「整体校准好」和「高低两端互相抵消」，加了按信心分桶的校准曲线和 ECE；
+/// Pace 用绝对中位耗时，难题本来就慢，慢不等于差，改成按难度归一的 PaceAdjusted；
+/// Persistence 用每组平均次数，和总题数强相关（做题多就显得"更坚持"），改成 RepeatRate = (总数−去重数)/总数；
+/// Topics 的兴趣用 n/total 且没有时间衰减，难度因子取值只有 [0.75,1.0] 形同虚设，
+/// 加了指数时间衰减，难度因子换成真正有区分度的目标难度曲线；
+/// TeacherView 的 k 语义搞错了：k-匿名该是「该标签覆盖的学生数 ≥k」，v2 判的是「标签个数 ≥k」，
+/// 旧重载保留（改叫最小标签数），真 k-匿名另加了重载；
+/// PrivacyNoise 用同一个伪随机数决定符号和幅度，分布严重偏离 Laplace，哈希还基于 value，
+/// 相同值永远加相同噪声，攻击者能查表反推，不满足差分隐私，改成标准 Laplace 逆变换，噪声由 seed 驱动。
 /// </summary>
 public static class UserProfiler
 {
     public static readonly string[] BannedDomains = { "sensitive", "crisis", "semantic" };
 
-    // ── 1. 信心校准 ─────────────────────────────────────
+    // 1. 信心校准
     /// <summary>Brier 分数（越小越准）：(conf/5 − 1{对})²。契约保持不变。</summary>
     public static double Brier(IEnumerable<AttemptSignal> signals)
     {
@@ -100,7 +95,7 @@ public static class UserProfiler
         return Math.Round(curve.Sum(b => (double)b.Count / total * Math.Abs(b.Gap)), 6);
     }
 
-    // ── 2. 行为特征 ─────────────────────────────────────
+    // 2. 行为特征
     public sealed record BehaviorFeatures(
         int Attempts,
         double Accuracy,
@@ -152,7 +147,7 @@ public static class UserProfiler
         var vol = list.Count <= 1 ? 0 : (double)flips / (list.Count - 1);
 
         // ★ v3：随机序列的期望翻转率 = 2·acc·(1−acc)。不归一化的话，
-        //   acc≈0.5 的学生天然 flip≈0.5，会被 v2 误判成"波动大"。
+        // acc≈0.5 的学生天然 flip≈0.5，会被 v2 误判成"波动大"。
         var expectedFlip = Math.Max(2 * acc * (1 - acc), 0.05);
         var excess = list.Count <= 1 ? 0 : vol / expectedFlip;
 
@@ -194,7 +189,7 @@ public static class UserProfiler
         return w;
     }
 
-    // ── 3. 学习风格轴（五维，各 ∈ [0,1]）────────────────
+    // 3. 学习风格轴（五维，各 ∈ [0,1]）
     public sealed record StyleVector(
         double AccuracyFirst,   // 又快又准 vs 慢而稳
         double Calibrated,      // 信心可靠
@@ -210,9 +205,9 @@ public static class UserProfiler
             : Math.Clamp(list.Average(s => s.Difficulty) / 5.0, 0, 1);
 
         var accFirst = Math.Clamp(0.55 * f.Accuracy + 0.45 * f.PaceAdjusted, 0, 1);
-        // 校准：仍以 Brier 为主（金样 UP04 依赖此口径），ECE 作为独立指标另出
+        // 校准还是以 Brier 为主（UP04 用例指着这个），ECE 当独立指标另出
         var calibrated = Math.Clamp(1.0 - Math.Min(f.Brier / 0.5, 1.0), 0, 1);
-        // ★ v3：稳态用超额波动，不再把 acc≈0.5 的正常学生误判为不稳
+        // v3：稳态用超额波动，不再把 acc≈0.5 的正常学生误判为不稳
         var steady = Math.Clamp(1.0 - Math.Min(f.ExcessVolatility, 1.0), 0, 1);
         var independent = Math.Clamp(1.0 - f.HintRate, 0, 1);
         // ★ v3：重复率取代"每组平均次数"（后者与总题数强相关）
@@ -222,7 +217,7 @@ public static class UserProfiler
             Math.Round(steady, 6), Math.Round(independent, 6), Math.Round(deep, 6));
     }
 
-    // ── 4. 主题画像（掌握 × 兴趣 × 难度）────────────────
+    // 4. 主题画像（掌握 × 兴趣 × 难度）
     public sealed record TopicProfile(string KpId, double Mastery, double Interest, double DiffTolerance, double Weight);
 
     /// <summary>
@@ -267,7 +262,7 @@ public static class UserProfiler
             .ToList();
     }
 
-    // ── 5. 动态 EMA（画像漂移）──────────────────────────
+    // 5. 动态 EMA（画像漂移）
     /// <summary>style 指标指数平滑，α 为新证据权重。契约保持不变。</summary>
     public static StyleVector Smooth(StyleVector old, StyleVector neu, double alpha = 0.25)
     {
@@ -291,12 +286,12 @@ public static class UserProfiler
         return Smooth(old, neu, alpha);
     }
 
-    // ── 6. 隐私：k-匿名与教师侧脱敏 ─────────────────────
+    // 6. 隐私：k-匿名与教师侧脱敏
     public sealed record TagOut(string Tag, string Domain, double Weight);
 
     /// <summary>
     /// 教师侧可见标签：禁列域剔除 + 「最少标签数」门槛。
-    /// ⚠️ 这里的 k 是**标签个数**，不是 k-匿名的 k（v2 把它叫 k-匿名是概念误用）。
+    /// 注意：这里的 k 是**标签个数**，不是 k-匿名的 k（v2 管它叫 k-匿名，是概念误用）。
     /// 真正的 k-匿名请用 <see cref="TeacherViewAnonymized"/>。
     /// </summary>
     public static (IReadOnlyList<TagOut> Visible, bool Suppressed) TeacherView(
@@ -373,7 +368,7 @@ public static class UserProfiler
         return u;
     }
 
-    // ── 7. 状态软提示（非处分）──────────────────────────
+    // 7. 状态软提示（非处分）
     /// <summary>
     /// v3：过度自信改用「校准偏差」判据（v2 用绝对信心 >0.6，会把"确实会且信心高"的好学生误判）；
     /// 并加连续答错的兜底提示。
@@ -391,7 +386,7 @@ public static class UserProfiler
         return "保持当前节奏。";
     }
 
-    // ── 8. 一次性装配 ───────────────────────────────────
+    // 8. 一次性装配
     public sealed record Profile(
         BehaviorFeatures Features,
         StyleVector Style,
@@ -411,7 +406,7 @@ public static class UserProfiler
         return new Profile(f, st, tp, CalibrationCurve(list), SoftNudge(f));
     }
 
-    // ── 9. 禁列域守卫 ───────────────────────────────────
+    // 9. 禁列域守卫
     public static bool IsBannedDomain(string domain)
         => BannedDomains.Contains(domain, StringComparer.OrdinalIgnoreCase);
 }

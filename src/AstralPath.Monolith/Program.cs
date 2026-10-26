@@ -86,7 +86,7 @@ internal sealed class MainForm : Form
         }
     }
 
-    // ── OCR 宿主桥 ─────────────────────────────────────────────────────
+    // OCR 宿主桥
     private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
 
     private sealed record OcrRequest(string? Type, string? Id, string? Name, string? Mode, string? Pages, string? Data);

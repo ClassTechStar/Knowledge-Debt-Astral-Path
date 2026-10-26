@@ -19,7 +19,7 @@ public interface IAppDataSource
     /// <summary>数据源模式标签，用于顶栏显示（如「离线演示」/「API」）。</summary>
     string ModeLabel { get; }
 
-    // ── 学生与图 ───────────────────────────────────────────────
+    // 学生与图
     IReadOnlyList<StudentSummary> Students { get; }
 
     GraphViewDto GetGraphView(string studentId);
@@ -28,7 +28,7 @@ public interface IAppDataSource
 
     IReadOnlyList<MasteryRow> GetMastery(string studentId);
 
-    // ── 计划 / 今日 / 练习 ─────────────────────────────────────
+    // 计划 / 今日 / 练习
     PlanDto CreatePlan(string studentId, int dayBudgetMin = 35, int horizonDays = 14);
 
     PlanDto? GetPlan(string studentId);
@@ -39,10 +39,10 @@ public interface IAppDataSource
 
     SaleCheckResponse SaleCheck(string studentId, string fromKp, string toKp);
 
-    // ── What-if ───────────────────────────────────────────────
+    // What-if
     WhatIfResponse WhatIf(WhatIfRequest request);
 
-    // ── 教师端与 consent（fail-closed） ─────────────────────────
+    // 教师端与 consent（fail-closed）
     HotspotsResponse GetHotspots(string teacherId);
 
     ConsentDto? GetConsent(string studentId, string teacherId, string purpose);
@@ -51,19 +51,19 @@ public interface IAppDataSource
 
     ConsentDto Revoke(string studentId, string teacherId, string purpose);
 
-    // ── §44 受约束智能体 ───────────────────────────────────────
+    // §44 受约束智能体
     AgentTurnResult AgentTurn(string userId, string role, string utterance, string? sessionId);
 
     IReadOnlyList<AgentToolRow> AgentTools(string role);
 
-    // ── §45 知识库 ────────────────────────────────────────────
+    // §45 知识库
     IReadOnlyList<KbDocRow> ListKbDocuments();
 
     IReadOnlyList<KbHitRow> KbSearch(string userId, string role, string query);
 
     KbDocRow CreateKbDocument(string title, string ownerUserId, string visibility, string text);
 
-    // ── §46 用户画像 ──────────────────────────────────────────
+    // §46 用户画像
     ProfileOverviewRow? GetProfile(string studentId, bool teacherSide);
 
     ProfileRadarRow? GetProfileRadar(string studentId, bool teacherSide);
@@ -75,7 +75,7 @@ public interface IAppDataSource
     ProfileOverviewRow? SetProfileOptOut(string studentId, bool optOut);
 }
 
-// ── 客户端侧强类型行记录（把模块的匿名返回规范化，便于 XAML 编译绑定） ──
+// 客户端侧强类型行记录（把模块的匿名返回规范化，便于 XAML 编译绑定） ──
 
 public sealed record StudentSummary(string StudentId, string DisplayName, string DemoGroup, int OpenDebtCount, double AvgScore);
 

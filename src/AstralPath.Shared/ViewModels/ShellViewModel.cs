@@ -93,7 +93,7 @@ public sealed partial class ShellViewModel : ViewModelBase
         RefreshConsent();
     }
 
-    // ── 顶栏 ───────────────────────────────────────────────────
+    // 顶栏
 
     public override string Title => Current?.Title ?? "今日";
 
@@ -133,7 +133,7 @@ public sealed partial class ShellViewModel : ViewModelBase
         foreach (var item in NavItems) item.IsActive = item.Page == CurrentPage;
     }
 
-    // ── 响应式断点（由各端视图回写） ────────────────────────────
+    // 响应式断点（由各端视图回写）
 
     [ObservableProperty]
     private double _shellWidth;
@@ -150,7 +150,7 @@ public sealed partial class ShellViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsNarrow));
     }
 
-    // ── 导航 ───────────────────────────────────────────────────
+    // 导航
 
     [RelayCommand]
     private void Navigate(AppPage page) => _nav.Navigate(page);
@@ -191,7 +191,7 @@ public sealed partial class ShellViewModel : ViewModelBase
         return PageContext.ForStudent(id, name);
     }
 
-    // ── 快捷键（方案 §12.4：Ctrl+1/2 切学生、Ctrl+D 诊断、Ctrl+T 教师、Ctrl+R 撤销）──
+    // 快捷键（方案 §12.4：Ctrl+1/2 切学生、Ctrl+D 诊断、Ctrl+T 教师、Ctrl+R 撤销）──
 
     [RelayCommand]
     private void SelectStudent(string? studentId)
@@ -259,7 +259,7 @@ public sealed partial class ShellViewModel : ViewModelBase
         });
     }
 
-    // ── consent 状态 ───────────────────────────────────────────
+    // consent 状态
 
     [ObservableProperty]
     private string _consentState = "none";

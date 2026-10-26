@@ -50,7 +50,7 @@ public class MaterialOcrPipelineTests
     public void OcrPipeline_ExtractsScannedPdfAndBuildsGraphNodes()
     {
         var pdf = FirstSamplePdf();
-        if (pdf is null) return; // sample pdf optional on CI machines
+        if (pdf is null) return; // 样例 PDF 不是每台机器都有
 
         var script = Path.Combine(RepoRoot, "tools", "ocr_pipeline.py");
         Assert.True(File.Exists(script));
@@ -83,7 +83,7 @@ public class MaterialOcrPipelineTests
         Assert.True(root.TryGetProperty("nodes", out var nodes));
         Assert.True(nodes.GetArrayLength() > 0, "expected auto graph nodes");
         Assert.True(root.TryGetProperty("extractedChars", out var chars));
-        // scanned books should either extract text or OCR something
+        // 扫描版要么抽出文本，要么 OCR 出点东西
         Assert.True(chars.GetInt32() >= 0);
         Assert.True(root.TryGetProperty("mode", out _));
     }
@@ -91,7 +91,7 @@ public class MaterialOcrPipelineTests
     [Fact]
     public void AutoGraphBuilder_ProducesAcyclicChapterChain()
     {
-        // pure unit path: synthetic OCR-like payload
+        // 纯单元路径：造一份类似 OCR 输出的数据
         var chapters = new[]
         {
             new { title = "第1章 变量与类型", kind = "chapter", offset = 0 },
@@ -112,7 +112,7 @@ public class MaterialOcrPipelineTests
             terms
         });
 
-        // rebuild using same heuristic as pipeline script via local C# mirror
+        // 用 C# 复刻流水线脚本的同一套规则，把图重建出来
         var nodes = new List<AstralPath.Graph.KpNode>();
         var edges = new List<AstralPath.Graph.KpEdge>();
         var i = 1;

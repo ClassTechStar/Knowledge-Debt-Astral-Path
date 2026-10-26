@@ -1,5 +1,5 @@
 /**
- * xss_runner.js —— 黄金用例驱动（供 scripts/verify_xss.py 调用）
+ * xss_runner.js —— 用例驱动（scripts/verify_xss.py 调用）
  * 用法：node scripts/xss_runner.js <cases.json>   # stdout 输出 JSON 结果
  * 只做渲染函数求值，不触碰 DOM，可在 CI 无浏览器环境下运行。
  */

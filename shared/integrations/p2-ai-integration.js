@@ -1,14 +1,14 @@
-/* ═══════════════════════════════════════════════════════════════════
- * P2 迁移：试卷作业错题识别 + 智能体三级路由（源：Astralpath index.html）
- * 注入位置：.cloudflare/pages/index.html 尾部 </body> 前（p1-ai-integration.js 之后）
- * 对应开发方案 P2-1（模块 D4-D8）/ P2-3（模块 F1-F6）。
- * 依赖：p0-ai-integration.js 的 window.__AP_MIMO__（可选，流式对话用）
- *     基准页面已有 esc / activeBook / activeNodes / title / save / $ / S（可选）
- * ═══════════════════════════════════════════════════════════════════ */
+/*
+  * P2 迁移：试卷作业错题识别 + 智能体三级路由（源：Astralpath index.html）
+  * 注入位置：.cloudflare/pages/index.html 尾部 </body> 前（p1-ai-integration.js 之后）
+  * 对应开发方案 P2-1（模块 D4-D8）/ P2-3（模块 F1-F6）。
+  * 依赖：p0-ai-integration.js 的 window.__AP_MIMO__（可选，流式对话用）
+  * 基准页面已有 esc / activeBook / activeNodes / title / save / $ / S（可选）
+  * */
 (function () {
   "use strict";
 
-  /* ═══ 1. 试卷 / 作业 / 错题本地结构化（P2-1，源 L3501-3634）═══════════ */
+  /* 1. 试卷 / 作业 / 错题本地结构化（P2-1，源 L3501-3634）═══════════ */
   var EXAM_MAX_ITEMS = 300;
 
   function paperTypeLabel(t) { return t === "hw" ? "作业" : (t === "wrong" ? "错题" : "试卷"); }
@@ -139,7 +139,7 @@
     return { items: items, sections: sections };
   }
 
-  /* ── 知识点词库 / 匹配 / 层级图谱（源 examKpLexicon / matchExamKps / buildExamKG）── */
+  /* 知识点词库 / 匹配 / 层级图谱（源 examKpLexicon / matchExamKps / buildExamKG）── */
   function examKpLexicon(book) {
     var lex = [], seen = {};
     function add(t, w, chTitle, chId, nodeId) {
@@ -346,7 +346,7 @@
     maxItems: EXAM_MAX_ITEMS
   };
 
-  /* ═══ 2. 智能体三级路由（P2-3，源 L6635-7023）══════════════════════════
+  /* 2. 智能体三级路由（P2-3，源 L6635-7023）
      ① 规则锚点（26 意图，与 tools/agent-intents.json 逐字一致）
      ② 轻量 ML：本地朴素贝叶斯分类器（源为 ONNX 模型；此处以字符 n-gram 朴素贝叶斯等价实现，
         能力对齐「口语化表达补强」，不引入外部模型文件依赖）
@@ -571,7 +571,7 @@
     thresholds: { exec: TauExec, clarify: TauClarify, maxClarify: MaxClarify }
   };
 
-  /* ═══ 3. 智能体流式对话（P2-3，源 reply L7053-7114 的精简适配）═════════ */
+  /* 3. 智能体流式对话（P2-3，源 reply L7053-7114 的精简适配）═════════ */
   function replyAgent(text, onChunk) {
     var r = routeWithML(text);
     var M = window.__AP_MIMO__;
@@ -616,7 +616,7 @@
 
   window.__AP_AGENT__ = { reply: replyAgent };
 
-  /* ═══ 4. UI 接线（试卷导入入口 + 智能体输入，存在即挂载）═══════════════ */
+  /* 4. UI 接线（试卷导入入口 + 智能体输入，存在即挂载）═══════════════ */
   document.addEventListener("DOMContentLoaded", function () {
     // 试卷/作业/错题文本导入：若页面有 #examText 与 #btnExamImport 则接线
     var btn = document.getElementById("btnExamImport");

@@ -9,7 +9,7 @@ using Xunit;
 
 namespace AstralPath.Desktop.Tests;
 
-/// <summary>Shell 导航、响应式断点与页面解析（方案 §11.8 / §12.4 / §13）。</summary>
+/// <summary>Shell 导航、响应式断点与页面解析。</summary>
 public sealed class ShellNavigationTests
 {
     [AvaloniaFact]

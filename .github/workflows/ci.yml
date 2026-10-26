@@ -1,6 +1,6 @@
-# 知债：星穹学途 · 持续集成门禁（方案 P1）
+# 知债：星穹学途 · 持续集成
 # ============================================================
-# 目标：任何 push / PR 自动执行「构建 → 测试 → 对拍 → 语法门禁」，
+# 目标：任何 push / PR 自动执行「构建 → 测试 → 比对 → 语法检查」，
 #       main 分支全绿才可合并，杜绝「静默漂移」（P2/P3 的根因缓解）。
 # 不变量：golden 契约 17 份全绿、verify_all.ps1 退出码 0、既有测试零回归。
 #
@@ -84,11 +84,11 @@ jobs:
       - name: verify formula constants generated
         run: python scripts/gen_formula_constants.py --check
 
-      # ④ 意图表五方对拍（json / 主 HTML / C# 登记表 / C# 运行时词表 / p2 副本）
+      # ④ 意图表五方比对（json / 主 HTML / C# 登记表 / C# 运行时词表 / p2 副本）
       - name: verify agent intents
         run: python scripts/verify_agent_intents.py
 
-      # ⑤ 公式跨语言对拍
+      # ⑤ 公式跨语言比对
       - name: verify formulas
         run: python scripts/verify_formulas.py
 
@@ -96,7 +96,7 @@ jobs:
       - name: check-js
         run: node tools/check-js.js
 
-      # ⑦ XSS 黄金用例（模型输出/用户内容进入 DOM 前的白名单渲染）
+      # XSS 用例（模型输出/用户内容进 DOM 前的白名单渲染）
       - name: verify xss cases
         run: python scripts/verify_xss.py
 
@@ -106,11 +106,11 @@ jobs:
           node scripts/gen-shared-core.js --check
           python scripts/verify_core.py
 
-      # ⑧b 前端构建合并：index.html 的 AP 生成区与 shared/ 逐字一致（方案 P2 阶段二）
+      # 前端构建合并：index.html 的 AP 生成区与 shared/ 逐字一致
       - name: verify frontend regions
         run: python scripts/gen_frontend_regions.py --check
 
-      # ⑧c state 分片存储：黄金用例 10 例 + 页面接入校验（方案 P6）
+      # state 分片存储：用例 10 例 + 页面接入校验
       - name: verify store shards
         run: python scripts/verify_store.py
 
@@ -124,7 +124,7 @@ jobs:
       - name: verify kg performance
         run: python scripts/bench_kg.py --check
 
-      # ⑧e 试卷结构化黄金用例 + 单文件内联 JS 棘轮（P2-8）
+      # 试卷结构化用例 + 单文件内联 JS 行数上限
       - name: verify exam golden
         run: node scripts/exam_runner.js
 

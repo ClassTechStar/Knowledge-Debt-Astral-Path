@@ -1,6 +1,5 @@
 /**
- * agent_router_runner.js —— shared/agent-router.js 黄金用例（供 verify_all / CI 调用）
- * ===========================================================
+ * agent_router_runner.js —— shared/agent-router.js 用例（verify_all / CI 调用）
  * 覆盖：危机拦截、负例占比、授权/撤销前置、章节阅读、图谱关系特判、
  *       锚点打分、模糊锚点二次确认、敏感词脱敏。
  */

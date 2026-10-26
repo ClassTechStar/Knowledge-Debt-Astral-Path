@@ -1,5 +1,5 @@
 {
-  "_comment": "受约束智能体意图登记表 · 唯一事实源（分工方案 §8.2/§44.2 指定 tools/ 下登记表为准；格式用 JSON 以便 verify 脚本零依赖解析）。四方对拍：本文件 ↔ deploy/monolith-web/index.html 的 INTENTS/CRISIS/BANNED/NEGATIVE 字面量 ↔ src/AstralPath.Core/Agent/AgentRouter.cs 的 DefaultAgentIntents.Table（P5-1 起即运行时表，DefaultIntents() 委托它）↔ src/AstralPath.Core/Formula/FormulaWeights.cs 的 BannedWords（伦理禁语，登记于 bannedEthics）。改动任何一方必须同步另几方并跑 scripts/verify_agent_intents.py。P5-1 统一时锚点两处定向调整：material.parse 补「藏书」（对齐旧 JS，只增不抢）；sale.check「条件」→「销账条件」（K-15 弱锚点从严，运行时随登记表收紧）。",
+  "_comment": "受约束智能体意图登记表 · 登记表（分工方案 §8.2/§44.2 指定 tools/ 下登记表为准；格式用 JSON 以便 verify 脚本零依赖解析）。四方对拍：本文件 ↔ deploy/monolith-web/index.html 的 INTENTS/CRISIS/BANNED/NEGATIVE 字面量 ↔ src/AstralPath.Core/Agent/AgentRouter.cs 的 DefaultAgentIntents.Table（P5-1 起即运行时表，DefaultIntents() 委托它）↔ src/AstralPath.Core/Formula/FormulaWeights.cs 的 BannedWords（伦理禁语，登记于 bannedEthics）。改动任何一方必须同步另几方并跑 scripts/verify_agent_intents.py。P5-1 统一时锚点两处定向调整：material.parse 补「藏书」（对齐旧 JS，只增不抢）；sale.check「条件」→「销账条件」（K-15 弱锚点从严，运行时随登记表收紧）。",
   "crisis": [
     "不想活",
     "自杀",

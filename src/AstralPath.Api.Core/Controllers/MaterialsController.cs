@@ -13,7 +13,7 @@ public sealed class MaterialsController : ControllerBase
 
     public MaterialsController(IAstralPathStore store) => _store = store;
 
-    // ── 资料落盘目录（P2-7）────────────────────────────────────────────
+    // 资料落盘目录（P2-7）
     // 原先写死在 AppContext.BaseDirectory（= bin 输出目录）下，实测该处已积累 576MB 用户上传；
     // 一次 `dotnet clean` / 重新 publish 就会**静默清空用户教材**。
     // 现改为可配置的数据目录，并把旧目录内容一次性迁移过来。
@@ -209,7 +209,7 @@ public sealed class MaterialsController : ControllerBase
             var displayName = Path.GetFileName((file.FileName ?? string.Empty).Trim());
             if (string.IsNullOrWhiteSpace(displayName)) displayName = "material.pdf";
 
-            // ── 准入校验（P2-6）：扩展名 + 魔数 + 文本可读率 ──────────────
+            // 准入校验（P2-6）：扩展名 + 魔数 + 文本可读率
             // 原先任意扩展名都收（.exe 也返回 201 且解析报 ready），脏数据会进图谱与题库。
             try
             {
@@ -542,7 +542,7 @@ public sealed class MaterialsController : ControllerBase
         // P3-10：去重必须以**磁盘现状**为唯一权威。
         // 原先只比对内存注册表：① 重启后注册表为空，去重形同虚设（冒烟反复调用把目录撑到 17GB）；
         // ② 注册表还可能指向其他目录（预热曾硬编码 bin 目录），单看注册表会产生幽灵条目——
-        //    磁盘上明明没有文件也报"已存在"，导致永远补不上。
+        // 磁盘上明明没有文件也报"已存在"，导致永远补不上。
         // 现规则：激活目录里存在「同名（净化后）+ 同字节数」的文件才视为已存在。
         Directory.CreateDirectory(MaterialsDir);
         foreach (var src in samples)

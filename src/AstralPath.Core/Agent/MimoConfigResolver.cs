@@ -1,13 +1,10 @@
 namespace AstralPath.Core.Agent;
 
 /// <summary>
-/// 配置解析（P0 迁移，源：Astralpath getConfig，L6242-6265）。
-/// 优先级：用户自定义密钥信封（KeyEnvelope + DEK）→ 内置演示密钥（DemoKeyProvider）→ 未配置（null）。
-/// <para>
-/// P5（2026-10-18）：信封失效不再「静默回退」——返回 <see cref="MimoConfigResolution.Issue"/> 与
-/// <see cref="MimoConfigResolution.UserMessage"/>，让前端能提示「自定义密钥需重新配置」。
-/// 三种失效原因分开报告：DEK 丢失（换浏览器）、命中吊销清单（运维判定泄露）、密文不可解。
-/// </para>
+/// 决定用哪份配置：用户自定义密钥信封（KeyEnvelope + DEK）→ 内置演示密钥（DemoKeyProvider）→ 都没有就 null。
+/// 信封失效不再悄悄回退，会带上 <see cref="MimoConfigResolution.Issue"/> 和
+/// <see cref="MimoConfigResolution.UserMessage"/>，前端好提示用户重新配 key。
+/// 失效分三种：DEK 丢了（换浏览器）、被吊销（运维判泄露）、密文解不开。
 /// </summary>
 public sealed record MimoConfigResolution(
     MimoConfig? Config,
@@ -36,7 +33,7 @@ public static class MimoConfigResolver
         if (env is null)
             return new MimoConfigResolution(DemoKeyProvider.Resolve(), CustomEnvelopeInvalid: false);
 
-        // ① 吊销优先：信封可能完好但仍被运维判废（泄露/离职/换供应商）
+        // 先查吊销：信封本身没坏也可能被运维判废（泄露/离职/换供应商）
         if (revocation?.IsRevoked(env) == true)
         {
             store.Invalidate();
@@ -48,7 +45,7 @@ public static class MimoConfigResolver
                 UserMessage: "自定义密钥已被吊销，已回退内置演示密钥。请重新输入 API Key。");
         }
 
-        // ② DEK 缺失：换浏览器 / 清理过 IndexedDB / 换机器
+        // DEK 缺失：换过浏览器、清过 IndexedDB 或者换机器都会这样
         var dek = getDek();
         if (dek is null)
         {
@@ -61,7 +58,7 @@ public static class MimoConfigResolver
                 UserMessage: "自定义密钥的加密材料不在本机（可能换过浏览器或清理过存储），已回退内置演示密钥。请重新输入 API Key。");
         }
 
-        // ③ 密文不可解
+        // 密文解不开
         var key = KeyEnvelopeCrypto.Open(env, dek);
         if (key is null)
         {

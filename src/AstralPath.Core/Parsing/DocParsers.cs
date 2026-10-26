@@ -12,7 +12,7 @@ public sealed record DocParseResult(string Text, string Engine, bool BestEffort 
 /// </summary>
 public static class DocParsers
 {
-    // ── Word(.docx)（源 extractDocxText，L3283-3311）────────────────────
+    // Word(.docx)（源 extractDocxText，L3283-3311）
     public static DocParseResult ParseDocx(IReadOnlyDictionary<string, byte[]> entries)
     {
         if (!entries.TryGetValue("word/document.xml", out var main))
@@ -50,7 +50,7 @@ public static class DocParsers
         return new DocParseResult(doc, "docx");
     }
 
-    // ── PowerPoint(.pptx)（源 extractPptxText，L3313-3322）─────────────
+    // PowerPoint(.pptx)（源 extractPptxText，L3313-3322）
     public static DocParseResult ParsePptx(IReadOnlyDictionary<string, byte[]> entries)
     {
         var slides = entries.Keys.Where(n => Regex.IsMatch(n, "^ppt/slides/slide\\d+\\.xml$"))
@@ -74,7 +74,7 @@ public static class DocParsers
         return m.Success && int.TryParse(m.Groups[1].Value, out var n) ? n : 0;
     }
 
-    // ── EPUB（源 extractEpubText，L3324-3355）──────────────────────────
+    // EPUB（源 extractEpubText，L3324-3355）
     public static DocParseResult ParseEpub(IReadOnlyDictionary<string, byte[]> entries)
     {
         if (!entries.TryGetValue("META-INF/container.xml", out var cont))
@@ -117,7 +117,7 @@ public static class DocParsers
         return new DocParseResult(string.Join("\n\n", outParts), "epub");
     }
 
-    // ── 旧版二进制 Office(.doc/.ppt)（源 extractLegacyOfficeText，L3357-3385）──
+    // 旧版二进制 Office(.doc/.ppt)（源 extractLegacyOfficeText，L3357-3385）──
     // UTF-16LE 文本游程尽力提取；序列噪声（码位连续递增 +1/+2 ≥60%）过滤字体表/二进制区伪文本。
     public static DocParseResult ParseLegacyOffice(byte[] bytes)
     {
@@ -163,7 +163,7 @@ public static class DocParsers
             Note: "旧版二进制格式为尽力提取（格式逆向不完整），建议核对结果");
     }
 
-    // ── 纯文本类（HTML/Markdown/TXT）──────────────────────────────────
+    // 纯文本类（HTML/Markdown/TXT）
     public static DocParseResult ParseHtml(string html) => new(ZipReader.HtmlText(html), "html");
     public static DocParseResult ParseText(string text, string engine = "text") => new((text ?? "").Replace("\r\n", "\n"), engine);
 

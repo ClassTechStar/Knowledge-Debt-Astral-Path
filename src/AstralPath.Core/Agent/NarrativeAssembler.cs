@@ -1,6 +1,6 @@
 namespace AstralPath.Core.Agent;
 
-/// <summary>结构化叙事装配（§47 OC-6）：模板 + 槽位，天生避开禁词。</summary>
+/// <summary>叙事装配：模板 + 槽位拼话术，天生不含禁词。</summary>
 public static class NarrativeAssembler
 {
     public static string BuildDebtStory(string fromKp, string toKp, double scoreFrom, double scoreTo, double impact)

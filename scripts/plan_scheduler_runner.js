@@ -1,6 +1,5 @@
 /**
- * plan_scheduler_runner.js —— shared/plan-scheduler.js 黄金用例（供 verify_all / CI 调用）
- * ===========================================================
+ * plan_scheduler_runner.js —— shared/plan-scheduler.js 用例（verify_all / CI 调用）
  * 覆盖：K1–K5 合约、逐日容量调度、先修感知重排、超预算减压、移动下限。
  */
 "use strict";

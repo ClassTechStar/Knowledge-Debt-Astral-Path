@@ -6,8 +6,8 @@ using Xunit;
 namespace AstralPath.Core.Tests;
 
 /// <summary>
-/// P1 迁移验证：多格式文档解析 golden 契约（eval/golden/doc_parse.json）。
-/// 覆盖 docx 标题层级、pptx 幻灯片/备注块、epub spine 顺序、旧版二进制游程提取（含序列噪声过滤）、
+/// 多格式文档解析的用例（eval/golden/doc_parse.json）。
+/// 覆盖 docx 标题层级、pptx 幻灯片/备注块、epub 章节顺序、旧版二进制文本游程提取（滤掉序列噪声）、
 /// html 去标签与实体解码、可读字符计数。
 /// </summary>
 public class GoldenDocParseTests
@@ -128,7 +128,7 @@ public class GoldenDocParseTests
             }
             foreach (var run in c.GetProperty("textRuns").EnumerateArray())
                 WriteRun(run.GetString()!);
-            // 序列噪声游程：码位连续递增（+1）的伪 UTF-16 文本（字体表噪声）→ 须被过滤
+            // 序列噪声游程：码位连续 +1 的伪 UTF-16 文本（字体表噪声），要滤掉
             foreach (var nr in c.GetProperty("noiseRuns").EnumerateArray())
             {
                 var noise = nr.GetString()!;
@@ -175,7 +175,7 @@ public class GoldenDocParseTests
     [Fact]
     public void DocParsers_ParseDispatch_ByExtension()
     {
-        // 统一入口分发：docx → word/document.xml 检测；不支持的扩展名抛 NotSupported
+        // 统一入口按扩展名分发：docx 靠 word/document.xml 判断；不支持的扩展名抛 NotSupported
         var xml = Encoding.UTF8.GetBytes("<w:document><w:body><w:p><w:r><w:t>正文</w:t></w:r></w:p></w:body></w:document>");
         using (var ms = new MemoryStream())
         {

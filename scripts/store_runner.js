@@ -1,5 +1,5 @@
 /**
- * store_runner.js —— shared/store.js 黄金用例（供 scripts/verify_store.py 调用）
+ * store_runner.js —— shared/store.js 用例（scripts/verify_store.py 调用）
  * 用内存 FakeLS 模拟 localStorage，逐条断言分片/跳过未变更/迁移/备份/清空。
  * 输出 JSON：{ passed, failed, results:[{id,name,ok,detail}] }
  */

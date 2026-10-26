@@ -3,7 +3,7 @@ from pathlib import Path
 path = Path(r"C:\Users\18948\XiaomiMiMoProjects\Knowledge Debt Astral Path\src\AstralPath.Api\wwwroot\index.html")
 c = path.read_text(encoding="utf-8")
 
-# --- CSS upgrade ---
+# CSS upgrade
 old_css = '''.dag-toolbar { display:flex; justify-content:space-between; gap:10px; margin:12px 0 8px; color:var(--muted); font-size:12px; }
 .dag-legend span { margin-right:10px; display:inline-flex; align-items:center; gap:5px; }
 .dag-legend span::before { width:9px; height:9px; border-radius:50%; content:""; background:var(--node-ok); }
@@ -51,7 +51,7 @@ if old_css in c:
 else:
     print("css_missing")
 
-# --- graph toolbar zoom controls ---
+# graph toolbar zoom controls
 old_tb = '''        <div class="dag-toolbar">
           <div class="dag-legend"><span class="chapter">章节</span><span>知识点</span></div>
           <div id="graphMeta">-</div>
@@ -73,7 +73,7 @@ if old_tb in c:
 else:
     print("toolbar_missing")
 
-# --- fix fillBookSelects ---
+# fix fillBookSelects
 old_fill = '''function fillBookSelects() {
   const gsel = $("graphSelect");
   const tsel = $("todayBookSelect");
@@ -114,7 +114,7 @@ if old_fill in c:
 else:
     print("fill_missing")
 
-# --- fix loadSelectedGraph to sync select after fill ---
+# fix loadSelectedGraph to sync select after fill
 old_sync = '''    try { sessionStorage.setItem("astralpath_graph_id", g.graphId); } catch (e) {}
     fillBookSelects();
     renderBookChips();'''
@@ -132,7 +132,7 @@ if old_sync in c:
 else:
     print("sync_missing")
 
-# --- rewrite renderDag with layered layout ---
+# rewrite renderDag with layered layout
 old_dag = c[c.find("function renderDag(nodes, edges, debtPairs) {"):c.find("function selectDagNode(id)")]
 new_dag = r'''function classifyNode(n) {
   const d = String(n.description || "").toLowerCase();

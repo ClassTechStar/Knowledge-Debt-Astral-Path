@@ -1,10 +1,9 @@
-# 公式跨端行为对拍（重构评估 2.2）：JS 侧
-# ============================================================
+# 公式跨端行为比对：JS 侧
 # 从 deploy/monolith-web/index.html 提取内联的 K 常量与
-# scoreV2 / impactV2 / saleStep（含其依赖 helper），在 node 中按
-# eval/golden/formula-cross.json 的输入求值，与 Python 生成的期望值对拍。
+# scoreV2 / impactV2 / saleStep（连同依赖的 helper），在 node 里按
+# eval/golden/formula-cross.json 的输入求值，和 Python 生成的期望值比对。
 # C# 侧由 tests/AstralPath.Core.Tests/FormulaCrossTests.cs 断言。
-# 退出码：0 = ALL GREEN；非 0 = JS 与契约漂移。
+# 退出码：0 = ALL GREEN；非 0 = JS 与契约不一致
 import json
 import re
 import subprocess

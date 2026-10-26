@@ -3,12 +3,9 @@ namespace AstralPath.Core.Ocr;
 /// <summary>
 /// 版面阅读顺序 v3：XY-cut 分栏 + 列内 top-to-bottom。
 ///
-/// 相对 v2 的修复：
-/// ① 行带 v2 写死 6px（Math.Round(Y/6)），大字号/小字号页面直接串行；
-///    v3 用「中位框高 × 0.6」自适应
-/// ② 分栏 v2 只用框中心点做 48 桶直方图，宽框（跨栏图注）会按中心被切进某一栏；
-///    v3 用「覆盖度投影」并按「最宽连续空档」切分，且先摘出跨栏宽框单独成段
-/// ③ v2 的 bestVal > 2 是拍脑袋阈值；v3 用「空档宽度 + 空档内无覆盖」双条件
+/// v2 的毛病：行带写死 6px（Math.Round(Y/6)），大字号/小字号页面直接串行，现在按「中位框高 × 0.6」自适应；
+/// 分栏只用框中心点做 48 桶直方图，宽框（跨栏图注）会按中心被切进某一栏，改成覆盖度投影 + 按最宽连续空档切分，
+/// 跨栏宽框先摘出来单独成段；bestVal > 2 这个拍脑袋阈值换成「空档宽度 + 空档内无覆盖」双条件。
 /// </summary>
 public static class ReadingOrder
 {
@@ -47,7 +44,7 @@ public static class ReadingOrder
         if (width < minColWidth * 2)
             return OrderWithinColumn(boxes, band);
 
-        // ① 先摘出跨栏宽框（图注/整幅图），它们不属于任何一栏
+        // 先摘出跨栏宽框（图注/整幅图），它们不属于任何一栏
         var fullWidth = boxes.Where(b => b.W > width * 0.55).ToList();
         var cols = fullWidth.Count > 0 ? boxes.Except(fullWidth).ToList() : boxes;
 
@@ -62,7 +59,7 @@ public static class ReadingOrder
             return Merge(fullWidth, OrderWithinColumn(cols, band), band);
         }
 
-        // ② 覆盖度投影：每个桶记录有多少框覆盖（不是中心点计数）
+        // 覆盖度投影：每个桶记录有多少框覆盖（不是中心点计数）
         var bins = (int)Math.Clamp(cWidth / 10.0, 16, 96);
         var cover = new int[bins];
         foreach (var b in cols)
@@ -72,7 +69,7 @@ public static class ReadingOrder
             for (var i = a; i <= z; i++) cover[i]++;
         }
 
-        // ③ 找中间区域（10%–90%）里最宽的「零覆盖连续段」
+        // 找中间区域（10%–90%）里最宽的「零覆盖连续段」
         var lo = Math.Max(1, bins / 10);
         var hi = bins - lo;
         var bestStart = -1; var bestLen = 0; var curStart = -1; var curLen = 0;

@@ -3,15 +3,10 @@ using Xunit.Abstractions;
 namespace AstralPath.Persistence.Tests;
 
 /// <summary>
-/// 持久化层测试。
-/// <para>
-/// 两类用例：
-/// <list type="bullet">
-///   <item><b>不依赖外部</b>：内存仓储、嵌入确定性、RRF 公式、切分、微服务宿主契约 —— 始终运行。</item>
-///   <item><b>依赖 Postgres</b>：真实建表、HNSW、全文与 RRF —— 仅在 <c>ASTRALPATH_PG_CONN</c> 可用时运行，
-///         否则 <see cref="Skip"/>（CI 无 DB 环境不会误判为失败）。</item>
-/// </list>
-/// </para>
+/// 持久化层测试，两类：
+/// 不依赖外部的（内存仓储、嵌入确定性、RRF 公式、切分、微服务宿主契约）一直跑；
+/// 依赖 Postgres 的（建表、HNSW、全文与 RRF）只在 <c>ASTRALPATH_PG_CONN</c> 可用时跑，
+/// 否则跳过（<see cref="Skip"/>），CI 上没数据库时不会误判失败。
 /// </summary>
 public class PersistenceTests
 {
@@ -34,7 +29,7 @@ public class PersistenceTests
         catch { return false; }
     }
 
-    // ═══════════════ 不依赖外部：内存模式与算法 ═══════════════
+    // 不依赖外部：内存模式与算法
 
     [Fact]
     public async Task InMemory_Repo_Upsert_Get_Search()
@@ -101,7 +96,7 @@ public class PersistenceTests
         Assert.Contains("vector(1024)", sql);
     }
 
-    // ═══════════════ 依赖 Postgres：真实持久化 ═══════════════
+    // 依赖 Postgres：真实持久化
 
     [Fact]
     public async Task Postgres_Schema_And_Hybrid_Search_Works()
@@ -155,12 +150,12 @@ public class PersistenceTests
         var options = new PersistenceOptions { Mode = "postgres", ConnectionString = PgConn, VectorDimensions = 64 };
         await using var repo = new PostgresKnowledgeRepository(options, new HashingEmbeddingProvider(64));
         await repo.EnsureSchemaAsync();
-        await repo.EnsureSchemaAsync();      // 重复建表不得抛错
+        await repo.EnsureSchemaAsync();      // 重复建表不能抛错
         var diag = await repo.DiagnosticsAsync();
         Assert.True(diag.Ready, diag.Error);
     }
 
-    // ═══════════════ 双模式等价性（内存 vs Postgres 语义一致）═══════════════
+    // 双模式等价性（内存 vs Postgres 语义一致）
 
     [Fact]
     public async Task Memory_And_Postgres_Agree_On_Visibility()

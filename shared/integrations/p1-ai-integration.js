@@ -1,17 +1,17 @@
-/* ═══════════════════════════════════════════════════════════════════
- * P1 迁移：AI 增强构图 + 多格式导入 + AI 计划官（源：Astralpath index.html）
- * 注入位置：.cloudflare/pages/index.html 尾部 </body> 前（p0-ai-integration.js 之后）
- * 对应开发方案 P1-1（模块 B2-B3）/ P1-2（模块 D1-D3）/ P1-3（模块 E2-E5）。
- * 依赖基准已有：esc / sanitizeText / activeBook / activeNodes / title / scoreOf /
- *              save / $ / K / buildPlan / scanDebts / generateQuestions /
- *              p0-ai-integration.js 的 window.__AP_MIMO__
- * ═══════════════════════════════════════════════════════════════════ */
+/*
+  * P1 迁移：AI 增强构图 + 多格式导入 + AI 计划官（源：Astralpath index.html）
+  * 注入位置：.cloudflare/pages/index.html 尾部 </body> 前（p0-ai-integration.js 之后）
+  * 对应开发方案 P1-1（模块 B2-B3）/ P1-2（模块 D1-D3）/ P1-3（模块 E2-E5）。
+  * 依赖基准已有：esc / sanitizeText / activeBook / activeNodes / title / scoreOf /
+  * save / $ / K / buildPlan / scanDebts / generateQuestions /
+  * p0-ai-integration.js 的 window.__AP_MIMO__
+  */
 (function () {
   "use strict";
 
-  // ═══ 1. 多格式导入（P1-2，源 L3189-3385）═════════════════════════════
+// 1. 多格式导入（P1-2，源 L3189-3385）
 
-  // ── ZIP 容器读取（源 readZipEntries L3210-3249）──────────────────────
+  // ZIP 容器读取（源 readZipEntries L3210-3249）
   function inflateRaw(bytes) {
     return new Promise(function (resolve, reject) {
       if (typeof DecompressionStream === "undefined") { reject(new Error("浏览器不支持 DecompressionStream")); return; }
@@ -242,7 +242,7 @@
 
   window.__AP_MULTI_FORMAT__ = { parse: parseMultiFormat, readZip: readZipEntries, legacy: extractLegacyOfficeText };
 
-  // ═══ 2. AI 增强构图（P1-1，源 mergeGraphAI L4361-4400 + demoGraphAI L4348）═══
+// 2. AI 增强构图（P1-1，源 mergeGraphAI L4361-4400 + demoGraphAI L4348）
 
   function normTitle(s) {
     return String(s || "").replace(/[！-～]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); })
@@ -413,7 +413,7 @@
 
   window.__AP_GRAPH_AI__ = { merge: mergeGraphAI, demo: demoGraphAI, parse: parseGraphExtract, cycles: removeCyclesTopo, keepAi: keepAiQuestions };
 
-  // ═══ 3. AI 计划官（P1-3，源 generatePlan/startGuiPlan T9）═══════════════
+// 3. AI 计划官（P1-3，源 generatePlan/startGuiPlan T9）
 
   // K1-K5 合约校验（与 C# PlannerConstraintChecker 语义对齐：K1 日预算 / K2 连续难 / K3 why 含先修名 / K4 concept 先于 drill / K5 债边覆盖）
   function checkPlanK(plan, budget, topDebts) {
@@ -570,7 +570,7 @@
 
   window.__AP_PLAN_AI__ = { orchestrate: aiPlanOrchestrate, checkK: checkPlanK, parse: parsePlanDraft, localPlan: null };
 
-  // ═══ 4. UI 接线：构图按钮 + 计划按钮 + 多格式上传 ══════════════════════
+// 4. UI 接线：构图按钮 + 计划按钮 + 多格式上传
   document.addEventListener("DOMContentLoaded", function () {
     // AI 增强构图按钮（基准旧版 UI 无此按钮时动态注入到识网页）
     var gbtn = document.getElementById("btnGraphAI");

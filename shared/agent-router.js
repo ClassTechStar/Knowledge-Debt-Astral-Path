@@ -1,14 +1,14 @@
 /**
- * agent-router.js —— 智能体规则路由（P2-8 第三个下沉边界）
- * ===========================================================
- * 从单文件 index.html 抽出的纯路由逻辑：口语归一、危机/负例拦截、授权前置、
- * 章节阅读与图谱关系特判、锚点打分、敏感词脱敏。页面状态（当前教材的节点/章节）
- * 与意图表由调用方通过 ctx 注入，模块本身不读 DOM、不读全局状态。
+  * agent-router.js —— 智能体规则路由：听懂用户想干什么
+  * ===========================================================
+  * 从 index.html 抽出来的路由逻辑：口语归一、危机/负例拦截、授权前置、
+  * 章节阅读与图谱关系特判、锚点打分、敏感词脱敏。当前教材的节点/章节
+  * 和意图表由调用方通过 ctx 传进来，这里不读 DOM、不读全局状态。
  *
- * 使用方式：
- *   浏览器：window.APAgent（由 scripts/gen_frontend_regions.py 内联进页面生成区）
- *   Node  ：require("./shared/agent-router.js")
- */
+  * 用法：
+  * 浏览器：window.APAgent（由 scripts/gen_frontend_regions.py 内联进页面生成区）
+  * Node  ：require("./shared/agent-router.js")
+  */
 (function (root, factory) {
   "use strict";
   var core = (typeof module === "object" && module.exports && typeof require === "function")
@@ -63,11 +63,11 @@
   }
 
   /**
-   * 规则路由。ctx 可注入：
-   *   nodes/chapters  当前教材（图谱关系特判用）
-   *   intents/crisis/negative  意图与词表（页面侧传入，保持唯一事实源）
-   *   kgCn2Num        中文数字章节号解析
-   */
+    * 规则路由。ctx 可注入：
+    * nodes/chapters  当前教材（图谱关系特判用）
+    * intents/crisis/negative  意图与词表（页面侧传入，保持唯一事实源）
+    * kgCn2Num        中文数字章节号解析
+    */
   function route(t, ctx) {
     ctx = ctx || {};
     var intents = ctx.intents || (core && core.INTENTS) || [];

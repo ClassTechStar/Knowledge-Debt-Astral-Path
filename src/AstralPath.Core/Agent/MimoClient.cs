@@ -7,17 +7,17 @@ namespace AstralPath.Core.Agent;
 /// <summary>模型补全消息（OpenAI 兼容 messages 数组元素）。</summary>
 public sealed record MimoMessage(string Role, string Content);
 
-/// <summary>补全调用可选项（源：Astralpath complete opts）。</summary>
+/// <summary>补全调用的可选项。</summary>
 public sealed record MimoOptions(
     int MaxTokens = 1600,
     double? Temperature = null,
     int TimeoutMs = 60000,
     Action<string, bool>? OnDelta = null);
 
-/// <summary>补全结果（源：Astralpath complete 返回 {text, model}）。</summary>
+/// <summary>补全结果：正文和实际用的模型名。</summary>
 public sealed record MimoResult(string Text, string Model);
 
-/// <summary>原始 HTTP 响应抽象——SSE 与非流式统一入口，便于 golden 测试注入 mock 网关。</summary>
+/// <summary>原始 HTTP 响应，SSE 和非流式都从这进，测试里可以直接塞 mock 网关。</summary>
 public sealed record MimoRawResponse(int StatusCode, string ContentType, Stream Body)
 {
     public static MimoRawResponse Json(int statusCode, string json, string model = "")
@@ -34,12 +34,10 @@ public delegate Task<MimoRawResponse> MimoTransport(MimoRequest request, Cancell
 public sealed record MimoRequest(string Base, string Key, string Model, IReadOnlyList<MimoMessage> Messages, int MaxTokens, double? Temperature, bool Stream);
 
 /// <summary>
-/// 通用模型调用层（P0 迁移，源：Astralpath __AP_MIMO__.complete，L6318-6376）。
-/// 要点：
-/// 1) 并发闸：最多 2 路并行，其余 FIFO 排队等待（T13：替代单飞拒绝，后台任务与用户操作互不阻塞）；
-/// 2) SSE 流式优先 + 非流式兜底；[DONE] 可能不带换行尾、网关发完 [DONE] 不关流，须显式终止（P2-1 修复①②）；
-/// 3) 推理型模型 reasoning_content 流式收集（onDelta 第二参 thinking=true），正文为空时以思维链兜底（T13）；
-/// 4) 正文仍为空 → 抛错（模型内容类故障，不触发冷却，见 FaultCooldown）。
+/// 通用模型调用层。并发最多 2 路，其余排队等，后台任务和用户操作互不堵对方。
+/// SSE 流式优先、非流式兜底；[DONE] 可能不带换行尾，网关发完 [DONE] 也未必关流，得自己探测着显式收尾。
+/// 推理型模型的 reasoning_content 边收边回调（onDelta 第二参 thinking=true），正文为空就拿思维链顶上；
+/// 还是空就抛错，算模型内容故障，不触发冷却（见 FaultCooldown）。
 /// </summary>
 public sealed class MimoClient
 {
@@ -59,7 +57,7 @@ public sealed class MimoClient
         options ??= new MimoOptions();
         var onDelta = options.OnDelta;
 
-        await _gate.WaitAsync(ct).ConfigureAwait(false); // T13：排队而非拒绝
+        await _gate.WaitAsync(ct).ConfigureAwait(false); // 排队等，不直接拒绝
         try
         {
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -82,7 +80,7 @@ public sealed class MimoClient
 
             if (isSse)
             {
-                // SSE 解析：逐行取 data: 载荷；[DONE] 裸尾也要终止（源 L6338-6359 三处修复）
+                // SSE 逐行取 data: 载荷；[DONE] 光秃秃结尾也要能停下来
                 using var reader = new StreamReader(resp.Body, Encoding.UTF8);
                 var buf = new StringBuilder();
                 var sseDone = false;
@@ -149,7 +147,7 @@ public sealed class MimoClient
                 }
             }
 
-            // T13：流式推理兜底——正文为空但思维链可用
+            // 正文为空但思维链有货：拿思维链当正文
             if (outText.Length == 0 && reasoning.Length >= 4)
             {
                 outText.Append(reasoning.ToString().Trim());
@@ -182,7 +180,7 @@ public sealed class MimoClient
             if (d.TryGetProperty("reasoning_content", out var rp) && rp.ValueKind == JsonValueKind.String && rp.GetString()!.Length > 0)
             {
                 reasoning.Append(rp.GetString());
-                if (onDelta != null) SafeDelta(onDelta, reasoning.ToString(), true); // T14：思维链流式回调
+                if (onDelta != null) SafeDelta(onDelta, reasoning.ToString(), true); // 思维链边收边回调
             }
             if (d.TryGetProperty("content", out var piece) && piece.ValueKind == JsonValueKind.String && piece.GetString()!.Length > 0)
             {

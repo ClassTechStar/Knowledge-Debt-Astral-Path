@@ -5,10 +5,9 @@ using Xunit;
 namespace AstralPath.Core.Tests;
 
 /// <summary>
-/// 公式跨端行为对拍金样（重构评估 2.2）：eval/golden/formula-cross.json 的期望值
-/// 由 Python 按契约公式独立计算（第三实现），本测试断言 **C#** 实现；
-/// **JS**（index.html 内联 scoreV2/impactV2/saleStep）由 scripts/verify_formulas.py
-/// 经 node 求值断言。三端任一漂移即红。
+/// 公式跨端比对用例：eval/golden/formula-cross.json 的期望值由 Python 独立算出（第三份实现），
+/// 这里断言 C# 的结果；JS 那份（index.html 里的 scoreV2/impactV2/saleStep）由
+/// scripts/verify_formulas.py 走 node 断言。哪一端算偏了都会红。
 /// </summary>
 public class FormulaCrossTests
 {

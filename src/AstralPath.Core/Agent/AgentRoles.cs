@@ -1,6 +1,6 @@
 namespace AstralPath.Core.Agent;
 
-/// <summary>受约束智能体角色与意图位图（§47 OC-2 / §44 R2）。</summary>
+/// <summary>受约束智能体的角色常量。</summary>
 public static class AgentRoles
 {
     public const string Student = "student";
