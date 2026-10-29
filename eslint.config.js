@@ -23,6 +23,9 @@ module.exports = [
       "src/**/Resources/**",
       "src/**/assets/**",
       "materials/**",
+      // 鸿蒙工程是 ArkTS（.ets），规范由 codelinter 管；这里的 oh_modules/build
+      // 是 ohpm 依赖与产物，当成 JS 扫会刷出一堆 "import 只能出现在 module" 的假错
+      "src/AstralPath.Harmony/**",
     ],
   },
   {
@@ -120,6 +123,20 @@ module.exports = [
     files: ["shared/integrations/**/*.js"],
     rules: {
       "no-undef": "off",
+    },
+  },
+  // 页面装配层：app-glue.js 直接操作页面里的全局（S/save/renderToday 等），
+  // 它自己不是模块，靠 index.html 的作用域运行。
+  {
+    files: ["shared/app-glue.js"],
+    languageOptions: {
+      globals: {
+        S: "readonly", save: "readonly", renderToday: "readonly",
+        renderGraph: "readonly", renderDebts: "readonly", renderProfile: "readonly",
+        APStore: "readonly", APNotify: "readonly", APRuntime: "readonly",
+        activeBook: "readonly", activeNodes: "readonly", activeQs: "readonly",
+        esc: "readonly", toast: "readonly", scoreOf: "readonly", K: "readonly",
+      },
     },
   },
 ];

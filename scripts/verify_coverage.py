@@ -19,6 +19,14 @@ import re
 import sys
 from pathlib import Path
 
+# Windows 控制台默认 cp1252，打印中文会 UnicodeEncodeError（CI 上真踩过）：
+# 这里自己兜一层，不依赖调用方设置 PYTHONUTF8。
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 ROOT = Path(__file__).resolve().parent.parent
 REPORT = ROOT / "eval" / "coverage-report.md"
 

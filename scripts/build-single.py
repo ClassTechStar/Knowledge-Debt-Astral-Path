@@ -55,7 +55,7 @@ ORT_WASM = os.path.join(ORT_DIR, "ort-wasm-simd-threaded.wasm")
 # 基座 index.html 的 md5 指纹。基座一改 md5 就变，构建会直接拒绝，这时要重打基线，
 # 也就是把 EXPECTED_MD5 更新成新值（值后续统一重算）。之前几次重打都是基座本身
 # 有改动：UI 调整、密钥内嵌、AI 流式、XSS 修复、公式常量改由 C# 生成、逻辑搬进 shared/ 等。
-EXPECTED_MD5 = "eb213f77a21a5ac1162ff58730dc0ff0"
+EXPECTED_MD5 = "941e1f203b403905e1486341f85aef76"
 
 # 唯一放行的外部 CDN 引用（页面内有 onerror 降级，缺失时自动降级）
 ALLOWED_EXTERNAL_PREFIX = "https://cdn.jsdelivr.net/npm/onnxruntime-web"

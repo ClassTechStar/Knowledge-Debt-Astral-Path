@@ -17,6 +17,11 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
+  // UMD 包装层的 root 只在外层作用域，factory 里要自己取一次全局；
+  // 之前直接写 root.AudioContext，ReferenceError 被 try 吞掉，响铃从来没响过。
+  var GLOBAL = typeof self !== "undefined" ? self
+    : (typeof window !== "undefined" ? window : null);
+
   var DWELL = { info: 4000, warn: 6500, crisis: 0 }; // 0 = 常驻，手动关闭
   var COLORS = { info: "#2f6fed", warn: "#b8860b", crisis: "#c0392b" };
   var TITLES = { info: "提示", warn: "注意", crisis: "重要提醒" };
@@ -44,7 +49,8 @@
   /** 危机响铃：WebAudio 短促两声；失败静默（无手势/不支持时浏览器会拒绝） */
   function beep() {
     try {
-      var AC = root.AudioContext || root.webkitAudioContext;
+      if (!GLOBAL) return;
+      var AC = GLOBAL.AudioContext || GLOBAL.webkitAudioContext;
       if (!AC) return;
       var ctx = new AC();
       [0, 0.28].forEach(function (t) {
