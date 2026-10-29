@@ -17,6 +17,7 @@ interface AggRow {
 export struct TeacherPage {
   @State rows: AggRow[] = [];
   @State msg: string = '聚合视图：同一薄弱点样本少于 3 人时只显示「样本不足」';
+  // k-匿名参数：聚合口径（真机由服务端按 k 聚合后下发，客户端只做展示与抑制）
   private readonly kAnon: number = 5;
   private readonly minSample: number = 3;
 

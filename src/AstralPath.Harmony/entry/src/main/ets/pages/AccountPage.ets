@@ -3,7 +3,7 @@
  * 红线继承：未授权时默认「不可见」；密钥只保存在本机首选项，不上传、不写日志。
  */
 import { promptAction } from '@kit.ArkUI';
-import { StoreService } from '../service/StoreService';
+import { StoreService, AiCfg } from '../service/StoreService';
 import { AiService, AiConfig } from '../service/AiService';
 
 @Component
@@ -11,6 +11,7 @@ export struct AccountPage {
   @State keyInput: string = '';
   @State hasKey: boolean = false;
   @State consent: boolean = false;
+  private cfg: AiCfg = { baseUrl: AiService.DEFAULT_BASE, key: '', model: 'mimo-7b-rl' };
 
   aboutToAppear(): void {
     this.refresh();
@@ -19,21 +20,35 @@ export struct AccountPage {
   private async refresh(): Promise<void> {
     const meta = await StoreService.loadMeta();
     this.consent = meta.consent;
-    this.hasKey = meta.onboard; // 演示：用 onboard 位示意已配置过密钥
+    this.cfg = await StoreService.loadAiCfg();
+    if (!this.cfg.baseUrl) {
+      this.cfg.baseUrl = AiService.DEFAULT_BASE;
+    }
+    this.hasKey = !!this.cfg.key;
   }
 
   private async saveKey(): Promise<void> {
     if (!this.keyInput) {
       return;
     }
-    const cfg: AiConfig = { baseUrl: AiService.DEFAULT_BASE, key: this.keyInput, model: 'mimo-7b-rl' };
-    // 真机应写入加密存储（如 Asset Store Kit）；这里先落首选项并立刻清空输入框
-    const meta = await StoreService.loadMeta();
-    meta.onboard = true;
-    await StoreService.saveMeta(meta);
+    // 真机建议改用 Asset Store Kit 做加密存储；这里先落本机首选项，不上传、不进日志
+    const next: AiCfg = {
+      baseUrl: this.cfg.baseUrl || AiService.DEFAULT_BASE,
+      key: this.keyInput,
+      model: this.cfg.model || 'mimo-7b-rl'
+    };
+    await StoreService.saveAiCfg(next);
+    this.cfg = next;
     this.keyInput = '';
     this.hasKey = true;
     promptAction.showToast({ message: '密钥已保存到本机', duration: 1500 });
+  }
+
+  private async clearKey(): Promise<void> {
+    await StoreService.saveAiCfg({ baseUrl: AiService.DEFAULT_BASE, key: '', model: 'mimo-7b-rl' });
+    this.cfg = { baseUrl: AiService.DEFAULT_BASE, key: '', model: 'mimo-7b-rl' };
+    this.hasKey = false;
+    promptAction.showToast({ message: '已移除密钥', duration: 1500 });
   }
 
   private async toggleConsent(): Promise<void> {
@@ -66,7 +81,11 @@ export struct AccountPage {
           Button('保存').onClick(() => this.saveKey());
         }
         if (this.hasKey) {
-          Text('已配置密钥（本机保存）').fontSize(11).fontColor($r('app.color.ok'));
+          Row() {
+            Text('已配置密钥（本机保存）').fontSize(11).fontColor($r('app.color.ok')).layoutWeight(1);
+            Button('移除').fontSize(10).onClick(() => this.clearKey());
+          }
+          .width('100%');
         }
       }
       .width('100%')

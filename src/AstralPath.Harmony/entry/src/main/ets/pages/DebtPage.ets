@@ -30,9 +30,9 @@ export struct DebtPage {
       return;
     }
     const ans = await StoreService.loadAnswers();
+    const visiting: Map<string, number> = new Map();
     const scoreOf = (id: string): number => {
-      const m: Mastery = ans.mastery[id] ?? { n: 0, s: 0, c: 3, age: 0, st: 0 };
-      return FormulaService.scoreOfMastery(m, []);
+      return FormulaService.scoreOfGraph(id, b?.edges ?? [], ans.mastery, visiting);
     };
     // 某知识点被下游拖累的次数：统计它的后续节点里有多少个处于低分
     const downCount = (id: string): number => {

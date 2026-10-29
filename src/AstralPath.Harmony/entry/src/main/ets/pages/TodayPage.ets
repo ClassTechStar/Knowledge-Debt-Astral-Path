@@ -38,10 +38,9 @@ export struct TodayPage {
     this.book = b;
     const ans = await StoreService.loadAnswers();
     const list: TaskItem[] = [];
+    const visiting: Map<string, number> = new Map();
     for (const n of b.nodes) {
-      const m: Mastery = ans.mastery[n.id] ?? { n: 0, s: 0, c: 3, age: 0, st: 0 };
-      // 演示口径：先修得分按 0.5 处理，真机实现里应递归取先修（见迁移说明）
-      const sc = FormulaService.scoreOfMastery(m, []);
+      const sc = FormulaService.scoreOfGraph(n.id, b.edges ?? [], ans.mastery, visiting);
       const item: TaskItem = { kp: n.id, title: n.title, score: sc };
       list.push(item);
     }

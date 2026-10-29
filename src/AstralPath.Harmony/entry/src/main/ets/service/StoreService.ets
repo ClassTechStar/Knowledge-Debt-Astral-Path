@@ -13,6 +13,13 @@ const KEY_BOOKS: string = 'ap:books';
 const KEY_ANSWERS: string = 'ap:answers';
 const KEY_PLAN: string = 'ap:plan';
 const KEY_PAPERS: string = 'ap:papers';
+const KEY_AI: string = 'ap:aicfg';
+
+export interface AiCfg {
+  baseUrl: string;
+  key: string;
+  model: string;
+}
 
 export class StoreService {
   private static store: preferences.Preferences | null = null;
@@ -83,6 +90,18 @@ export class StoreService {
     await StoreService.get().flush();
   }
 
+  /** 模型配置（base url / key / model）。生产环境应改用 Asset Store Kit 做加密存储，
+   *  这里先用首选项，保证「密钥只存本机」这一条不被破坏。 */
+  static async loadAiCfg(): Promise<AiCfg> {
+    const raw = await StoreService.get().get(KEY_AI, '') as string;
+    return raw ? JSON.parse(raw) as AiCfg : { baseUrl: '', key: '', model: '' };
+  }
+
+  static async saveAiCfg(cfg: AiCfg): Promise<void> {
+    await StoreService.get().put(KEY_AI, JSON.stringify(cfg));
+    await StoreService.get().flush();
+  }
+
   static async loadAll(): Promise<AppState> {
     const meta = await StoreService.loadMeta();
     const books = await StoreService.loadBooks();
@@ -106,6 +125,7 @@ export class StoreService {
     await s.delete(KEY_ANSWERS);
     await s.delete(KEY_PLAN);
     await s.delete(KEY_PAPERS);
+    await s.delete(KEY_AI);
     await s.flush();
   }
 

@@ -1,0 +1,8 @@
+# ArkTS 混淆规则（release 构建用）
+-enable-property-obfuscation
+-enable-toplevel-obfuscation
+-compact
+-keep-property-name
+  id title name kp stem opts ci diff impact why open day minutes samples weakRate
+-keep-file-name
+  Index HomePage MaterialsPage GraphPage PapersPage DebtPage TodayPage AgentPage ProfilePage TeacherPage AccountPage

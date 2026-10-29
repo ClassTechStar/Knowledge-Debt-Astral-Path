@@ -4,7 +4,7 @@
  * 这里刻意不引入任何平台 API，方便将来和 JS/C# 三方对拍。
  */
 import { FormulaConstants as K } from '../model/FormulaConstants';
-import { DebtEdge, Mastery, SaleInput, SaleResult } from '../model/Models';
+import { DebtEdge, Mastery, SaleInput, SaleResult, KEdge } from '../model/Models';
 
 export class FormulaService {
   static clamp01(v: number): number {
@@ -100,6 +100,26 @@ export class FormulaService {
   /** 由掌握度记录计算某个知识点的得分（先修由调用方传入，避免递归查表） */
   static scoreOfMastery(m: Mastery, prereq: number[]): number {
     return FormulaService.scoreV2(m.n, m.s, m.c, m.age, m.st, prereq);
+  }
+
+  /** 递归算某个知识点的得分：先修由图谱边推出，带 visiting 防环（对齐 Web 版 scoreOfMemo） */
+  static scoreOfGraph(id: string, edges: KEdge[], mastery: Record<string, Mastery>,
+    visiting: Map<string, number>): number {
+    const cached = visiting.get(id);
+    if (cached !== undefined) {
+      return cached;
+    }
+    visiting.set(id, 0.5); // 环上的临时值，避免死循环
+    const m: Mastery = mastery[id] ?? { n: 0, s: 0, c: 3, age: 0, st: 0 };
+    const pre: number[] = [];
+    for (const e of edges) {
+      if (e.b === id) {
+        pre.push(FormulaService.scoreOfGraph(e.a, edges, mastery, visiting));
+      }
+    }
+    const v = FormulaService.scoreV2(m.n, m.s, m.c, m.age, m.st, pre);
+    visiting.set(id, v);
+    return v;
   }
 
   /** 开放红边判定 */

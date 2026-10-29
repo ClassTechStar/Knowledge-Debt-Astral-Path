@@ -20,7 +20,9 @@ import { AccountPage } from './AccountPage';
 @Component
 struct Index {
   @StorageLink('layoutSize') layoutSize: number = LayoutSize.SM;
-  @State current: string = 'home';
+  // 必须是 StorageLink：首页/藏书阁的跳转按钮是写 AppStorage('currentPage') 的，
+  // 用 @State 收不到，点了没反应
+  @StorageLink('currentPage') current: string = 'home';
   @State userName: string = '王小明（有债）';
 
   aboutToAppear(): void {

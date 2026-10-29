@@ -85,7 +85,7 @@ File → Project Structure → Signing Configs 生成证书，写回 `build-prof
 | 导航 | `nav.pills` + `main#p-*` 显隐 | `Index.ets` 单页壳 + 内部状态切换（折叠态胶囊 / 展开态侧栏） |
 | 存储 | localStorage / IndexedDB | `@kit.ArkData` preferences（分片）；大文本走文件 |
 | 网络 | fetch / EventSource | `@kit.NetworkKit` http（含 `requestInStream` 做 SSE） |
-| OCR | tesseract.js / pdf.js（WASM） | 需另做：Native 侧接 OCR 引擎，或用 `Core Vision Kit`；当前版本未接入 |
+| OCR | tesseract.js / pdf.js（WASM） | 未接入：扫描版 PDF 走不了；文本类（TXT/MD）已由 `KgService` 接上 |
 | 权限 | 无 | `INTERNET`、`GET_NETWORK_INFO`（已在 module.json5 声明并写明用途） |
 | 推送/后台 | 无 | 未使用；如需再加 `ohos.permission.KEEP_BACKGROUND_RUNNING` |
 
@@ -97,8 +97,8 @@ File → Project Structure → Signing Configs 生成证书，写回 `build-prof
    本次已按规则改写（显式接口 + 显式类型循环）；后续新增代码需遵守，否则编译不过。
 3. **图谱渲染降级**：SVG 力导向图在 ArkUI 无直接对应。当前用列表 + 先修/后续面板表达，
    功能等价但视觉不同；若要 1:1 需用 Canvas 自绘。
-4. **OCR/文件解析未接入**：解析 PDF/TXT 建图谱这条链在鸿蒙侧尚无实现，
-   首次体验依赖示例教材（与 Android 版首发时的状态一致）。
+4. **OCR 未接入**：包里没有 OCR 引擎与字库（这是 HAP 只有数百 KB 的主因，见第 8 节）。
+   文本类资料（TXT / Markdown）已可解析建图谱；扫描版 PDF 需要后续接引擎。
 5. **数据迁移**：Web 版导出 JSON 可直接读取（字段一致）；反向导入需注意
    `Record<string, Mastery>` 在 ArkTS 中的类型显式化。
 
@@ -203,3 +203,30 @@ Mate X7 模拟器；首次运行 IDE 会自动 Sync 并装包。
 - 官方文档中心：<https://developer.huawei.com/consumer/cn/doc/doccenter>
 - ArkTS 语法约束：搜索 `arkts-no-structural-typing` / `arkts-no-untyped-obj-literals`
 - 折叠屏适配：搜索 `一次开发多端部署` / `响应式布局`
+
+## 8. 已知缺口（对照单文件版逐项列）
+
+**已实现**：10 个页面与导航、公式与债边诊断（含递归先修得分）、14 天计划、销账、
+五分片存储、教材列表与切换、TXT/MD 解析建图谱、意图路由（24 个意图的本地答复）、
+危机词拦截（11 个，与 `tools/agent-intents.json` 同源）、折叠屏自适应、模型流式对话。
+
+**还没做**（按影响排序）：
+
+| 缺口 | 说明 | 代价 |
+|---|---|---|
+| OCR（扫描版 PDF） | 无 tesseract/RapidOCR 引擎与字库，扫描件只能走文本层 | 包体积 +10~20 MB，需 Native 或 WASM 移植 |
+| PDF/PPT/Word/EPUB 解析 | 目前只认 TXT/MD | 中等（PDF 文本层解析约几百行） |
+| 图谱可视化 | 现在是列表 + 先修/后续面板，不是力导向图 | Canvas 自绘，约 200 行 |
+| What-if 模拟 | 滑杆调参数看债边变化 | 小（纯本地公式） |
+| 债边叙事解读 / 计划复盘 | 需要模型参与，也可本地模板化 | 小~中 |
+| 拍照识别试卷 | 相机 + 图像预处理 | 中 |
+| 敏感词脱敏 | Web 版在入库前脱敏，鸿蒙版还没做 | 小 |
+| 内置演示密钥 | Web/单文件版内置了一份演示密钥，鸿蒙版没有 | 小（但有合规考量，建议不内置） |
+| 帮助中心 / 术语词典 | Web 版有引导与词典 | 小 |
+
+**包体积说明**：HAP 现在约 410 KB（debug，含 93 KB sourcemap；release 约 310 KB）。
+对比 Android APK 11 MB、单文件 Web 33 MB，差距几乎全部来自「没有内联 OCR 引擎与字库」
+（tesseract 核心约 10 MB ×2、中英文字库约 5 MB、pdf.js 与 WASM 若干）。
+功能代码本身（ArkTS 字节码 252 KB）并不比其它端少多少。
+是否要把 OCR 搬进来，取决于你要不要「拍照/扫描版教材直接解析」这条能力——
+要的话包会涨到 10 MB 量级，不要的话当前体积就是合理的。
