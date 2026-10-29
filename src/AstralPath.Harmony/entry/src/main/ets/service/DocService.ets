@@ -91,9 +91,13 @@ export class DocService {
   private static async parseZip(kind: DocKind, uri: string, outDir: string): Promise<DocResult> {
     try {
       fileIo.mkdirSync(outDir, true);
-      await zlib.unzipFile(uri, outDir, {});
+      // 选择器给的是 URI，unzipFile 只认沙箱路径，先拷一份到缓存目录
+      const ext = kind === 'docx' ? '.docx' : (kind === 'pptx' ? '.pptx' : '.epub');
+      const local = `${outDir}/src${ext}`;
+      fileIo.copyFileSync(uri, local);
+      await zlib.unzipFile(local, `${outDir}/unzipped`, {});
       const parts: string[] = [];
-      DocService.collect(outDir, parts);
+      DocService.collect(`${outDir}/unzipped`, parts);
       let xmlFiles: string[] = [];
       if (kind === 'docx') {
         xmlFiles = parts.filter((p: string) => p.endsWith('word/document.xml'));
