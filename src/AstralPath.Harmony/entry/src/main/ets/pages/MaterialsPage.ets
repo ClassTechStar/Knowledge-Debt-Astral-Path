@@ -2,12 +2,15 @@
  * 藏书阁 —— 对应 Web 版 main#p-materials：教材列表、设为当前、导入示例资料。
  * 文件解析（PDF/TXT）在鸿蒙侧走文件选择器 + KgService；这里先接通列表与切换。
  */
-import { picker, fileIo } from '@kit.CoreFileKit';
-import { util } from '@kit.ArkTS';
+import { picker } from '@kit.CoreFileKit';
+import { common } from '@kit.AbilityKit';
 import { Book } from '../model/Models';
 import { DemoData } from '../model/DemoData';
 import { StoreService } from '../service/StoreService';
 import { KgService } from '../service/KgService';
+import { DocService, DocResult } from '../service/DocService';
+import { OcrService } from '../service/OcrService';
+import { SanitizeService } from '../service/SanitizeService';
 
 @Component
 export struct MaterialsPage {
@@ -43,21 +46,31 @@ export struct MaterialsPage {
       const docPicker = new picker.DocumentViewPicker();
       const uris: string[] = await docPicker.select({
         maxSelectNumber: 1,
-        fileSuffixFilters: ['.txt', '.md', '.markdown']
+        fileSuffixFilters: ['.txt', '.md', '.markdown', '.pdf', '.docx', '.pptx', '.epub', '.html']
       });
       if (uris.length === 0) {
         return;
       }
       const uri = uris[0];
       const name = uri.split('/').pop() ?? '未命名资料';
-      const file = fileIo.openSync(uri, fileIo.OpenMode.READ_ONLY);
-      const size = fileIo.statSync(file.fd).size;
-      const buf = new ArrayBuffer(size);
-      fileIo.readSync(file.fd, buf);
-      fileIo.closeSync(file);
-      const text = new util.TextDecoder('utf-8').decodeToString(new Uint8Array(buf));
+      const ctx = getContext(this) as common.UIAbilityContext;
+      const doc: DocResult = await DocService.parse(uri, name, ctx.cacheDir);
+      let text = SanitizeService.mask(doc.text);
+      if (doc.note) {
+        this.tip = doc.note;
+      }
+      // 文本层太少 → 判定扫描版，走 OCR（本机没装 Core Vision 时这里会明确提示）
+      if (OcrService.needOcr(doc.chars, doc.scanned)) {
+        const ocr = await OcrService.recognize(uri);
+        if (ocr.ok) {
+          text = SanitizeService.mask(ocr.text);
+          this.tip = `已用 OCR 识别（${ocr.engine}）`;
+        } else {
+          this.tip = `没读到文本层：${ocr.note}`;
+        }
+      }
       if (!text || text.trim().length < 20) {
-        this.tip = '这份文件没读出文本内容，可能不是文本类资料';
+        this.tip = this.tip || '这份文件没读出文本内容';
         return;
       }
       const book: Book = KgService.build(name, text);

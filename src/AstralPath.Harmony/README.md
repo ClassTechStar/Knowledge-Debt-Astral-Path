@@ -204,29 +204,39 @@ Mate X7 模拟器；首次运行 IDE 会自动 Sync 并装包。
 - ArkTS 语法约束：搜索 `arkts-no-structural-typing` / `arkts-no-untyped-obj-literals`
 - 折叠屏适配：搜索 `一次开发多端部署` / `响应式布局`
 
-## 8. 已知缺口（对照单文件版逐项列）
+## 8. 功能对照（第二版）
 
-**已实现**：10 个页面与导航、公式与债边诊断（含递归先修得分）、14 天计划、销账、
-五分片存储、教材列表与切换、TXT/MD 解析建图谱、意图路由（24 个意图的本地答复）、
-危机词拦截（11 个，与 `tools/agent-intents.json` 同源）、折叠屏自适应、模型流式对话。
+**已实现**：10 个页面与导航、公式与债边诊断（递归先修得分）、14 天计划、计划复盘、销账、
+五分片存储、教材列表与切换、**TXT/MD/HTML/Word/PPT/EPUB/PDF 文本层解析**、
+**图谱力导向图（Canvas 自绘、点选节点看先修）**、意图路由（24 个）、危机词拦截（11 个）、
+**What-if 模拟**、**债边叙事**、**拍照/选图识别试卷（走 OCR）**、**入库前脱敏**、
+**帮助中心 + 术语词典**、折叠屏自适应、模型流式对话、**演示密钥（资源注入，默认空）**。
 
-**还没做**（按影响排序）：
+**仍未完成**（只有一项，且有外部依赖）：
 
-| 缺口 | 说明 | 代价 |
+| 缺口 | 状态 | 说明 |
 |---|---|---|
-| OCR（扫描版 PDF） | 无 tesseract/RapidOCR 引擎与字库，扫描件只能走文本层 | 包体积 +10~20 MB，需 Native 或 WASM 移植 |
-| PDF/PPT/Word/EPUB 解析 | 目前只认 TXT/MD | 中等（PDF 文本层解析约几百行） |
-| 图谱可视化 | 现在是列表 + 先修/后续面板，不是力导向图 | Canvas 自绘，约 200 行 |
-| What-if 模拟 | 滑杆调参数看债边变化 | 小（纯本地公式） |
-| 债边叙事解读 / 计划复盘 | 需要模型参与，也可本地模板化 | 小~中 |
-| 拍照识别试卷 | 相机 + 图像预处理 | 中 |
-| 敏感词脱敏 | Web 版在入库前脱敏，鸿蒙版还没做 | 小 |
-| 内置演示密钥 | Web/单文件版内置了一份演示密钥，鸿蒙版没有 | 小（但有合规考量，建议不内置） |
-| 帮助中心 / 术语词典 | Web 版有引导与词典 | 小 |
+| 扫描版 PDF 的 OCR 识别 | 代码已就绪，缺系统组件 | `OcrService` / `CoreVisionOcrEngine` 写好了，本机 SDK 26.0.0 **没有装 Core Vision 组件**，所以默认挂 Noop 引擎并明确提示不可用。装上组件后按第 9 节两步启用即可 |
 
-**包体积说明**：HAP 现在约 410 KB（debug，含 93 KB sourcemap；release 约 310 KB）。
-对比 Android APK 11 MB、单文件 Web 33 MB，差距几乎全部来自「没有内联 OCR 引擎与字库」
-（tesseract 核心约 10 MB ×2、中英文字库约 5 MB、pdf.js 与 WASM 若干）。
-功能代码本身（ArkTS 字节码 252 KB）并不比其它端少多少。
-是否要把 OCR 搬进来，取决于你要不要「拍照/扫描版教材直接解析」这条能力——
-要的话包会涨到 10 MB 量级，不要的话当前体积就是合理的。
+**包体积**：debug 524 KB（其中 ArkTS 字节码 330 KB、sourcemap 129 KB、图标 59 KB），
+release 去 sourcemap 约 395 KB。对比 Android 11 MB / 单文件 33 MB，差距来自**没有内联 OCR 引擎**——
+鸿蒙侧用系统 OCR 能力（Core Vision）而不是往包里塞 tesseract，所以包小是设计选择，不是功能缺失。
+
+## 9. 启用 OCR（扫描版 PDF / 拍照识别）
+
+1. DevEco Studio → **Settings → SDK**，勾选 **Core Vision** 组件并安装（本机当前未装）。
+2. 打开 `entry/src/main/ets/service/CoreVisionOcrEngine.ets`：
+   - 取消 `@kit.CoreVisionKit` / `@kit.ImageKit` / `fileIo` 三行 import 的注释；
+   - 取消 `recognize()` 里那段实现的注释；
+   - 把 `available()` 改成 `return true;`。
+3. 在 `entryability/EntryAbility.ets` 里注册引擎：`OcrService.use(new CoreVisionOcrEngine())`。
+4. 重新构建。之后「藏书阁」遇到扫描版 PDF、「试卷作业」拍照，都会走 OCR 链路。
+
+未启用时行为：`OcrService.recognize()` 返回 `ok:false` 并带一句「OCR 不可用：请安装 Core Vision 组件」，
+界面照实显示，不会把空结果当成功。
+
+## 10. 演示密钥
+
+`entry/src/main/resources/base/element/string.json` 里的 `demo_key` 默认为空。
+本机演示时填自己的 key（**不建议提交真实密钥**），智能体页在用户没配 key 时会用它；
+用户在「账户」页填的 key 优先级更高。

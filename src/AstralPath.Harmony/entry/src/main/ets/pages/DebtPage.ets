@@ -1,8 +1,9 @@
 /**
- * 知债页 —— 对应 Web 版 main#p-debt：红边诊断（impact-v2）、生成 14 天计划（K1–K5 约束）、销账检查。
- * 计划编排在真机上会交给模型（演示模式由本地规则兜底），这里先给出与 Web 版一致的本地实现。
+ * 知债页 —— 对应 Web 版 main#p-debt：红边诊断（impact-v2）、债边叙事、生成 14 天计划、
+ * 计划复盘、销账检查，以及 What-if 模拟（调参数看这条债边的变化）。
+ * 计划编排在真机上会交给模型（演示模式由本地规则兜底）。
  */
-import { Book, DebtEdge, Mastery, PlanItem, SaleState, SaleInput, SaleResult, KNode } from '../model/Models';
+import { Book, DebtEdge, PlanItem, SaleState, SaleInput, SaleResult, KNode } from '../model/Models';
 import { FormulaConstants as K } from '../model/FormulaConstants';
 import { StoreService } from '../service/StoreService';
 import { FormulaService } from '../service/FormulaService';
@@ -12,6 +13,13 @@ export struct DebtPage {
   @State debts: DebtEdge[] = [];
   @State msg: string = '点「重新诊断」查看红边与解读';
   @State plan: PlanItem[] = [];
+  @State selected: DebtEdge | null = null;
+  // What-if 的三个输入（与 Web 版滑杆同义：前置掌握 / 目标掌握 / 错题频次）
+  @State wSp: number = 30;
+  @State wSc: number = 25;
+  @State wFq: number = 5;
+  @State whatOut: string = '拖动滑杆，看它对这条债边的影响（本地公式实时计算）';
+  @State review: string = '';
 
   aboutToAppear(): void {
     this.diag();
@@ -34,7 +42,6 @@ export struct DebtPage {
     const scoreOf = (id: string): number => {
       return FormulaService.scoreOfGraph(id, b?.edges ?? [], ans.mastery, visiting);
     };
-    // 某知识点被下游拖累的次数：统计它的后续节点里有多少个处于低分
     const downCount = (id: string): number => {
       return (b?.edges ?? []).filter((e) => e.a === id && scoreOf(e.b) < K.cg).length;
     };
@@ -56,6 +63,10 @@ export struct DebtPage {
     }
     this.debts = FormulaService.sortDebts(list.filter((d: DebtEdge) => d.open));
     this.msg = this.debts.length > 0 ? `发现 ${this.debts.length} 条开放红边` : '当前没有开放红边';
+    if (this.debts.length > 0) {
+      this.selected = this.debts[0];
+      this.simulate();
+    }
   }
 
   private titleOf(b: Book, id: string): string {
@@ -63,36 +74,91 @@ export struct DebtPage {
     return n ? n.title : id;
   }
 
-  /** 本地规则编排：先修有序、单日时长预算、间隔 >= 1 天、开放债边全覆盖（K1–K5 的简化版） */
+  /** 债边叙事：把公式里的每个因子翻译成一句人话 */
+  private narrative(d: DebtEdge | null): string {
+    if (!d) {
+      return '先选一条债边';
+    }
+    const parts: string[] = [];
+    parts.push(`「${d.a}」到「${d.b}」这条边的影响分是 ${d.impact.toFixed(3)}，${d.open ? '已构成开放红边' : '还没到开放阈值'}。`);
+    const sf = this.wSp / 100;
+    const st = this.wSc / 100;
+    if (sf < K.pg) {
+      parts.push(`先修掌握 ${(sf * 100).toFixed(0)}% 低于门限 ${(K.pg * 100).toFixed(0)}%，这是主要缺口。`);
+    }
+    if (st < K.cg) {
+      parts.push(`后续只有 ${(st * 100).toFixed(0)}%，说明拖累已经传导过去了。`);
+    }
+    if (d.impact >= K.hit) {
+      parts.push('建议先补先修再练后续，顺序反了效果会打折。');
+    }
+    return parts.join('');
+  }
+
+  /** What-if：用滑杆值直接跑 impact-v2 */
+  private simulate(): void {
+    const sf = this.wSp / 100;
+    const st = this.wSc / 100;
+    const impact = FormulaService.impactV2(sf, st, 1, false, this.wFq, 1);
+    this.whatOut = `前置 ${(sf * 100).toFixed(0)}% / 目标 ${(st * 100).toFixed(0)}% / 频次 ${this.wFq} → 影响分 ${impact.toFixed(3)}（${FormulaService.isOpen(impact) ? '开放红边' : '未开放'}）`;
+  }
+
   private async buildPlan(): Promise<void> {
     await this.diag();
     const items: PlanItem[] = [];
     let day = 1;
     const budget = 40; // K1：每天 40 分钟
     for (const d of this.debts) {
-      // K2：先排先修（a），再排后续（b）
-      const seq: string[] = [d.a, d.b];
+      const seq: string[] = [d.a, d.b]; // K2：先修有序
       for (const kp of seq) {
         if (items.some((p: PlanItem) => p.kp === kp)) {
           continue;
         }
-        items.push({
+        const item: PlanItem = {
           id: `PL${String(items.length + 1).padStart(2, '0')}`,
           day: day,
           kp: kp,
           minutes: 20,
           why: `补先修债：${d.id}`
-        });
-        // K4：同一知识点间隔 >= 1 天
-        day = Math.min(14, day + 1);
+        };
+        items.push(item);
+        day = Math.min(14, day + 1); // K4：间隔 >= 1 天
       }
-      if (items.reduce((s: number, p: PlanItem) => s + p.minutes, 0) >= budget * 14) {
+      const total = items.reduce((s: number, p: PlanItem) => s + p.minutes, 0);
+      if (total >= budget * 14) {
         break;
       }
     }
     this.plan = items;
     await StoreService.savePlan(items);
     this.msg = `已生成 ${items.length} 条计划（每天不超过 ${budget} 分钟）`;
+  }
+
+  /** 计划复盘：拿作答日志对照计划，看哪些做完了、哪些还欠着 */
+  private async reviewPlan(): Promise<void> {
+    const ans = await StoreService.loadAnswers();
+    const plan = await StoreService.loadPlan();
+    if (plan.length === 0) {
+      this.review = '还没有计划，先点「生成 14 天计划」';
+      return;
+    }
+    let done = 0;
+    let partial = 0;
+    for (const p of plan) {
+      const n = (ans.logs ?? []).filter((l) => l.kp === p.kp).length;
+      if (n >= 3) {
+        done += 1;
+      } else if (n > 0) {
+        partial += 1;
+      }
+    }
+    let clearedCount = 0;
+    for (const k of Object.keys(ans.sale)) {
+      if (ans.sale[k].cleared) {
+        clearedCount += 1;
+      }
+    }
+    this.review = `计划 ${plan.length} 条：达标 ${done} 条、进行中 ${partial} 条、未开始 ${plan.length - done - partial} 条；已销账 ${clearedCount} 条`;
   }
 
   private async checkSale(): Promise<void> {
@@ -106,7 +172,6 @@ export struct DebtPage {
       const acc = logs.filter((l) => l.ok).length / logs.length;
       const conf = logs.reduce((s: number, l) => s + l.conf, 0) / logs.length;
       const s: SaleState = ans.sale[d.id] ?? { streak: 0, att: 0 };
-      // ArkTS 不支持结构化类型，入参要按接口显式构造
       const input: SaleInput = { streak: s.streak, att: s.att };
       const r: SaleResult = FormulaService.saleStep(input, acc, conf);
       ans.sale[d.id] = { streak: r.streak, att: r.att, cleared: r.cleared };
@@ -120,28 +185,27 @@ export struct DebtPage {
 
   build() {
     Column({ space: 10 }) {
-      Row() {
-        Text('知债：星穹学途')
-          .fontSize(17)
-          .fontWeight(FontWeight.Bold);
-        Blank();
+      Text('知债：星穹学途').fontSize(17).fontWeight(FontWeight.Bold).width('100%');
+      Row({ space: 6 }) {
         Button($r('app.string.debt_diag')).fontSize(11).onClick(() => this.diag());
         Button($r('app.string.debt_plan')).fontSize(11).onClick(() => this.buildPlan());
         Button($r('app.string.debt_sale')).fontSize(11).onClick(() => this.checkSale());
+        Button('计划复盘').fontSize(11).onClick(() => this.reviewPlan());
       }
       .width('100%');
 
       Text(this.msg).fontSize(12).fontColor($r('app.color.muted'));
+      if (this.review) {
+        Text(this.review).fontSize(12).fontColor($r('app.color.brand'));
+      }
 
       ForEach(this.debts, (d: DebtEdge) => {
         Column({ space: 3 }) {
           Text(`${d.a} → ${d.b}`)
             .fontSize(14)
-            .fontWeight(FontWeight.Bold)
+            .fontWeight(this.selected?.id === d.id ? FontWeight.Bold : FontWeight.Normal)
             .fontColor($r('app.color.danger'));
-          Text(`影响分 ${d.impact.toFixed(3)}`)
-            .fontSize(11)
-            .fontColor($r('app.color.muted'));
+          Text(`影响分 ${d.impact.toFixed(3)}`).fontSize(11).fontColor($r('app.color.muted'));
           if (d.why) {
             Text(d.why).fontSize(11).fontColor($r('app.color.muted'));
           }
@@ -149,15 +213,67 @@ export struct DebtPage {
         .width('100%')
         .padding(12)
         .borderRadius(14)
-        .backgroundColor($r('app.color.soft'))
-        .alignItems(HorizontalAlign.Start);
+        .backgroundColor(this.selected?.id === d.id ? '#FDECEC' : $r('app.color.soft'))
+        .alignItems(HorizontalAlign.Start)
+        .onClick(() => {
+          this.selected = d;
+        });
       }, (d: DebtEdge) => d.id);
 
+      // 债边叙事
+      Column({ space: 4 }) {
+        Text('债边叙事').fontSize(13).fontWeight(FontWeight.Bold);
+        Text(this.narrative(this.selected)).fontSize(12).fontColor($r('app.color.ink'));
+      }
+      .width('100%')
+      .padding(12)
+      .borderRadius(14)
+      .backgroundColor($r('app.color.soft'))
+      .alignItems(HorizontalAlign.Start);
+
+      // What-if 模拟
+      Column({ space: 6 }) {
+        Text('What-if 模拟').fontSize(13).fontWeight(FontWeight.Bold);
+        Row() {
+          Text(`前置掌握 ${(this.wSp / 100).toFixed(2)}`).fontSize(11).width(110);
+          Slider({ value: this.wSp, min: 0, max: 100, step: 5 })
+            .layoutWeight(1)
+            .onChange((v: number) => {
+              this.wSp = v;
+              this.simulate();
+            });
+        }
+        .width('100%');
+        Row() {
+          Text(`目标掌握 ${(this.wSc / 100).toFixed(2)}`).fontSize(11).width(110);
+          Slider({ value: this.wSc, min: 0, max: 100, step: 5 })
+            .layoutWeight(1)
+            .onChange((v: number) => {
+              this.wSc = v;
+              this.simulate();
+            });
+        }
+        .width('100%');
+        Row() {
+          Text(`错题频次 ${this.wFq}`).fontSize(11).width(110);
+          Slider({ value: this.wFq, min: 0, max: 20, step: 1 })
+            .layoutWeight(1)
+            .onChange((v: number) => {
+              this.wFq = v;
+              this.simulate();
+            });
+        }
+        .width('100%');
+        Text(this.whatOut).fontSize(12).fontColor($r('app.color.muted'));
+      }
+      .width('100%')
+      .padding(12)
+      .borderRadius(14)
+      .backgroundColor($r('app.color.soft'))
+      .alignItems(HorizontalAlign.Start);
+
       if (this.plan.length > 0) {
-        Text(`修复计划（${this.plan.length} 条）`)
-          .fontSize(14)
-          .fontWeight(FontWeight.Bold)
-          .margin({ top: 6 });
+        Text(`修复计划（${this.plan.length} 条）`).fontSize(14).fontWeight(FontWeight.Bold).margin({ top: 6 });
         ForEach(this.plan, (p: PlanItem) => {
           Row() {
             Text(`D${p.day}`).fontSize(12).fontColor($r('app.color.brand')).width(36);

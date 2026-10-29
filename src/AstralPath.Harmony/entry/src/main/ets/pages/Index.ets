@@ -15,6 +15,7 @@ import { AgentPage } from './AgentPage';
 import { ProfilePage } from './ProfilePage';
 import { TeacherPage } from './TeacherPage';
 import { AccountPage } from './AccountPage';
+import { HelpPanel } from '../components/HelpPanel';
 
 @Entry
 @Component
@@ -23,6 +24,7 @@ struct Index {
   // 必须是 StorageLink：首页/藏书阁的跳转按钮是写 AppStorage('currentPage') 的，
   // 用 @State 收不到，点了没反应
   @StorageLink('currentPage') current: string = 'home';
+  @State showHelp: boolean = false;
   @State userName: string = '王小明（有债）';
 
   aboutToAppear(): void {
@@ -114,6 +116,15 @@ struct Index {
             .fontWeight(FontWeight.Bold)
             .fontColor($r('app.color.strong'));
           Blank();
+          Button('？')
+            .fontSize(12)
+            .backgroundColor($r('app.color.soft'))
+            .fontColor($r('app.color.ink'))
+            .width(28)
+            .height(24)
+            .onClick(() => {
+              this.showHelp = true;
+            });
           Text(this.userName)
             .fontSize(12)
             .fontColor($r('app.color.muted'));
@@ -133,7 +144,15 @@ struct Index {
 
         // 内容区：展开态限制最大宽度并居中，折叠态铺满
         Column() {
-          this.pageContent(this.current);
+          if (this.showHelp) {
+            HelpPanel({ onClose: () => {
+              this.showHelp = false;
+            } })
+              .width('100%')
+              .height('100%');
+          } else {
+            this.pageContent(this.current);
+          }
         }
         .width('100%')
         .layoutWeight(1)

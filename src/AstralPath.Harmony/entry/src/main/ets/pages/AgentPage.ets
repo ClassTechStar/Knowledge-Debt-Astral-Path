@@ -9,6 +9,7 @@
  */
 import { AiService, AiConfig } from '../service/AiService';
 import { StoreService, AiCfg } from '../service/StoreService';
+import { DemoKey } from '../common/DemoKey';
 
 interface IntentDef {
   id: string;
@@ -87,9 +88,11 @@ export struct AgentPage {
 
   private async loadCfg(): Promise<void> {
     const c: AiCfg = await StoreService.loadAiCfg();
+    // 用户自己的 key 优先；没有就用资源里的演示密钥（默认为空）
+    const key = c.key && c.key.length > 0 ? c.key : DemoKey.value();
     this.cfg = {
       baseUrl: c.baseUrl || AiService.DEFAULT_BASE,
-      key: c.key || '',
+      key: key,
       model: c.model || 'mimo-7b-rl'
     };
   }

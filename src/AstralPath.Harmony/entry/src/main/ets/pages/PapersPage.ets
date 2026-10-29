@@ -1,9 +1,17 @@
 /**
- * 试卷作业 —— 对应 Web 版 main#p-papers：识别试卷/作业/错题并结构化。
- * 结构化逻辑与 shared/exam.js 同源（题头、选项、答案、批量分发），鸿蒙侧用同一套正则重写。
+ * 试卷作业 —— 对应 Web 版 main#p-papers：拍照 / 选图 → OCR → 结构化（题头、选项、答案）。
+ * 结构化规则与 shared/exam.js 同源；拍照走 cameraPicker，识别走 OcrService
+ * （本机没装 Core Vision 时会明确提示不可用，不假装识别成功）。
+ * 入库前用 SanitizeService 脱敏：手机号 / 身份证 / 邮箱这类一律打码。
  */
+import cameraPicker from '@ohos.multimedia.cameraPicker';
+import camera from '@ohos.multimedia.camera';
+import { picker } from '@kit.CoreFileKit';
+import { common } from '@kit.AbilityKit';
 import { Paper, PaperItem } from '../model/Models';
 import { StoreService } from '../service/StoreService';
+import { OcrService } from '../service/OcrService';
+import { SanitizeService } from '../service/SanitizeService';
 
 interface AnswerPair {
   no: number | null;
@@ -14,6 +22,7 @@ interface AnswerPair {
 export struct PapersPage {
   @State papers: Paper[] = [];
   @State demo: string = '';
+  @State busy: boolean = false;
 
   aboutToAppear(): void {
     this.refresh();
@@ -27,15 +36,16 @@ export struct PapersPage {
   private parse(text: string, type: 'exam' | 'hw' | 'wrong'): Paper {
     const lines = text.split('\n').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
     const items: PaperItem[] = [];
-    let cur: PaperItem | null = null;
     const ansPool: AnswerPair[] = [];
+    let cur: PaperItem | null = null;
     for (const ln of lines) {
       const qh = /^(\d+)\s*[.、．)]\s*(.+)$/.exec(ln);
       if (qh) {
         if (cur) {
           items.push(cur);
         }
-        cur = { no: items.length + 1, stem: qh[2], options: [], answer: '', qtype: 'solve' };
+        const head: PaperItem = { no: items.length + 1, stem: qh[2], options: [], answer: '', qtype: 'solve' };
+        cur = head;
         continue;
       }
       const om = /^([A-Da-d])\s*[.、．)]\s*(.+)$/.exec(ln);
@@ -53,13 +63,14 @@ export struct PapersPage {
         let mm = re.exec(body);
         let hit = false;
         while (mm !== null) {
-          ansPool.push({ no: Number(mm[1]), text: mm[2].toUpperCase() });
+          const pair: AnswerPair = { no: Number(mm[1]), text: mm[2].toUpperCase() };
+          ansPool.push(pair);
           mm = re.exec(body);
           hit = true;
         }
         if (!hit && cur) {
           cur.answer = body;
-          if (['正确', '错误', '对', '错', '√', '×'].includes(body)) {
+          if (body === '正确' || body === '错误' || body === '对' || body === '错' || body === '√' || body === '×') {
             cur.qtype = 'judge';
           } else if (cur.options.length === 0) {
             cur.qtype = 'blank';
@@ -71,12 +82,87 @@ export struct PapersPage {
       items.push(cur);
     }
     for (const a of ansPool) {
-      const it = a.no !== null ? items.find((x: PaperItem) => x.no === a.no) : undefined;
+      if (a.no === null) {
+        continue;
+      }
+      const it = items.find((x: PaperItem) => x.no === a.no);
       if (it) {
         it.answer = a.text;
       }
     }
-    return { id: `paper-${Date.now()}`, name: `识别结果 ${new Date().toLocaleDateString()}`, type: type, items: items, created: Date.now() };
+    return {
+      id: `paper-${Date.now()}`,
+      name: `识别结果 ${new Date().toLocaleDateString()}`,
+      type: type,
+      items: items,
+      created: Date.now()
+    };
+  }
+
+  /** 拍照识别：相机 → OCR → 脱敏 → 结构化 */
+  private async shoot(): Promise<void> {
+    this.busy = true;
+    this.demo = '';
+    try {
+      const ctx = getContext(this) as common.UIAbilityContext;
+      // PickerProfile 是 class，ArkTS 里必须 new 出来再赋值
+      const profile = new cameraPicker.PickerProfile();
+      profile.cameraPosition = camera.CameraPosition.CAMERA_POSITION_BACK;
+      const res: cameraPicker.PickerResult = await cameraPicker.pick(ctx,
+        [cameraPicker.PickerMediaType.PHOTO], profile);
+      const uri = res.resultUri;
+      if (!uri) {
+        this.busy = false;
+        return;
+      }
+      const ocr = await OcrService.recognize(uri);
+      if (!ocr.ok) {
+        this.demo = ocr.note;
+        this.busy = false;
+        return;
+      }
+      const hits = SanitizeService.hits(ocr.text);
+      const p = this.parse(SanitizeService.mask(ocr.text), 'exam');
+      const list = await StoreService.loadPapers();
+      list.push(p);
+      await StoreService.savePapers(list);
+      this.demo = `识别 ${p.items.length} 题${hits.length > 0 ? `（已脱敏 ${hits.length} 处）` : ''}`;
+      this.refresh();
+    } catch (e) {
+      this.demo = `拍照识别失败：${(e as Error).message}`;
+    }
+    this.busy = false;
+  }
+
+  /** 从文件里选一张图识别 */
+  private async pickImage(): Promise<void> {
+    this.busy = true;
+    try {
+      const docPicker = new picker.DocumentViewPicker();
+      const uris: string[] = await docPicker.select({
+        maxSelectNumber: 1,
+        fileSuffixFilters: ['.jpg', '.png', '.jpeg']
+      });
+      if (uris.length === 0) {
+        this.busy = false;
+        return;
+      }
+      const ocr = await OcrService.recognize(uris[0]);
+      if (!ocr.ok) {
+        this.demo = ocr.note;
+        this.busy = false;
+        return;
+      }
+      const p = this.parse(SanitizeService.mask(ocr.text), 'hw');
+      const list = await StoreService.loadPapers();
+      list.push(p);
+      await StoreService.savePapers(list);
+      this.demo = `识别 ${p.items.length} 题`;
+      this.refresh();
+    } catch (e) {
+      this.demo = `识别失败：${(e as Error).message}`;
+    }
+    this.busy = false;
   }
 
   private async addDemo(): Promise<void> {
@@ -91,9 +177,11 @@ export struct PapersPage {
 
   build() {
     Column({ space: 10 }) {
-      Row() {
+      Row({ space: 6 }) {
         Text('试卷作业').fontSize(17).fontWeight(FontWeight.Bold);
         Blank();
+        Button(this.busy ? '识别中' : '拍照识别').fontSize(11).onClick(() => this.shoot());
+        Button('选图识别').fontSize(11).onClick(() => this.pickImage());
         Button('示例识别').fontSize(11).onClick(() => this.addDemo());
       }
       .width('100%');
