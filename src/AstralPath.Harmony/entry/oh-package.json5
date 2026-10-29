@@ -1,0 +1,13 @@
+{
+  "name": "entry",
+  "version": "1.0.0",
+  "description": "知债：星穹学途 主模块（手机 / 折叠屏 / 平板）",
+  "main": "",
+  "author": "",
+  "license": "",
+  "dependencies": {},
+  "devDependencies": {
+    "@ohos/hypium": "1.0.30",
+    "@ohos/hamock": "1.0.0"
+  }
+}

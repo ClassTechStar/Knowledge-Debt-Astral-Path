@@ -1,0 +1,15 @@
+{
+  "modelVersion": "6.0.0",
+  "dependencies": {
+    "@ohos/hvigor": "file:C:/Program Files/Huawei/DevEco Studio/tools/hvigor/hvigor",
+    "@ohos/hvigor-ohos-plugin": "file:C:/Program Files/Huawei/DevEco Studio/tools/hvigor/hvigor-ohos-plugin"
+  },
+  "execution": {
+    "daemon": true,
+    "incremental": true,
+    "parallel": true,
+    "typeCheck": false
+  },
+  "logging": { "level": "info" },
+  "debugging": { "stacktrace": false }
+}

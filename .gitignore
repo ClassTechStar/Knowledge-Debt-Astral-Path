@@ -117,3 +117,13 @@ playwright-report/
 
 # 本地门禁中间产物（覆盖率原始 XML 等；报告在 eval/ 入库）
 artifacts/
+
+# HarmonyOS（DevEco / hvigor）构建产物
+src/AstralPath.Harmony/.hvigor/
+src/AstralPath.Harmony/entry/oh_modules/
+src/AstralPath.Harmony/oh_modules/
+src/AstralPath.Harmony/node_modules/
+src/AstralPath.Harmony/entry/build/
+src/AstralPath.Harmony/entry/.preview/
+src/AstralPath.Harmony/.idea/
+*.hap

@@ -1,0 +1,15 @@
+{
+  "color": [
+    { "name": "start_window_background", "value": "#FFFFFF" },
+    { "name": "ink", "value": "#1E2228" },
+    { "name": "muted", "value": "#5F6672" },
+    { "name": "strong", "value": "#11151A" },
+    { "name": "surface", "value": "#FFFFFF" },
+    { "name": "soft", "value": "#EEF1F4" },
+    { "name": "brand", "value": "#2F6BFF" },
+    { "name": "brand_soft", "value": "#E7EFFF" },
+    { "name": "danger", "value": "#D8453F" },
+    { "name": "warn", "value": "#C77700" },
+    { "name": "ok", "value": "#1F9254" }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "string": [
+    { "name": "app_name", "value": "知债：星穹学途" },
+    { "name": "module_desc", "value": "教材解析、知识图谱、学习诊断与修复计划" },
+    { "name": "EntryAbility_desc", "value": "主入口" },
+    { "name": "perm_internet_reason", "value": "未配置模型密钥时全部计算在本机完成；配置后用于调用对话模型生成讲解与出题" },
+    { "name": "perm_net_reason", "value": "判断网络可用性，离线时自动切换到演示模式" },
+    { "name": "nav_home", "value": "起点" },
+    { "name": "nav_materials", "value": "藏书阁" },
+    { "name": "nav_graph", "value": "识网" },
+    { "name": "nav_papers", "value": "试卷作业" },
+    { "name": "nav_debt", "value": "知债" },
+    { "name": "nav_today", "value": "今日" },
+    { "name": "nav_agent", "value": "智能体" },
+    { "name": "nav_profile", "value": "画像" },
+    { "name": "nav_teacher", "value": "教师" },
+    { "name": "nav_account", "value": "账户" },
+    { "name": "home_seed", "value": "导入示例教材" },
+    { "name": "home_open_materials", "value": "打开藏书阁" },
+    { "name": "today_load", "value": "加载今日任务" },
+    { "name": "today_start", "value": "开始练习" },
+    { "name": "debt_diag", "value": "重新诊断" },
+    { "name": "debt_plan", "value": "生成 14 天计划" },
+    { "name": "debt_sale", "value": "销账检查" },
+    { "name": "mode_local", "value": "本机数据 · 无需联网" },
+    { "name": "demo_mode", "value": "演示模式" }
+  ]
+}

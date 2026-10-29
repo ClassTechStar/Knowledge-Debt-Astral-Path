@@ -1,0 +1,12 @@
+{
+  "app": {
+    "bundleName": "com.astralpath.harmony",
+    "vendor": "astralpath",
+    "versionCode": 1000001,
+    "versionName": "2.6.0",
+    "icon": "$media:app_icon",
+    "label": "$string:app_name",
+    "minAPIVersion": 26,
+    "targetAPIVersion": 26
+  }
+}

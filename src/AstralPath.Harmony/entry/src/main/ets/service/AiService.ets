@@ -1,0 +1,163 @@
+/**
+ * 模型服务 —— 与单文件版同一套接口：OpenAI 兼容的 /v1/chat/completions，
+ * 鉴权 Authorization: Bearer <key>，SSE 流式（data: {...}\n\n，以 [DONE] 结束）。
+ * 未配置密钥或网络不可用时返回 null，调用方走本地规则兜底（演示模式），
+ * 这一点和 Web / Android 版保持一致：AI 挂了不影响核心功能。
+ */
+import { http } from '@kit.NetworkKit';
+
+export interface AiConfig {
+  baseUrl: string;
+  key: string;
+  model: string;
+}
+
+export interface AiChunk {
+  text: string;
+  done: boolean;
+}
+
+/** /v1/chat/completions 请求体 */
+export interface ChatRequestBody {
+  model: string;
+  messages: ChatMessage[];
+  stream: boolean;
+  max_tokens: number;
+}
+
+export class AiService {
+  static readonly DEFAULT_BASE: string = 'https://api.xiaomimimo.com/v1';
+
+  static ready(cfg: AiConfig): boolean {
+    return !!cfg && !!cfg.key && cfg.key.length > 0;
+  }
+
+  /** 非流式：一次拿全量，用于讲解、计划编排等对实时性要求不高的场景 */
+  static async complete(cfg: AiConfig, prompt: string, maxTokens: number = 1500): Promise<string | null> {
+    if (!AiService.ready(cfg)) {
+      return null;
+    }
+    const msg: ChatMessage = { role: 'user', content: prompt };
+    const reqBody: ChatRequestBody = {
+      model: cfg.model,
+      messages: [msg],
+      stream: false,
+      max_tokens: maxTokens
+    };
+    const req = http.createHttp();
+    try {
+      const res = await new Promise<http.HttpResponse>((resolve, reject) => {
+        req.request(`${cfg.baseUrl || AiService.DEFAULT_BASE}/chat/completions`, {
+          method: http.RequestMethod.POST,
+          header: {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Authorization': `Bearer ${cfg.key}`
+          },
+          extraData: JSON.stringify(reqBody),
+          expectDataType: http.HttpDataType.STRING
+        }, (err: Error, data: http.HttpResponse) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(data);
+          }
+        });
+      });
+      if (res.responseCode !== 200) {
+        return null;
+      }
+      const body = JSON.parse(res.result as string) as ChatResponse;
+      return body?.choices?.[0]?.message?.content ?? null;
+    } catch (e) {
+      return null;
+    } finally {
+      req.destroy();
+    }
+  }
+
+  /** 流式：逐块回调，用于智能体对话与「命题中」进度；失败时回退到非流式 */
+  static async stream(cfg: AiConfig, prompt: string, onDelta: (chunk: AiChunk) => void,
+    maxTokens: number = 1500): Promise<void> {
+    if (!AiService.ready(cfg)) {
+      onDelta({ text: '', done: true });
+      return;
+    }
+    const req = http.createHttp();
+    const streamMsg: ChatMessage = { role: 'user', content: prompt };
+    const streamBody: ChatRequestBody = {
+      model: cfg.model,
+      messages: [streamMsg],
+      stream: true,
+      max_tokens: maxTokens
+    };
+    const body = JSON.stringify(streamBody);
+    req.on('dataReceive', (chunk: ArrayBuffer) => {
+      const text = AiService.decode(chunk);
+      for (const line of text.split('\n')) {
+        const t = line.trim();
+        if (!t.startsWith('data:')) {
+          continue;
+        }
+        const payload = t.slice(5).trim();
+        if (payload === '[DONE]') {
+          onDelta({ text: '', done: true });
+          return;
+        }
+        try {
+          const j = JSON.parse(payload) as StreamResponse;
+          const delta = j?.choices?.[0]?.delta?.content ?? '';
+          if (delta) {
+            onDelta({ text: delta, done: false });
+          }
+        } catch (e) {
+          // 半包或心跳，忽略
+        }
+      }
+    });
+    req.on('dataEnd', () => {
+      onDelta({ text: '', done: true });
+      req.destroy();
+    });
+    await new Promise<void>((resolve) => {
+      req.requestInStream(`${cfg.baseUrl || AiService.DEFAULT_BASE}/chat/completions`, {
+        method: http.RequestMethod.POST,
+        header: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Authorization': `Bearer ${cfg.key}`,
+          'Accept': 'text/event-stream'
+        },
+        expectDataType: http.HttpDataType.STRING
+      }).then(() => resolve()).catch(() => {
+        onDelta({ text: '', done: true });
+        resolve();
+      });
+    });
+  }
+
+  private static decode(buf: ArrayBuffer): string {
+    const u8 = new Uint8Array(buf);
+    let s: string = '';
+    for (let i = 0; i < u8.length; i++) {
+      s += String.fromCharCode(u8[i]);
+    }
+    return s;
+  }
+}
+
+export interface ChatMessage {
+  role?: string;
+  content?: string;
+}
+
+export interface ChatChoice {
+  message?: ChatMessage;
+  delta?: ChatMessage;
+}
+
+export interface ChatResponse {
+  choices?: ChatChoice[];
+}
+
+export interface StreamResponse {
+  choices?: ChatChoice[];
+}

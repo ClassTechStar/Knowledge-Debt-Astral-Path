@@ -1,0 +1,11 @@
+{
+  "modelVersion": "6.0.0",
+  "name": "astralpath",
+  "description": "知债：星穹学途 —— HarmonyOS 版（ArkTS/ArkUI），与 Windows / Android / 单文件 Web 同构",
+  "version": "1.0.0",
+  "dependencies": {},
+  "devDependencies": {
+    "@ohos/hypium": "1.0.30",
+    "@ohos/hamock": "1.0.0"
+  }
+}
