@@ -222,18 +222,28 @@ Mate X7 模拟器；首次运行 IDE 会自动 Sync 并装包。
 release 去 sourcemap 约 395 KB。对比 Android 11 MB / 单文件 33 MB，差距来自**没有内联 OCR 引擎**——
 鸿蒙侧用系统 OCR 能力（Core Vision）而不是往包里塞 tesseract，所以包小是设计选择，不是功能缺失。
 
-## 9. 启用 OCR（扫描版 PDF / 拍照识别）
+## 9. OCR（Core Vision）
 
-1. DevEco Studio → **Settings → SDK**，勾选 **Core Vision** 组件并安装（本机当前未装）。
-2. 打开 `entry/src/main/ets/service/CoreVisionOcrEngine.ets`：
-   - 取消 `@kit.CoreVisionKit` / `@kit.ImageKit` / `fileIo` 三行 import 的注释；
-   - 取消 `recognize()` 里那段实现的注释；
-   - 把 `available()` 改成 `return true;`。
-3. 在 `entryability/EntryAbility.ets` 里注册引擎：`OcrService.use(new CoreVisionOcrEngine())`。
-4. 重新构建。之后「藏书阁」遇到扫描版 PDF、「试卷作业」拍照，都会走 OCR 链路。
+**它不在 OpenHarmony 公共 SDK 里**，而是随 DevEco Studio 自带：
+`<DevEco Studio>/sdk/default/hms/ets/api/@hms.ai.ocr.textRecognition.d.ts`。
 
-未启用时行为：`OcrService.recognize()` 返回 `ok:false` 并带一句「OCR 不可用：请安装 Core Vision 组件」，
-界面照实显示，不会把空结果当成功。
+构建时把 SDK 指向 IDE 自带的那份即可编译：
+
+```bat
+set OHOS_SDK_HOME=C://Users//<你>//AppData//Local//OpenHarmony//Sdk//26.0.0
+set HOS_SDK_HOME=C://Program Files\Huawei\DevEco Studio\sdk
+hvigorw assembleHap --mode module -p product=default --no-daemon
+```
+
+代码侧已就绪：`CoreVisionOcrEngine`（`image.createImageSource` → `textRecognition.recognizeText`）
+在 `EntryAbility` 里注册，日志会打 `ocr engine=core-vision available=true`。
+
+**实测限制（Mate X7 模拟器）**：
+- 引擎注册成功、调用链走通，但模拟器镜像**没有 OCR 服务**，返回
+  `Failed to run OCR, please try again.`；真机预计可用。
+- 扫描版 PDF 还差一步：Core Vision 只吃 `PixelMap`，PDF 需要先**栅格化**
+  （逐页渲染成图）。鸿蒙侧没有 pdf.js，这一步要么接 native 渲染，要么用
+  `image.createImageSource` 之外的方案，属未完成项。
 
 ## 10. 演示密钥
 
