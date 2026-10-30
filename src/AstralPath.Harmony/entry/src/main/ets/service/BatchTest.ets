@@ -15,7 +15,8 @@ import { SanitizeService } from './SanitizeService';
 import { Book, KNode, KEdge } from '../model/Models';
 import { StoreService } from './StoreService';
 import { PdfOcrService, PdfOcrResult } from './PdfOcrService';
-import { BatchWorker, HeavyResult } from './BatchWorker';
+import { BatchWorker, HeavyResult, KitTextResult } from './BatchWorker';
+import { PdfKitClient, KitResp } from './PdfKitClient';
 
 export interface BatchItem {
   name: string;
@@ -132,7 +133,11 @@ export class BatchTest {
         const buf = new ArrayBuffer(st.size);
         fileIo.readSync(f.fd, buf);
         fileIo.closeSync(f.fd);
-        const r: HeavyResult = await BatchWorker.run({ name: name, bytes: buf });
+        // 解析全走自研解析器（后台线程）。PDFKit 的 pdfService 在 taskpool 与
+        // 独立 Worker 里都是 undefined（HMS 原生模块不注入），主线程又会 THREAD_BLOCK，
+        // 因此 PDFKit 暂不进入批量流程 —— 相关代码保留在 PdfKitService/PdfKitClient，
+        // 待接上 PdfView + PdfController（异步 getPagePixelMap）再启用。
+        const r: HeavyResult = await BatchWorker.run({ name: name, bytes: buf, path: local });
         item.chars = r.chars;
         item.scanned = r.scanned;
         item.note = r.note;

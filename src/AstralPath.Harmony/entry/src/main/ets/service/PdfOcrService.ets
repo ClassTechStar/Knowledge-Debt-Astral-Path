@@ -10,6 +10,7 @@
 import { fileIo } from '@kit.CoreFileKit';
 import { PdfImage, PdfImageInfo } from './PdfImage';
 import { Inflate } from './Inflate';
+import { PdfKitClient, KitResp } from './PdfKitClient';
 import { OcrService, OcrResult } from './OcrService';
 
 export interface PdfOcrResult {
@@ -96,9 +97,48 @@ export class PdfOcrService {
     }
     out.text = chunks.join('\n');
     out.ok = out.text.length > 0;
-    if (!out.ok && !out.note) {
-      out.note = out.skipped > 0 ? '页图编码不受支持（如 JBIG2）' : '识别未产出文本';
+    if (out.ok) {
+      return out;
     }
+    // 自研抽图搞不定（典型是 JBIG2）→ 交给 PDFKit 渲染，它支持全部编码
+    const rendered = await PdfOcrService.viaPdfKit(pdfPath, cacheDir, maxPages);
+    if (rendered.ok) {
+      return rendered;
+    }
+    if (!out.note) {
+      out.note = out.skipped > 0 ? `页图编码不受支持（如 JBIG2），PDFKit 也未取到：${rendered.note}` : '识别未产出文本';
+    }
+    return out;
+  }
+
+  /** 用 PDFKit 渲染页图再 OCR（JBIG2/CCITT 都能渲染） */
+  private static async viaPdfKit(pdfPath: string, cacheDir: string, maxPages: number): Promise<PdfOcrResult> {
+    const out: PdfOcrResult = {
+      ok: false, text: '', pages: 0, supported: 0, skipped: 0,
+      engine: OcrService.engineName(), note: ''
+    };
+    const kr: KitResp = await PdfKitClient.render(pdfPath, maxPages, cacheDir);
+    const files: string[] = kr.files;
+    out.pages = files.length;
+    if (files.length === 0) {
+      out.note = 'PDFKit 渲染失败';
+      return out;
+    }
+    const chunks: string[] = [];
+    for (const f of files) {
+      const r: OcrResult = await OcrService.recognize(f);
+      if (r.ok && r.text.length > 0) {
+        chunks.push(r.text);
+        out.supported += 1;
+      } else {
+        out.skipped += 1;
+        if (r.note && !out.note) {
+          out.note = r.note;
+        }
+      }
+    }
+    out.text = chunks.join('\n');
+    out.ok = out.text.length > 0;
     return out;
   }
 

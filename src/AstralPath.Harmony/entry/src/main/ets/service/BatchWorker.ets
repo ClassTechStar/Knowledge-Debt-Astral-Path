@@ -8,6 +8,7 @@ import { taskpool } from '@kit.ArkTS';
 import { PdfText } from './PdfText';
 import { KgService } from './KgService';
 import { Book, KNode, KEdge } from '../model/Models';
+import { pdfService } from '@kit.PDFKit';
 
 export interface HeavyResult {
   chars: number;
@@ -24,6 +25,56 @@ export interface HeavyResult {
 export interface HeavyInput {
   name: string;
   bytes: ArrayBuffer;
+  /** 本地路径（PDFKit 要按路径打开；为空则不做 PDFKit 提取） */
+  path: string;
+}
+
+export interface KitTextResult {
+  ok: boolean;
+  text: string;
+  pages: number;
+  tried: number;
+  note: string;
+}
+
+/** 后台线程里用 PDFKit 取文本：loadDocument 是同步重活，绝不能放主线程 */
+@Concurrent
+export function pdfKitTextInWorker(path: string, maxPages: number): KitTextResult {
+  const out: KitTextResult = { ok: false, text: '', pages: 0, tried: 0, note: '' };
+  let doc: pdfService.PdfDocument | null = null;
+  try {
+    doc = new pdfService.PdfDocument();
+    doc.loadDocument(path);
+    const total = doc.getPageCount();
+    out.pages = total;
+    const n = Math.min(total, maxPages);
+    const chunks: string[] = [];
+    for (let i = 0; i < n; i++) {
+      out.tried += 1;
+      try {
+        const t = doc.getPage(i).getTextContent();
+        if (t && t.trim().length > 0) {
+          chunks.push(t);
+        }
+      } catch (e) {
+        // 单页失败跳过
+      }
+    }
+    out.text = chunks.join('\n');
+    out.ok = out.text.replace(/\s/g, '').length > 0;
+    return out;
+  } catch (e) {
+    out.note = `PDFKit 失败：${(e as Error).message}`;
+    return out;
+  } finally {
+    if (doc) {
+      try {
+        doc.releaseDocument();
+      } catch (e) {
+        // 忽略
+      }
+    }
+  }
 }
 
 @Concurrent
@@ -88,5 +139,12 @@ export class BatchWorker {
     const task = new taskpool.Task(processPdfInWorker, input);
     const r = await taskpool.execute(task);
     return r as HeavyResult;
+  }
+
+  /** 后台线程跑 PDFKit 取文本 */
+  static async kitText(path: string, maxPages: number): Promise<KitTextResult> {
+    const task = new taskpool.Task(pdfKitTextInWorker, path, maxPages);
+    const r = await taskpool.execute(task);
+    return r as KitTextResult;
   }
 }
