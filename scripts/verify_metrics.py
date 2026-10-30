@@ -101,9 +101,13 @@ def main() -> int:
         json.dumps(metrics, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     drift = rewrite_readme(metrics, check_only)
+    # 这里别写嵌套 f-string：PEP 701 要 Python 3.12+，而 CI 跑的是 3.11
+    test_parts = " / ".join(
+        "%s=%s" % (k.split("-")[-1], v) for k, v in metrics["tests"].items()
+    )
     print(
         f"[metrics] 意图 {metrics['agentIntents']} · 危机词 {metrics['crisisWords']} · "
-        f"测试 {metrics['testsTotal']}（{' / '.join(f'{k.split('-')[-1]}={v}' for k, v in metrics['tests'].items())}）"
+        f"测试 {metrics['testsTotal']}（{test_parts}）"
     )
     missing = [k for k, _ in [("tests-Total", 0)] if f"<!-- metrics:{k} -->" not in README.read_text(encoding="utf-8")]
     if missing:

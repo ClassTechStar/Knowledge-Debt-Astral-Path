@@ -251,7 +251,11 @@ jobs:
           if (-not $apk) { throw "未找到 APK 产物" }
           $size = [math]::Round($apk.Length / 1MB, 1)
           Write-Host "APK: $($apk.FullName) ($size MB)"
-          & $env:ANDROID_HOME\build-tools\*\aapt2.exe dump badging $apk.FullName |
+          # 调用运算符不展开通配符，先把 aapt2 解析成实际路径
+          $aapt2 = Get-ChildItem (Join-Path $env:ANDROID_HOME "build-tools\*\aapt2.exe") |
+            Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $aapt2) { throw "未找到 aapt2.exe" }
+          & $aapt2.FullName dump badging $apk.FullName |
             Select-String "package: name=|versionName" | ForEach-Object { Write-Host $_ }
 
       - name: upload apk
