@@ -52,8 +52,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: pip
-          cache-dependency-path: requirements.txt
+          # 不开 pip 缓存：requirements.txt 里没有任何依赖（门禁脚本全用标准库），
+          # 缓存目录不会生成，收尾保存缓存时反而报错把整个作业判失败。
+          # 将来真引入依赖了，再加回 cache: pip 并补一个 pip install 步骤。
 
       - name: Setup Node
         uses: actions/setup-node@v4
