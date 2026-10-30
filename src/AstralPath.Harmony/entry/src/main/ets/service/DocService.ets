@@ -14,6 +14,7 @@
 import { fileIo } from '@kit.CoreFileKit';
 import { zlib } from '@kit.BasicServicesKit';
 import { util } from '@kit.ArkTS';
+import { PdfText } from './PdfText';
 
 export type DocKind = 'txt' | 'md' | 'html' | 'docx' | 'pptx' | 'epub' | 'pdf' | 'unknown';
 
@@ -83,7 +84,7 @@ export class DocService {
 
   private static wrap(kind: DocKind, text: string, note: string): DocResult {
     const chars = text.replace(/\s/g, '').length;
-    // 文本层太稀（平均每页不到 50 字）就当作扫描版
+    // PDF 取不出正文就当扫描版，交给 OCR 链路
     const scanned = chars < 200 && (kind === 'pdf');
     return { kind: kind, text: text, chars: chars, scanned: scanned, note: note };
   }
@@ -151,100 +152,25 @@ export class DocService {
   }
 
   /**
-   * PDF 文本层抽取：找 stream 块，对未压缩的取 Tj/TJ 里的字符串；
-   * 遇到 FlateDecode 的压缩流，鸿蒙侧没有裸 inflate，只能跳过（记为压缩）。
+   * PDF 文本层抽取：交给 PdfText（Flate 解压 + CID 十六进制 Tj + ToUnicode 映射）。
+   * 大文件只读前 PdfText.MAX_BYTES，避免 400MB 整本进内存。
    */
   private static async parsePdf(uri: string): Promise<DocResult> {
-    let raw = '';
     try {
-      raw = DocService.readAllText(uri);
+      const file = fileIo.openSync(uri, fileIo.OpenMode.READ_ONLY);
+      const st = fileIo.statSync(file.fd);
+      const want = Math.min(st.size, PdfText.MAX_BYTES);
+      const buf = new ArrayBuffer(want);
+      fileIo.readSync(file.fd, buf);
+      fileIo.closeSync(file.fd);
+      const res = PdfText.extract(new Uint8Array(buf));
+      const note = st.size > PdfText.MAX_BYTES
+        ? `文件 ${(st.size / 1048576).toFixed(0)}MB，只解析了前 ${(PdfText.MAX_BYTES / 1048576).toFixed(0)}MB`
+        : res.note;
+      return DocService.wrap('pdf', res.text, note);
     } catch (e) {
-      return DocService.wrap('pdf', '', '读文件失败');
+      return DocService.wrap('pdf', '', `读文件失败：${(e as Error).message}`);
     }
-    const out: string[] = [];
-    let compressed = 0;
-    const re = /stream\r?\n([\s\S]*?)\r?\nendstream/g;
-    let m = re.exec(raw);
-    while (m !== null) {
-      const body = m[1];
-      if (/[^\x20-\x7e\r\n]/.test(body) && !/\((?:[^()\\]|\\.)*\)/.test(body)) {
-        // 看起来是二进制（压缩过）的流
-        compressed += 1;
-        m = re.exec(raw);
-        continue;
-      }
-      const t = DocService.textFromContentStream(body);
-      if (t) {
-        out.push(t);
-      }
-      m = re.exec(raw);
-    }
-    const text = out.join('\n');
-    const note = compressed > 0 ? `有 ${compressed} 段压缩流没解（鸿蒙侧无裸 inflate），文本可能不全` : '';
-    return DocService.wrap('pdf', text, note);
-  }
-
-  /** 从 PDF 内容流里取文本算子 Tj / TJ / ' 的内容，含 UTF-16BE 与转义 */
-  private static textFromContentStream(body: string): string {
-    const out: string[] = [];
-    const re = /\(((?:[^()\\]|\\.)*)\)\s*(?:Tj|'|")|(TJ)/g;
-    const arrRe = /\[([\s\S]*?)\]\s*TJ/g;
-    let am = arrRe.exec(body);
-    while (am !== null) {
-      const inner = am[1];
-      const strRe = /\(((?:[^()\\]|\\.)*)\)/g;
-      let sm = strRe.exec(inner);
-      let line = '';
-      while (sm !== null) {
-        line += DocService.unescapePdf(sm[1]);
-        sm = strRe.exec(inner);
-      }
-      if (line.trim()) {
-        out.push(line.trim());
-      }
-      am = arrRe.exec(body);
-    }
-    let m = re.exec(body);
-    while (m !== null) {
-      if (m[1] !== undefined && !m[2]) {
-        const s = DocService.unescapePdf(m[1]);
-        if (s.trim()) {
-          out.push(s.trim());
-        }
-      }
-      m = re.exec(body);
-    }
-    return out.join('\n');
-  }
-
-  private static unescapePdf(s: string): string {
-    let r = '';
-    for (let i = 0; i < s.length; i++) {
-      const c = s.charAt(i);
-      if (c !== '\\') {
-        r += c;
-        continue;
-      }
-      const n = s.charAt(i + 1);
-      const map: Record<string, string> = { 'n': '\n', 'r': '\r', 't': '\t', 'b': '\b', 'f': '\f' };
-      if (map[n] !== undefined) {
-        r += map[n];
-        i += 1;
-      } else if (/[0-7]/.test(n)) {
-        let oct = n;
-        let k = 1;
-        while (k < 3 && /[0-7]/.test(s.charAt(i + 1 + k))) {
-          oct += s.charAt(i + 1 + k);
-          k += 1;
-        }
-        r += String.fromCharCode(parseInt(oct, 8));
-        i += k;
-      } else {
-        r += n;
-        i += 1;
-      }
-    }
-    return r;
   }
 
   /** 去 HTML/XML 标签，保留文本 */

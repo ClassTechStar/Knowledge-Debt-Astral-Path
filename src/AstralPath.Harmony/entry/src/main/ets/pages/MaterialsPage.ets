@@ -11,12 +11,15 @@ import { KgService } from '../service/KgService';
 import { DocService, DocResult } from '../service/DocService';
 import { OcrService } from '../service/OcrService';
 import { SanitizeService } from '../service/SanitizeService';
+import { BatchTest, BatchItem } from '../service/BatchTest';
 
 @Component
 export struct MaterialsPage {
   @State books: Book[] = [];
   @State activeId: string = '';
   @State tip: string = '';
+  @State batch: string = '';
+  @State busy: boolean = false;
 
   aboutToAppear(): void {
     this.refresh();
@@ -101,6 +104,30 @@ export struct MaterialsPage {
     }
   }
 
+  /** 批量解析测试：跑 /data/local/tmp/pdftest/ 下全部资料，逐条打到 hilog */
+  private async runBatch(): Promise<void> {
+    this.busy = true;
+    this.batch = '测试中…';
+    const ctx = getContext(this) as common.UIAbilityContext;
+    const items: BatchItem[] = await BatchTest.runHttp(ctx);
+    let okNode = 0;
+    let needOcr = 0;
+    let ocrFail = 0;
+    for (const it of items) {
+      if (it.nodes > 0) {
+        okNode += 1;
+      }
+      if (it.ocr === '不可用(none)') {
+        ocrFail += 1;
+      }
+      if (it.scanned || it.ocr.startsWith('不可用')) {
+        needOcr += 1;
+      }
+    }
+    this.batch = `共 ${items.length} 份：建出图谱 ${okNode} 份、需要 OCR ${needOcr} 份（其中 OCR 不可用 ${ocrFail} 份）。明细见 hilog [BATCH]`;
+    this.busy = false;
+  }
+
   private async use(id: string): Promise<void> {
     const meta = await StoreService.loadMeta();
     meta.activeBookId = id;
@@ -121,8 +148,18 @@ export struct MaterialsPage {
         Button('选择文本资料')
           .fontSize(12)
           .onClick(() => this.pickAndParse());
+        Button(this.busy ? '测试中' : '批量测试')
+          .fontSize(12)
+          .onClick(() => this.runBatch());
       }
       .width('100%');
+
+      if (this.batch) {
+        Text(this.batch)
+          .fontSize(12)
+          .fontColor($r('app.color.brand'))
+          .padding({ left: 4, bottom: 4 });
+      }
 
       if (this.tip) {
         Text(this.tip)
