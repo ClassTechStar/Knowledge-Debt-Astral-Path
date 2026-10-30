@@ -6,6 +6,7 @@
  * 折叠屏展开态画布更宽，节点会自动铺开（坐标按画布尺寸归一化）。
  */
 import { KNode, KEdge } from '../model/Models';
+import { hilog } from '@kit.PerformanceAnalysisKit';
 
 interface Pt {
   x: number;
@@ -137,6 +138,13 @@ export struct GraphCanvas {
       const title = n.title.length > 6 ? `${n.title.substring(0, 6)}…` : n.title;
       ctx.fillText(title, p.x, p.y + r + 9);
     }
+    // 画布基准点与节点坐标（vp）打印出来，自动化点击靠它对位
+    const dbg: string[] = [];
+    this.pos.forEach((p: Pt, id: string) => {
+      dbg.push(`${id}@${Math.round(p.x)},${Math.round(p.y)}`);
+    });
+    hilog.info(0x0000, 'GRAPHCANVAS',
+      `canvas ${Math.round(this.w)}x${Math.round(this.h)} selected=${this.selectedId} nodes=${dbg.join(' ')}`);
   }
 
   build() {
@@ -151,6 +159,9 @@ export struct GraphCanvas {
           this.w = w;
           this.h = h;
           this.layout(w, h);
+          // 关键：重新布局后必须重绘，否则画面还是旧坐标，
+          // 而命中判定用的是新坐标 —— 点节点永远点不中（实测踩过）
+          this.draw();
         }
       })
       .onReady(() => {
@@ -172,7 +183,8 @@ export struct GraphCanvas {
             best = id;
           }
         });
-        if (bestD < 900 && best) {
+      // 容差 50px：节点半径只有 6~10px，按 30px 判手指点不准
+        if (bestD < 2500 && best) {
           this.onSelect(best);
         }
       });

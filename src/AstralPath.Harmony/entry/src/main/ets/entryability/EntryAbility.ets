@@ -4,6 +4,8 @@ import { display } from '@kit.ArkUI';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { Breakpoint, LayoutSize } from '../common/Breakpoint';
 import { StoreService } from '../service/StoreService';
+import { OcrService } from '../service/OcrService';
+import { CoreVisionOcrEngine } from '../service/CoreVisionOcrEngine';
 
 const TAG: string = 'EntryAbility';
 
@@ -17,6 +19,14 @@ export default class EntryAbility extends UIAbility {
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
     hilog.info(0x0000, TAG, 'onWindowStageCreate');
+    // 注册 OCR 引擎：Core Vision 可用就挂上，不可用由 OcrService 兜底成 Noop
+    try {
+      OcrService.use(new CoreVisionOcrEngine());
+      hilog.info(0x0000, TAG, `ocr engine=${OcrService.engineName()} available=${OcrService.available()}`);
+    } catch (e) {
+      hilog.warn(0x0000, TAG, `ocr engine init failed: ${(e as Error).message}`);
+    }
+
     // 存储初始化要拿到 UIAbilityContext，放在这里最稳
     StoreService.init(this.context).catch((err: Error) => {
       hilog.error(0x0000, TAG, `store init failed: ${err.message}`);

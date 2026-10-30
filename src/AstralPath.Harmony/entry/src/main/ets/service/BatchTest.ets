@@ -59,7 +59,9 @@ export class BatchTest {
       let m = re.exec(html);
       while (m !== null) {
         const h = decodeURIComponent(m[1]);
-        if (h.toLowerCase().endsWith('.pdf') && out.indexOf(h) < 0) {
+        const low = h.toLowerCase();
+        const usable = low.endsWith('.pdf') || low.endsWith('.png') || low.endsWith('.jpg') || low.endsWith('.jpeg');
+        if (usable && out.indexOf(h) < 0) {
           out.push(h);
         }
         m = re.exec(html);
@@ -138,9 +140,22 @@ export class BatchTest {
         item.chapters = r.chapters;
         item.bookNodes = r.bookNodes;
         item.bookEdges = r.bookEdges;
-        if (OcrService.needOcr(r.chars, r.scanned)) {
+        const isImage = /\.(png|jpg|jpeg|bmp|webp)$/i.test(name);
+        if (isImage) {
+          // 图片直接走 OCR（扫描版 PDF 要先栅格化，这里先用图片验证引擎本身）
           const o = await OcrService.recognize(local);
-          item.ocr = o.ok ? `OK(${o.engine})` : `不可用(${o.engine})`;
+          item.ocr = o.ok ? `OK(${o.engine},${o.text.length}字)` : `失败(${o.engine}): ${o.note}`;
+          if (o.ok) {
+            item.chars = o.text.replace(/\s/g, '').length;
+            item.scanned = false;
+            const book = KgService.build(name, o.text);
+            item.nodes = book.nodes.length;
+            item.edges = book.edges.length;
+            item.chapters = book.chapters ? book.chapters.length : 0;
+          }
+        } else if (OcrService.needOcr(r.chars, r.scanned)) {
+          const o = await OcrService.recognize(local);
+          item.ocr = o.ok ? `OK(${o.engine})` : `失败(${o.engine}): ${o.note}`;
         } else {
           item.ocr = '不需要';
         }

@@ -33,17 +33,48 @@ export class Inflate {
    * 这比「只做头检测」稳：有些 zlib 变种的头不一定能被 FCHECK 识别出来。
    */
   static raw(data: Uint8Array): Uint8Array {
-    // 路 1：裸 deflate
-    try {
-      return Inflate.inflateFrom(data, 0);
-    } catch (e1) {
-      // 路 2：跳过 zlib 头再解（0x78 0x9C / 0x78 0x01 / 0x78 0xDA 等）
+    // 先按 RFC 1950 规则判 zlib 头：CM=8、CINFO<=7、FCHECK 整除 31、无 FDICT。
+    // 注意 CINFO 不一定是 7（0x78），教材 PDF 里常见 0x68（CINFO=6，8KB 窗口）——
+    // 早期只认 0x78~0x7f，导致 990 个流全部解不出（实测踩过）。
+    const off = Inflate.zlibHeaderLen(data);
+    if (off === 2) {
       try {
         return Inflate.inflateFrom(data, 2);
-      } catch (e2) {
-        throw new Error('inflate: cannot decompress (tried raw and zlib-wrapped)');
+      } catch (e1) {
+        // 头看着像 zlib 但解不动，退回裸 deflate 再试一次
+        return Inflate.inflateFrom(data, 0);
       }
     }
+    try {
+      return Inflate.inflateFrom(data, 0);
+    } catch (e2) {
+      // 裸 deflate 失败，再看是不是漏判的 zlib 头
+      if (data.length > 2) {
+        return Inflate.inflateFrom(data, 2);
+      }
+      throw new Error(`inflate: cannot decompress (${(e2 as Error).message})`);
+    }
+  }
+
+  /** 返回 zlib 头长度（2 或 0） */
+  private static zlibHeaderLen(d: Uint8Array): number {
+    if (d.length <= 2) {
+      return 0;
+    }
+    const cmf = d[0];
+    const flg = d[1];
+    const cm = cmf & 0x0f;
+    const cinfo = cmf >> 4;
+    if (cm !== 8 || cinfo > 7) {
+      return 0;
+    }
+    if (((cmf << 8) + flg) % 31 !== 0) {
+      return 0;
+    }
+    if ((flg & 0x20) !== 0) {
+      return 0; // 有预置字典，不支持
+    }
+    return 2;
   }
 
   private static inflateFrom(data: Uint8Array, offset: number): Uint8Array {
