@@ -32,31 +32,6 @@ struct Index {
   }
 
   @Builder
-  pageContent(name: string) {
-    if (name === 'home') {
-      HomePage();
-    } else if (name === 'materials') {
-      MaterialsPage();
-    } else if (name === 'graph') {
-      GraphPage();
-    } else if (name === 'papers') {
-      PapersPage();
-    } else if (name === 'debt') {
-      DebtPage();
-    } else if (name === 'today') {
-      TodayPage();
-    } else if (name === 'agent') {
-      AgentPage();
-    } else if (name === 'profile') {
-      ProfilePage();
-    } else if (name === 'teacher') {
-      TeacherPage();
-    } else {
-      AccountPage();
-    }
-  }
-
-  @Builder
   navPills() {
     Row() {
       ForEach(PAGE_ORDER, (p: string) => {
@@ -150,8 +125,26 @@ struct Index {
             } })
               .width('100%')
               .height('100%');
+          } else if (this.current === 'home') {
+            HomePage()
+          } else if (this.current === 'materials') {
+            MaterialsPage()
+          } else if (this.current === 'graph') {
+            GraphPage()
+          } else if (this.current === 'papers') {
+            PapersPage()
+          } else if (this.current === 'debt') {
+            DebtPage()
+          } else if (this.current === 'today') {
+            TodayPage()
+          } else if (this.current === 'agent') {
+            AgentPage()
+          } else if (this.current === 'profile') {
+            ProfilePage()
+          } else if (this.current === 'teacher') {
+            TeacherPage()
           } else {
-            this.pageContent(this.current);
+            AccountPage()
           }
         }
         .width('100%')
@@ -161,7 +154,9 @@ struct Index {
         })
         .alignItems(HorizontalAlign.Start);
       }
-      .width(this.layoutSize === LayoutSize.LG ? '100%' : '100%')
+      // 注意：有侧栏时不能写 width('100%')，那会把 140vp 的侧栏算进去导致右侧溢出；
+      // 用 layoutWeight(1) 吃满剩余宽度。
+      .layoutWeight(1)
       .height('100%');
     }
     .width('100%')

@@ -2,7 +2,7 @@
  * 示例教材 —— 对齐单文件版「导入示例教材」的演示数据（Python 入门教材骨架）。
  * 真机解析 PDF/TXT 由 KgService 负责；这里只保证首次启动就有可演示的图谱、题目与债边。
  */
-import { Book, KNode, KEdge, Question } from '../model/Models';
+import { Book, KNode, KEdge, Question, Mastery, AnswerLog } from '../model/Models';
 
 interface QuestionSeed {
   kp: string;
@@ -85,6 +85,34 @@ export class DemoData {
         src: 'bank'
       });
     }
+    return out;
+  }
+
+  /**
+   * 演示学情：让 3 个「后续」知识点带着错题（先修还算正常）。
+   * 为什么需要：全默认掌握度时按 impact-v2 算出来约 0.0798，正好卡在 0.08 阈值下，
+   * 演示数据就成了「零红边」，看不出这套东西在干嘛。
+   */
+  static seedMastery(): Record<string, Mastery> {
+    const m: Record<string, Mastery> = {};
+    m['P02'] = { n: 3, s: 0, c: 2, age: 6, st: 0 };
+    m['P06'] = { n: 2, s: 0, c: 1, age: 8, st: 0 };
+    m['D02'] = { n: 2, s: 0, c: 1, age: 5, st: 0 };
+    return m;
+  }
+
+  /** 对应的错题日志（impact 里的 freq / down 两个因子要它） */
+  static seedLogs(): AnswerLog[] {
+    const now = Date.now();
+    const out: AnswerLog[] = [];
+    const push = (kp: string, times: number) => {
+      for (let i = 0; i < times; i++) {
+        out.push({ qid: `seed-${kp}-${i}`, kp: kp, ok: false, conf: 2, ts: now - i * 86400000 });
+      }
+    };
+    push('P02', 3);
+    push('P06', 2);
+    push('D02', 2);
     return out;
   }
 }

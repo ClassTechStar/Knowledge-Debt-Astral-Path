@@ -37,6 +37,16 @@ export struct MaterialsPage {
     const meta = await StoreService.loadMeta();
     meta.activeBookId = 'demo-python';
     await StoreService.saveMeta(meta);
+    // 写入演示学情，否则 impact 刚好卡在阈值下，页面会显示「零红边」
+    const ans = await StoreService.loadAnswers();
+    const seed = DemoData.seedMastery();
+    for (const k of Object.keys(seed)) {
+      if (!ans.mastery[k]) {
+        ans.mastery[k] = seed[k];
+      }
+    }
+    ans.logs = ans.logs.concat(DemoData.seedLogs());
+    await StoreService.saveAnswers(ans);
     this.refresh();
   }
 

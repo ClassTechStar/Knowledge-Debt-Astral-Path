@@ -184,8 +184,9 @@ export struct DebtPage {
   }
 
   build() {
-    Column({ space: 10 }) {
-      Text('知债：星穹学途').fontSize(17).fontWeight(FontWeight.Bold).width('100%');
+    Scroll() {
+      Column({ space: 10 }) {
+      Text('债边诊断').fontSize(17).fontWeight(FontWeight.Bold).width('100%');
       Row({ space: 6 }) {
         Button($r('app.string.debt_diag')).fontSize(11).onClick(() => this.diag());
         Button($r('app.string.debt_plan')).fontSize(11).onClick(() => this.buildPlan());
@@ -287,9 +288,14 @@ export struct DebtPage {
           .backgroundColor($r('app.color.surface'));
         }, (p: PlanItem) => p.id);
       }
+      }
+      .width('100%')
+      .padding(16)
+      .alignItems(HorizontalAlign.Start);
     }
     .width('100%')
-    .padding(16)
-    .alignItems(HorizontalAlign.Start);
+    .height('100%')
+    .scrollBar(BarState.Auto)
+    .align(Alignment.TopStart);
   }
 }

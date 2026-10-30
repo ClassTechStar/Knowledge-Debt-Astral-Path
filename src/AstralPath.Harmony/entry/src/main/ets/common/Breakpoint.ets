@@ -13,6 +13,28 @@ export class Breakpoint {
   static readonly SM_MAX: number = 600;
   static readonly MD_MAX: number = 840;
 
+  /**
+   * 折叠感知判定：光看宽度不够 —— Mate X7 展开态实测只有 707vp（宽 2210px / density 500），
+   * 落在 MD 区间，但它是「展开」，就该给双栏。所以折叠屏优先按折叠状态判，
+   * 非折叠设备再退回宽度断点。
+   * @param foldStatus 0=unknown 1=expanded 2=folded 3=half_folded（与 display.FoldStatus 对齐）
+   */
+  static ofFold(widthVp: number, foldable: boolean, foldStatus: number): LayoutSize {
+    if (foldable) {
+      if (foldStatus === 1 || foldStatus === 11) {
+        return LayoutSize.LG; // 展开：侧栏 + 双栏
+      }
+      if (foldStatus === 2) {
+        return LayoutSize.SM; // 折叠：单栏 + 底部/顶部胶囊
+      }
+      if (foldStatus === 3 || foldStatus === 21) {
+        // 半折叠：宽度还够就单栏大卡，别硬上双栏
+        return widthVp >= Breakpoint.MD_MAX ? LayoutSize.MD : LayoutSize.SM;
+      }
+    }
+    return Breakpoint.of(widthVp);
+  }
+
   /** 按窗口宽度（vp）判定档位 */
   static of(widthVp: number): LayoutSize {
     if (widthVp < Breakpoint.SM_MAX) {

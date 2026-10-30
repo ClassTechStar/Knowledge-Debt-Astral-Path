@@ -84,7 +84,9 @@ export struct TodayPage {
   }
 
   build() {
-    Column({ space: 10 }) {
+    // 内容会超过一屏（任务列表 + 题卡），必须能滚，否则提交按钮被底部挤住
+    Scroll() {
+        Column({ space: 10 }) {
       Row() {
         Text('今日')
           .fontSize(17)
@@ -146,9 +148,14 @@ export struct TodayPage {
         .borderRadius(16)
         .backgroundColor($r('app.color.soft'));
       }
+        }
+        .width('100%')
+        .padding(16)
+        .alignItems(HorizontalAlign.Start);
     }
     .width('100%')
-    .padding(16)
-    .alignItems(HorizontalAlign.Start);
+    .height('100%')
+    .scrollBar(BarState.Auto)
+    .align(Alignment.TopStart);
   }
 }
