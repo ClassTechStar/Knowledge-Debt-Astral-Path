@@ -14,6 +14,7 @@ import { OcrService } from './OcrService';
 import { SanitizeService } from './SanitizeService';
 import { Book, KNode, KEdge } from '../model/Models';
 import { StoreService } from './StoreService';
+import { PdfOcrService, PdfOcrResult } from './PdfOcrService';
 import { BatchWorker, HeavyResult } from './BatchWorker';
 
 export interface BatchItem {
@@ -154,8 +155,22 @@ export class BatchTest {
             item.chapters = book.chapters ? book.chapters.length : 0;
           }
         } else if (OcrService.needOcr(r.chars, r.scanned)) {
-          const o = await OcrService.recognize(local);
-          item.ocr = o.ok ? `OK(${o.engine})` : `失败(${o.engine}): ${o.note}`;
+          // 扫描版 PDF：抽内嵌页图 → 逐页 OCR（整页渲染代价太大，不做）
+          const po: PdfOcrResult = await PdfOcrService.recognize(local, ctx.cacheDir, 6);
+          item.ocr = po.ok
+            ? `OK(${po.engine},${po.supported}/${po.pages}页,${po.text.length}字)`
+            : `未识别(${po.engine}): ${po.note}`;
+          item.note = po.ok ? `OCR 页 ${po.supported}/${po.pages}` : item.note;
+          if (po.ok) {
+            item.chars = po.text.replace(/\s/g, '').length;
+            item.scanned = false;
+            const book = KgService.build(name, po.text);
+            item.nodes = book.nodes.length;
+            item.edges = book.edges.length;
+            item.chapters = book.chapters ? book.chapters.length : 0;
+            item.bookNodes = book.nodes;
+            item.bookEdges = book.edges;
+          }
         } else {
           item.ocr = '不需要';
         }
