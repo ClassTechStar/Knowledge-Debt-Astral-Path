@@ -12,7 +12,8 @@ import { DocService, DocResult } from './DocService';
 import { KgService } from './KgService';
 import { OcrService } from './OcrService';
 import { SanitizeService } from './SanitizeService';
-import { Book } from '../model/Models';
+import { Book, KNode, KEdge } from '../model/Models';
+import { StoreService } from './StoreService';
 import { BatchWorker, HeavyResult } from './BatchWorker';
 
 export interface BatchItem {
@@ -25,6 +26,8 @@ export interface BatchItem {
   edges: number;
   chapters: number;
   note: string;
+  bookNodes: KNode[];
+  bookEdges: KEdge[];
 }
 
 export class BatchTest {
@@ -115,7 +118,7 @@ export class BatchTest {
     for (const name of names) {
       const item: BatchItem = {
         name: name, bytes: 0, chars: 0, scanned: false, ocr: '-',
-        nodes: 0, edges: 0, chapters: 0, note: ''
+        nodes: 0, edges: 0, chapters: 0, note: '', bookNodes: [], bookEdges: []
       };
       try {
         const local = await BatchTest.fetchOne(name, dest);
@@ -133,6 +136,8 @@ export class BatchTest {
         item.nodes = r.nodes;
         item.edges = r.edges;
         item.chapters = r.chapters;
+        item.bookNodes = r.bookNodes;
+        item.bookEdges = r.bookEdges;
         if (OcrService.needOcr(r.chars, r.scanned)) {
           const o = await OcrService.recognize(local);
           item.ocr = o.ok ? `OK(${o.engine})` : `不可用(${o.engine})`;
@@ -154,6 +159,42 @@ export class BatchTest {
       lines.push(line);
       hilog.info(0x0000, 'BATCH', line);
     }
+    // 把节点最多的那份图谱存入 StoreService，识网页可直接查看
+    try {
+      let bestNodes: KNode[] = [];
+      let bestEdges: KEdge[] = [];
+      let bestName = '';
+      let bestCount = 0;
+      for (const it of out) {
+        if (it.nodes > bestCount && it.bookNodes.length > 0) {
+          bestCount = it.nodes;
+          bestNodes = it.bookNodes;
+          bestEdges = it.bookEdges;
+          bestName = it.name;
+        }
+      }
+      if (bestNodes.length > 0) {
+        const book: Book = {
+          id: `batch-${Date.now()}`,
+          name: `${bestName}（批量导入）`,
+          source: 'batch',
+          nodes: bestNodes,
+          edges: bestEdges,
+          qs: [],
+          created: Date.now()
+        };
+        const books = await StoreService.loadBooks();
+        books.push(book);
+        await StoreService.saveBooks(books);
+        const meta = await StoreService.loadMeta();
+        meta.activeBookId = book.id;
+        await StoreService.saveMeta(meta);
+        hilog.info(0x0000, 'BATCH', `已导入图谱：${bestName}（${bestNodes.length} 节点 ${bestEdges.length} 边）`);
+      }
+    } catch (e) {
+      hilog.error(0x0000, 'BATCH', `导入图谱失败: ${(e as Error).message}`);
+    }
+
     // 落文件：hilog 会被轮转，明细以文件为准
     try {
       const outPath = `${ctx.cacheDir}/btest_results.txt`;
@@ -189,7 +230,9 @@ export class BatchTest {
         nodes: 0,
         edges: 0,
         chapters: 0,
-        note: ''
+        note: '',
+        bookNodes: [],
+        bookEdges: []
       };
       try {
         const st = fileIo.statSync(uri);
@@ -224,6 +267,42 @@ export class BatchTest {
       lines.push(line);
       hilog.info(0x0000, 'BATCH', line);
     }
+    // 把节点最多的那份图谱存入 StoreService，识网页可直接查看
+    try {
+      let bestNodes: KNode[] = [];
+      let bestEdges: KEdge[] = [];
+      let bestName = '';
+      let bestCount = 0;
+      for (const it of out) {
+        if (it.nodes > bestCount && it.bookNodes.length > 0) {
+          bestCount = it.nodes;
+          bestNodes = it.bookNodes;
+          bestEdges = it.bookEdges;
+          bestName = it.name;
+        }
+      }
+      if (bestNodes.length > 0) {
+        const book: Book = {
+          id: `batch-${Date.now()}`,
+          name: `${bestName}（批量导入）`,
+          source: 'batch',
+          nodes: bestNodes,
+          edges: bestEdges,
+          qs: [],
+          created: Date.now()
+        };
+        const books = await StoreService.loadBooks();
+        books.push(book);
+        await StoreService.saveBooks(books);
+        const meta = await StoreService.loadMeta();
+        meta.activeBookId = book.id;
+        await StoreService.saveMeta(meta);
+        hilog.info(0x0000, 'BATCH', `已导入图谱：${bestName}（${bestNodes.length} 节点 ${bestEdges.length} 边）`);
+      }
+    } catch (e) {
+      hilog.error(0x0000, 'BATCH', `导入图谱失败: ${(e as Error).message}`);
+    }
+
     // 落文件：hilog 会被轮转，明细以文件为准
     try {
       const outPath = `${ctx.cacheDir}/btest_results.txt`;

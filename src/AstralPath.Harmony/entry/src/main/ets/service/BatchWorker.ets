@@ -7,6 +7,7 @@
 import { taskpool } from '@kit.ArkTS';
 import { PdfText } from './PdfText';
 import { KgService } from './KgService';
+import { Book, KNode, KEdge } from '../model/Models';
 
 export interface HeavyResult {
   chars: number;
@@ -15,6 +16,9 @@ export interface HeavyResult {
   edges: number;
   chapters: number;
   note: string;
+  /** 图谱数据，供 BatchTest 存入 StoreService 让识网页展示 */
+  bookNodes: KNode[];
+  bookEdges: KEdge[];
 }
 
 export interface HeavyInput {
@@ -59,13 +63,22 @@ export function processPdfInWorker(input: HeavyInput): HeavyResult {
     edges = book.edges.length;
     chapters = book.chapters ? book.chapters.length : 0;
   }
+  let bookNodes: KNode[] = [];
+  let bookEdges: KEdge[] = [];
+  if (text && text.trim().length >= 20) {
+    const book = KgService.build(name, text);
+    bookNodes = book.nodes;
+    bookEdges = book.edges;
+  }
   const out: HeavyResult = {
     chars: chars,
     scanned: scanned,
     nodes: nodes,
     edges: edges,
     chapters: chapters,
-    note: note
+    note: note,
+    bookNodes: bookNodes,
+    bookEdges: bookEdges
   };
   return out;
 }

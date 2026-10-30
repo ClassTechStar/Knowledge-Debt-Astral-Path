@@ -26,32 +26,36 @@ export class Inflate {
   private outLen: number = 0;
 
   /**
-   * 解压一段 deflate 数据。兼容两种形态：
-   * - 裸 deflate（PDF FlateDecode 理论形态）
-   * - zlib 包裹（0x78 0x9C / 0x78 0x01 / 0x78 0xDA 头，实际教材 PDF 多是这种）
-   * zlib 尾部的 Adler-32 不用管，解到最后一块就停。
+   * 解压一段 deflate 数据。PDF 流有两种形态都要支持：
+   * - 裸 deflate（无头，RFC 1951）
+   * - zlib 包裹（2 字节头 + deflate + 4 字节 Adler32，RFC 1950）
+   * 先按裸 deflate 试，失败再跳过 2 字节 zlib 头重试。
+   * 这比「只做头检测」稳：有些 zlib 变种的头不一定能被 FCHECK 识别出来。
    */
   static raw(data: Uint8Array): Uint8Array {
+    // 路 1：裸 deflate
+    try {
+      return Inflate.inflateFrom(data, 0);
+    } catch (e1) {
+      // 路 2：跳过 zlib 头再解（0x78 0x9C / 0x78 0x01 / 0x78 0xDA 等）
+      try {
+        return Inflate.inflateFrom(data, 2);
+      } catch (e2) {
+        throw new Error('inflate: cannot decompress (tried raw and zlib-wrapped)');
+      }
+    }
+  }
+
+  private static inflateFrom(data: Uint8Array, offset: number): Uint8Array {
     const z = new Inflate();
-    z.data = Inflate.skipZlibHeader(data);
+    z.data = data.subarray(offset);
     z.pos = 0;
     z.bitBuf = 0;
     z.bitCnt = 0;
-    z.out = new Uint8Array(Math.max(64, data.length * 4));
+    z.out = new Uint8Array(Math.max(64, data.length * 4 + 64));
     z.outLen = 0;
     z.run();
     return z.out.subarray(0, z.outLen);
-  }
-
-  private static skipZlibHeader(d: Uint8Array): Uint8Array {
-    if (d.length > 2 && (d[0] & 0x0f) === 8 && d[0] >= 0x78 && d[0] <= 0x7f) {
-      const cmf = d[0];
-      const flg = d[1];
-      if (((cmf << 8) + flg) % 31 === 0 && (flg & 0x20) === 0) {
-        return d.subarray(2);
-      }
-    }
-    return d;
   }
 
   private run(): void {
@@ -121,6 +125,10 @@ export class Inflate {
         const len = LEN_BASE[idx] + this.bits(LEN_EXTRA[idx]);
         const dsym = this.decode(dist);
         const d = DIST_BASE[dsym] + this.bits(DIST_EXTRA[dsym]);
+        if (d <= 0 || d > this.outLen) {
+          // 距离越过已输出的起点：流已损坏，必须报错而不是默默补 0
+          throw new Error('inflate: distance too far back');
+        }
         let src = this.outLen - d;
         for (let i = 0; i < len; i++) {
           this.emit(this.out[src + i]);
