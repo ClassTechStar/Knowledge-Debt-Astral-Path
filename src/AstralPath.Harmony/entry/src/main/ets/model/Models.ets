@@ -97,6 +97,12 @@ export interface PlanItem {
   layer?: string;
   minutes: number;
   why?: string;
+  // 调度器（PlanScheduler）产出的扩展字段：K3 校验用 fromKp，复盘用 st，展示用 label；
+  // 旧版本存的数据没有这些字段，全部可选
+  st?: string;
+  fromKp?: string;
+  rd?: number;
+  label?: string;
 }
 
 /** 试卷/作业/错题识别结果 */

@@ -3,10 +3,11 @@
  * 计划复盘、销账检查，以及 What-if 模拟（调参数看这条债边的变化）。
  * 计划编排在真机上会交给模型（演示模式由本地规则兜底）。
  */
-import { Book, DebtEdge, PlanItem, SaleState, SaleInput, SaleResult, KNode } from '../model/Models';
+import { Book, DebtEdge, PlanItem, SaleState, SaleInput, SaleResult, KNode, KEdge } from '../model/Models';
 import { FormulaConstants as K } from '../model/FormulaConstants';
 import { StoreService } from '../service/StoreService';
 import { FormulaService } from '../service/FormulaService';
+import { PlanScheduler, DebtInput, ScheduleCtx, SchedItem, CtxEdge, K5Debt } from '../service/PlanScheduler';
 
 @Component
 export struct DebtPage {
@@ -20,6 +21,9 @@ export struct DebtPage {
   @State wFq: number = 5;
   @State whatOut: string = '拖动滑杆，看它对这条债边的影响（本地公式实时计算）';
   @State review: string = '';
+  @State deferredMsg: string = '';
+  // 当前教材：diag() 里缓存，buildPlan 的 label/why 生成要用标题
+  private book: Book | null = null;
 
   aboutToAppear(): void {
     this.diag();
@@ -35,8 +39,10 @@ export struct DebtPage {
     if (!b) {
       this.msg = '还没有资料，先到起点页导入示例教材';
       this.debts = [];
+      this.book = null;
       return;
     }
+    this.book = b;
     const ans = await StoreService.loadAnswers();
     const visiting: Map<string, number> = new Map();
     const scoreOf = (id: string): number => {
@@ -103,35 +109,74 @@ export struct DebtPage {
     this.whatOut = `前置 ${(sf * 100).toFixed(0)}% / 目标 ${(st * 100).toFixed(0)}% / 频次 ${this.wFq} → 影响分 ${impact.toFixed(3)}（${FormulaService.isOpen(impact) ? '开放红边' : '未开放'}）`;
   }
 
+  /**
+   * 生成 14 天计划：走与 Web 版同一套调度器（逐日容量 + 三遍复习 + K1–K5 合约 +
+   * 先修顺序重排）。之前是每条债边顺序塞两天任务的简化版，跟 Web 版的计划质量差距大，
+   * 现在对齐——排不下的债边显式延期，合约违规如实报出来，不假装全过。
+   */
   private async buildPlan(): Promise<void> {
     await this.diag();
-    const items: PlanItem[] = [];
-    let day = 1;
-    const budget = 40; // K1：每天 40 分钟
-    for (const d of this.debts) {
-      const seq: string[] = [d.a, d.b]; // K2：先修有序
-      for (const kp of seq) {
-        if (items.some((p: PlanItem) => p.kp === kp)) {
-          continue;
-        }
-        const item: PlanItem = {
-          id: `PL${String(items.length + 1).padStart(2, '0')}`,
-          day: day,
-          kp: kp,
-          minutes: 20,
-          why: `补先修债：${d.id}`
-        };
-        items.push(item);
-        day = Math.min(14, day + 1); // K4：间隔 >= 1 天
-      }
-      const total = items.reduce((s: number, p: PlanItem) => s + p.minutes, 0);
-      if (total >= budget * 14) {
-        break;
-      }
+    const b = this.book;
+    if (!b) {
+      this.msg = '还没有资料，先到起点页导入示例教材';
+      return;
     }
-    this.plan = items;
-    await StoreService.savePlan(items);
-    this.msg = `已生成 ${items.length} 条计划（每天不超过 ${budget} 分钟）`;
+    const budget = 40; // K1：每天 40 分钟
+    const offsets = [0, 2, 6];
+    const titleOf = (id: string): string => this.titleOf(b, id);
+    const ds: DebtInput[] = this.debts.map((d: DebtEdge): DebtInput => {
+      return { from: d.a, to: d.b, imp: d.impact, fromName: titleOf(d.a), toName: titleOf(d.b) };
+    });
+    const ctxEdges = (b.edges ?? []).map((e: KEdge): CtxEdge => {
+      return { from: e.a, to: e.b, tg: e.tg ?? false, w: e.w ?? 1 };
+    });
+    const ctx: ScheduleCtx = {
+      edges: ctxEdges,
+      nodes: b.nodes,
+      prereqsOf: (id: string): string[] => (b.edges ?? []).filter((e: KEdge) => e.b === id).map((e: KEdge) => e.a),
+      label: (d: DebtInput, kind: string, r: number): string => {
+        return kind === 'core' ? `巩固「${titleOf(d.from)}」` : `进阶「${titleOf(d.to)}」`;
+      },
+      why: (d: DebtInput, kind: string, r: number, min: number, rdP: number): string => {
+        // K3 要求 why 里必须出现 from_kp（先修点名称或标题），否则合约校验会拦
+        const off = offsets[r] ?? 0;
+        return `先补「${titleOf(d.from)}」再带动「${titleOf(d.to)}」，第 ${r + 1}/${rdP} 遍（间隔 ${off} 天），${min} 分钟`;
+      }
+    };
+    const k5debts = ds.map((d: DebtInput): K5Debt => {
+      return { from: d.from, to: d.to, fromName: d.fromName, toName: d.toName };
+    });
+    const result = PlanScheduler.schedule(ds, budget, { debts: k5debts }, ctx);
+    const viol = PlanScheduler.checkPlanK(result.items, budget,
+      { edges: ctxEdges, debts: k5debts, deferred: result.deferred }, { titleOf: titleOf });
+    const plan: PlanItem[] = result.items.map((p: SchedItem): PlanItem => {
+      return {
+        id: `PL${String(p.id).padStart(2, '0')}`,
+        day: p.day,
+        kp: p.kp,
+        layer: p.layer,
+        minutes: p.min,
+        why: p.why,
+        st: p.st,
+        fromKp: p.fromKp,
+        rd: p.rd,
+        label: p.label
+      };
+    });
+    this.plan = plan;
+    this.deferredMsg = result.deferred.length > 0
+      ? `另有 ${result.deferred.length} 条债边本轮未排入：${result.deferred.map((x) => x.reason).join('；')}`
+      : '';
+    await StoreService.savePlan(plan);
+    let msg = `已生成 ${plan.length} 条计划（三遍复习、每天不超过 ${budget} 分钟，K1–K5 已过）`;
+    if (viol.length > 0) {
+      // 合约违规不该出现（调度器自修过）；真出现就如实报第一条，不静默吞掉
+      msg += `；警告：${viol[0]}`;
+    }
+    if (this.deferredMsg) {
+      msg += `；${this.deferredMsg}`;
+    }
+    this.msg = msg;
   }
 
   /** 计划复盘：拿作答日志对照计划，看哪些做完了、哪些还欠着 */
@@ -276,16 +321,23 @@ export struct DebtPage {
       if (this.plan.length > 0) {
         Text(`修复计划（${this.plan.length} 条）`).fontSize(14).fontWeight(FontWeight.Bold).margin({ top: 6 });
         ForEach(this.plan, (p: PlanItem) => {
-          Row() {
-            Text(`D${p.day}`).fontSize(12).fontColor($r('app.color.brand')).width(36);
-            Text(p.kp).fontSize(13).fontColor($r('app.color.ink'));
-            Blank();
-            Text(`${p.minutes} 分钟`).fontSize(11).fontColor($r('app.color.muted'));
+          Column({ space: 2 }) {
+            Row() {
+              Text(`D${p.day}`).fontSize(12).fontColor($r('app.color.brand')).width(36);
+              Text(p.label ?? p.kp).fontSize(13).fontColor($r('app.color.ink'));
+              Blank();
+              Text(`${p.minutes} 分钟`).fontSize(11).fontColor($r('app.color.muted'));
+            }
+            .width('100%');
+            if (p.why) {
+              Text(p.why).fontSize(11).fontColor($r('app.color.muted'));
+            }
           }
           .width('100%')
           .padding(10)
           .borderRadius(10)
-          .backgroundColor($r('app.color.surface'));
+          .backgroundColor($r('app.color.surface'))
+          .alignItems(HorizontalAlign.Start);
         }, (p: PlanItem) => p.id);
       }
       }
