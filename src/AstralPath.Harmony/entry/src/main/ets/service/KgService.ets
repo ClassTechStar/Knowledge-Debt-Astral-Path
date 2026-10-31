@@ -4,8 +4,8 @@
  *   ① 按标题行切章（第N章、第N节、# 标题、1. 标题）
  *   ② 按 2–6 字中文短语的词频抽概念（无分词库，取高频且去停用）
  *   ③ 同一章内按出现顺序连先修边（靠前的作为先修）
- * 扫描版 PDF 的 OCR 链路（RapidOCR / tesseract）鸿蒙侧尚未接入，
- * 因此本服务明确只处理文本，遇到扫描件应提示用户。
+ * 本服务只处理「已经是文本」的输入；扫描版 PDF 由 PdfText / PdfOcrService
+ * 走文本层优先、扫描页抽页图转识别（Core Vision / 宿主 OCR），不经过这里。
  */
 import { Book, KNode, KEdge, Chapter } from '../model/Models';
 

@@ -7,6 +7,7 @@
  * 3) 未配置密钥时明确标注演示模式，不假装是模型在说话；
  * 4) 模型调用失败不报错弹窗，静默回退本地答复。
  */
+import { promptAction } from '@kit.ArkUI';
 import { AiService, AiConfig } from '../service/AiService';
 import { StoreService, AiCfg } from '../service/StoreService';
 import { DemoKey } from '../common/DemoKey';
@@ -22,6 +23,8 @@ export struct AgentPage {
   @State input: string = '';
   @State transcript: string[] = [];
   @State streaming: boolean = false;
+  // 流式期间正在生长的那段回复：像 Web 版一样边收边显示，而不是憋到最后一次性出现
+  @State liveText: string = '';
   private cfg: AiConfig = { baseUrl: AiService.DEFAULT_BASE, key: '', model: 'mimo-7b-rl' };
 
   /** 危机词：与 tools/agent-intents.json 的 crisis 列表一致（11 个） */
@@ -30,7 +33,8 @@ export struct AgentPage {
     '伤害自己', '跳楼', '上吊', 'suicide', 'kill myself', '活不下去'
   ];
 
-  /** 26 个意图的锚点与本地兜底答复（无密钥时按这个答） */
+  /** 25 个意图的锚点与本地兜底答复（无密钥时按这个答）；危机词单独优先处理，
+   *  合计覆盖 tools/agent-intents.json 登记表的 26 个意图（由 verify_agent_intents.py 对拍）。 */
   private static readonly INTENTS: IntentDef[] = [
     { id: 'debt.diagnose', anchors: ['知识债', '债边', '诊断', '红边', '薄弱', '搞不清', '漏洞', '哪里不会', '哪里薄弱', '帮我分析'],
       reply: '去「知债」页点重新诊断，会按 impact 公式算出开放红边。' },
@@ -49,13 +53,15 @@ export struct AgentPage {
     { id: 'graph.view', anchors: ['图谱', '识网', '知识图谱', '思维导图', '关系图', '知识网', '看看图'],
       reply: '「识网」页看知识点和先修关系，点节点能看到它的先修与后续。' },
     { id: 'material.parse', anchors: ['解析资料', '上传', 'OCR', '教材', '藏书', '解析文件', '导入教材', '上传课本'],
-      reply: '「藏书阁」选 PDF/TXT 解析；目前鸿蒙版先支持文本类，扫描版 OCR 还在路上。' },
+      reply: '「藏书阁」支持 PDF 与文本类资料：文本层优先，扫描版自动抽页图转识别，解析完自动生成识网。' },
     { id: 'material.list', anchors: ['列出资料', '教材列表', '藏书', '有哪些书', '书单', '几本书', '已解析教材', '有什么教材'],
       reply: '「藏书阁」列出已解析教材，点「设为当前」切换。' },
     { id: 'material.switch', anchors: ['切换教材', '换书', '切书', '切换到', '换一本', '切到', '切过去', '换个教材', '换本书'],
       reply: '「藏书阁」点某本书的「设为当前」即可切换。' },
     { id: 'kb.search', anchors: ['知识库', '检索', '什么是', '查资料', '文档', '搜索', '搜一下', '查一下', '找找', '章节', '帮我找', '找找看', '查一查', '讲一下', '知识点', '介绍', '概要', '概述', '概括'],
       reply: '可以在「识网」页按知识点名称找，或在「藏书阁」翻章节目录。' },
+    { id: 'kb.ingest', anchors: ['入库', '上传文档', '发布知识'],
+      reply: '在「藏书阁」上传资料解析后自动入库，生成识网与题库。' },
     { id: 'profile.view', anchors: ['画像', '我的标签', '学习画像', '我的情况'],
       reply: '「画像」页看掌握/薄弱分布和累计作答；不想被画像可以随时关掉个性化。' },
     { id: 'profile.optout', anchors: ['退出画像', '关闭画像', 'opt-out'],
@@ -67,7 +73,7 @@ export struct AgentPage {
     { id: 'consent.revoke', anchors: ['撤销', '取消授权', '关闭可见'],
       reply: '「账户」页把授权开关关掉，立刻失效。注意「撤销授权」不是要授权。' },
     { id: 'whatif.simulate', anchors: ['what-if', '如果', '模拟', '假设', '假如', '要是', '试想'],
-      reply: 'What-if 模拟（调前置掌握度/目标掌握度/错题频次看债边变化）还没搬到鸿蒙版。' },
+      reply: '「知债」页底部有 What-if 模拟：拖动前置掌握、目标掌握、错题频次三个滑杆，实时看影响分变化。' },
     { id: 'narrative.read', anchors: ['故事', '叙事', '讲解', '讲个故事', '举个例子', '给我讲讲', '讲一讲'],
       reply: '配了模型密钥就能讲；没配的话我可以按知识点给你一段要点。' },
     { id: 'sale.check', anchors: ['销账检查', '能否销账', '销账条件', '能销账吗', '销账了没'],
@@ -134,10 +140,18 @@ export struct AgentPage {
     this.input = '';
     this.transcript = [...this.transcript, `我：${q}`];
 
-    // 红线 1：危机词优先，不作答
+    // 红线 1：危机词优先，不作答；除文字回复外弹常驻对话框（点击才关闭），
+    // 对齐 Web 版「危机通知常驻展示、不被免打扰静音」的口径
     if (this.crisis(q)) {
       this.transcript = [...this.transcript,
         '智能体：这类问题我不回答。请联系学校心理辅导老师，或拨打心理援助热线，有人能帮你。'];
+      promptAction.showDialog({
+        title: '你不是一个人在扛',
+        message: '请联系学校心理辅导老师，或拨打心理援助热线（全国 24 小时）。系统不会把这段对话当作处分依据。',
+        buttons: [{ text: '我知道了', color: '#2f6fed' }]
+      }).catch((e: Error) => {
+        // 对话框失败不阻断文字回复
+      });
       return;
     }
 
@@ -149,17 +163,21 @@ export struct AgentPage {
     }
 
     this.streaming = true;
+    this.liveText = '';
     let acc = '';
     await AiService.stream(this.cfg, q, (c) => {
       if (c.done) {
         this.streaming = false;
+        this.liveText = '';
         this.transcript = [...this.transcript, `智能体：${acc || '（模型没有返回内容）'}`];
       } else {
         acc += c.text;
+        this.liveText = acc;
       }
     });
     if (this.streaming) {
       this.streaming = false;
+      this.liveText = '';
     }
   }
 
@@ -176,6 +194,15 @@ export struct AgentPage {
               .padding(8);
           }
         }, (line: string, idx: number) => `${idx}-${line.slice(0, 10)}`);
+        if (this.streaming && this.liveText) {
+          ListItem() {
+            Text(`智能体：${this.liveText}`)
+              .fontSize(13)
+              .fontColor($r('app.color.muted'))
+              .width('100%')
+              .padding(8);
+          }
+        }
       }
       .layoutWeight(1)
       .backgroundColor($r('app.color.soft'))

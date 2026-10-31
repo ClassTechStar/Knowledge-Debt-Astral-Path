@@ -5,6 +5,7 @@
  * 这一点和 Web / Android 版保持一致：AI 挂了不影响核心功能。
  */
 import { http } from '@kit.NetworkKit';
+import { util } from '@kit.ArkTS';
 
 export interface AiConfig {
   baseUrl: string;
@@ -91,30 +92,58 @@ export class AiService {
       max_tokens: maxTokens
     };
     const body = JSON.stringify(streamBody);
+    // 解码与分行必须带缓冲：网络 chunk 既不按 UTF-8 字符边界切，也不按 SSE 事件边界切——
+    // 逐字节 String.fromCharCode 会把跨 chunk 的中文解码成乱码，跨 chunk 的 JSON 事件会被整条丢弃（掉字）。
+    // TextDecoder 的 stream 模式负责攒多字节字符，lineBuf 负责攒半行。
+    const decoder: util.TextDecoder = util.TextDecoder.create('utf-8');
+    let lineBuf: string = '';
+    let finished = false;
+    const handleLine = (line: string): void => {
+      const t = line.trim();
+      if (!t.startsWith('data:')) {
+        return;
+      }
+      const payload = t.slice(5).trim();
+      if (payload === '[DONE]') {
+        finished = true;
+        onDelta({ text: '', done: true });
+        return;
+      }
+      try {
+        const j = JSON.parse(payload) as StreamResponse;
+        const delta = j?.choices?.[0]?.delta?.content ?? '';
+        if (delta) {
+          onDelta({ text: delta, done: false });
+        }
+      } catch (e) {
+        // 完整行但解析失败（心跳/注释行），忽略
+      }
+    };
     req.on('dataReceive', (chunk: ArrayBuffer) => {
-      const text = AiService.decode(chunk);
-      for (const line of text.split('\n')) {
-        const t = line.trim();
-        if (!t.startsWith('data:')) {
-          continue;
-        }
-        const payload = t.slice(5).trim();
-        if (payload === '[DONE]') {
-          onDelta({ text: '', done: true });
+      if (finished) {
+        return;
+      }
+      let text = '';
+      try {
+        text = decoder.decodeToString(new Uint8Array(chunk), { stream: true });
+      } catch (e) {
+        return; // 解码失败丢弃本块，不中断流
+      }
+      lineBuf += text;
+      const lines = lineBuf.split('\n');
+      lineBuf = lines.pop() ?? ''; // 最后一段可能是不完整行，留到下一块
+      for (const line of lines) {
+        handleLine(line);
+        if (finished) {
           return;
-        }
-        try {
-          const j = JSON.parse(payload) as StreamResponse;
-          const delta = j?.choices?.[0]?.delta?.content ?? '';
-          if (delta) {
-            onDelta({ text: delta, done: false });
-          }
-        } catch (e) {
-          // 半包或心跳，忽略
         }
       }
     });
     req.on('dataEnd', () => {
+      if (!finished && lineBuf.trim().length > 0) {
+        handleLine(lineBuf); // 流结束时的最后半行
+      }
+      lineBuf = '';
       onDelta({ text: '', done: true });
       req.destroy();
     });
@@ -134,14 +163,6 @@ export class AiService {
     });
   }
 
-  private static decode(buf: ArrayBuffer): string {
-    const u8 = new Uint8Array(buf);
-    let s: string = '';
-    for (let i = 0; i < u8.length; i++) {
-      s += String.fromCharCode(u8[i]);
-    }
-    return s;
-  }
 }
 
 export interface ChatMessage {

@@ -32,6 +32,9 @@ FORMULA_WEIGHTS = ROOT / "src" / "AstralPath.Core" / "Formula" / "FormulaWeights
 P2_JS = ROOT / "shared" / "integrations" / "p2-ai-integration.js"
 # 共享内核：常量块是构建期从 JSON 生成的（DO NOT EDIT），还是得比一遍，防止生成器忘了重跑
 CORE_JS = ROOT / "shared" / "core.js"
+# 鸿蒙方（ArkTS）：危机词与意图锚点是手抄进 AgentPage.ets 的，同样纳入对拍防漂移；
+# 缺文件时跳过（旧检出没有鸿蒙目录）
+HARMONY_AGENT = ROOT / "src" / "AstralPath.Harmony" / "entry" / "src" / "main" / "ets" / "pages" / "AgentPage.ets"
 
 
 def fail(msg):
@@ -191,12 +194,45 @@ def main():
                 fail(f"core.js 意图 {k} 锚点不一致（生成器未重跑？）\n  json={canon_map[k]}\n  core={core_map[k]}")
         core_checked = True
 
+    # 7) 鸿蒙方（ArkTS AgentPage.ets）：危机词逐词一致（无序）；
+    #    意图集合 = 登记表去掉 crisis.handoff（鸿蒙侧危机词独立优先处理，不入 INTENTS），锚点逐条一致。
+    et_count = 0
+    if HARMONY_AGENT.exists():
+        ets = HARMONY_AGENT.read_text(encoding="utf-8")
+        m_crisis = re.search(r"CRISIS: string\[\] = \[(.*?)\];", ets, re.S)
+        if not m_crisis:
+            fail("AgentPage.ets 找不到 CRISIS 数组")
+        else:
+            et_crisis = re.findall(r"'([^']*)'", m_crisis.group(1))
+            if sorted(et_crisis) != sorted(canon["crisis"]):
+                fail(f"鸿蒙 CRISIS 与 JSON 不一致\n  json={canon['crisis']}\n  ets={et_crisis}")
+        m_intents = re.search(r"INTENTS: IntentDef\[\] = \[(.*?)\n  \];", ets, re.S)
+        if not m_intents:
+            fail("AgentPage.ets 找不到 INTENTS 数组")
+        else:
+            et_entries = re.findall(
+                r"\{ id: '([a-z.]+)', anchors: \[(.*?)\],",
+                m_intents.group(1), re.S)
+            if not et_entries:
+                fail("AgentPage.ets INTENTS 解析出 0 条（正则与代码结构不符）")
+            et_map = {eid: re.findall(r"'([^']*)'", anchors_raw) for eid, anchors_raw in et_entries}
+            et_count = len(et_map)
+            expect_ids = [k for k in canon_map if k != "crisis.handoff"]
+            if list(et_map) != expect_ids:
+                fail(f"鸿蒙意图清单与 JSON 不一致\n  仅 json 有: {sorted(set(expect_ids) - set(et_map))}\n"
+                     f"  仅 ets 有: {sorted(set(et_map) - set(expect_ids))}")
+            for k in et_map:
+                if et_map[k] != canon_map[k]:
+                    fail(f"鸿蒙意图 {k} 锚点不一致\n  json={canon_map[k]}\n  ets={et_map[k]}")
+
     n_ethics = len(canon.get("bannedEthics", []))
     extra = []
     if p2_checked:
         extra.append(f"p2={len(p2_map)}")
     if core_checked:
         extra.append(f"core={len(core_map)}")
+    if et_count:
+        extra.append(f"ets={et_count}")
     tail = (" " + " ".join(extra)) if extra else ""
     print(f"ALL GREEN · agent-intents 多方一致（json={len(canon_map)} js={len(js_map)} cs={len(cs_map)}{tail} 意图；"
           f"crisis={len(js_crisis)} banned={len(js_banned)} negative={len(js_negative)} "

@@ -17,6 +17,7 @@ export struct TodayPage {
   @State tasks: TaskItem[] = [];
   @State quiz: Question | null = null;
   @State picked: number = -1;
+  @State conf: number = 4;
   @State result: string = '';
   private book: Book | null = null;
 
@@ -56,6 +57,7 @@ export struct TodayPage {
     }
     this.quiz = pool[Math.floor(Math.random() * pool.length)];
     this.picked = -1;
+    this.conf = 4;
     this.result = '';
   }
 
@@ -76,10 +78,10 @@ export struct TodayPage {
     }
     m.age = 0;
     ans.mastery[q.kp] = m;
-    ans.logs.push({ qid: q.id, kp: q.kp, ok: ok, conf: 4, ts: Date.now() });
+    ans.logs.push({ qid: q.id, kp: q.kp, ok: ok, conf: this.conf, ts: Date.now() });
     await StoreService.saveAnswers(ans);
     const sc = FormulaService.scoreOfMastery(m, []);
-    this.result = `${ok ? '答对了' : '答错了'} · 该知识点掌握度 ${(sc * 100).toFixed(0)}%`;
+    this.result = `${ok ? '答对了' : '答错了'} · 信心 ${this.conf}/5 · 该知识点掌握度 ${(sc * 100).toFixed(0)}%`;
     this.loadToday();
   }
 
@@ -137,6 +139,15 @@ export struct TodayPage {
                 this.picked = idx;
               });
           }, (opt: string, idx: number) => `${idx}-${opt}`);
+          Row() {
+            Text(`信心 ${this.conf}/5`).fontSize(11).fontColor($r('app.color.muted')).width(64);
+            Slider({ value: this.conf, min: 1, max: 5, step: 1 })
+              .layoutWeight(1)
+              .onChange((v: number) => {
+                this.conf = v;
+              });
+          }
+          .width('100%');
           Button('提交')
             .onClick(() => this.submit());
           if (this.result) {
