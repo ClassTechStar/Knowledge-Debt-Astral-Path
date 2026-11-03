@@ -216,7 +216,8 @@ window.APDiag=(function(){
     if (container) return container;
     container = document.createElement("div");
     container.id = "ap-notify-stack";
-    container.style.cssText = "position:fixed;top:14px;right:14px;z-index:99998;display:flex;flex-direction:column;gap:8px;max-width:340px";
+    // top:64 让出页眉高度：危机卡常驻、必须确认，绝不能盖住导航栏把用户困在当前页
+    container.style.cssText = "position:fixed;top:64px;right:14px;z-index:99998;display:flex;flex-direction:column;gap:8px;max-width:340px";
     document.body.appendChild(container);
     return container;
   }

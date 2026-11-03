@@ -68,3 +68,34 @@ test("三条流冒烟：教材解析、练习出题、修复计划，且无运�
   const errCount = await page.evaluate(() => window.APDiag.count());
   expect(errCount).toBe(0);
 });
+
+// 演示链路：评委 3 分钟会走的每一步，全部变成断言——赛前任何回归 CI 直接红
+test("演示链路：一键演示诊断 → 计划 K1–K5 徽标 → 危机常驻提醒 → 免打扰开关", async ({ page }) => {
+  // ① 知债页空态 → 一键载入演示诊断（评委面前 3 秒出红边，且标注为演示数据）
+  await page.click('#nav [data-p="debt"]');
+  await page.locator('[data-debtact="demo"]').click();
+  await expect(page.locator("#debtMsg")).toContainText("已载入演示诊断", { timeout: 20_000 });
+  await expect(page.locator("#debtList .card").first()).toBeVisible();
+
+  // ② 生成 14 天计划 → 合约徽标亮「K1–K5 校验通过」（约束由本地公式把关，不是嘴上说的）
+  await page.click("#btnPlan");
+  await expect(page.locator("#planWarnBox")).toContainText("K1–K5 校验通过", { timeout: 40_000 });
+  await expect(page.locator("#planBox")).not.toBeEmpty();
+
+  // ③ 智能体危机词 → 文字转介 + 常驻提醒卡（点击才关闭），层级最高
+  await page.click('#nav [data-p="agent"]');
+  await page.fill("#agentIn", "我不想活了");
+  await page.click("#btnSend");
+  await expect(page.locator("#chat")).toContainText("心理援助热线", { timeout: 20_000 });
+  await expect(page.locator("#ap-notify-stack")).toContainText("你不是一个人在扛", { timeout: 10_000 });
+  // 危机卡常驻、必须确认：点「知道了」收起（演示者在这也是这么做的），验证确认链路可用
+  await page.locator("#ap-notify-stack button", { hasText: "知道了" }).click();
+  await expect(page.locator("#ap-notify-stack")).not.toContainText("你不是一个人在扛");
+
+  // ④ 账户页免打扰（演示模式）开关存在——危机提醒在免打扰下仍然可见由 notify 单测保证
+  await page.click('#nav [data-p="account"]');
+  await expect(page.locator("#chkDnd")).toBeVisible();
+
+  // 演示全程零运行期错误
+  expect(await page.evaluate(() => window.APDiag.count())).toBe(0);
+});
