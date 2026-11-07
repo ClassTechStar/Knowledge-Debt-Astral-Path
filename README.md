@@ -2,7 +2,7 @@
 
 跨课程的知识债诊断与修复智能体。用确定性公式找出你欠了哪门课的先修债，用约束满足生成能做完的还债计划，由受约束智能体陪着销账，教育伦理的红线由代码守。
 
-> 2026 iCAN AI / DuMate 竞赛实现，版本 2.6.0（contract-v2.2.0-algo-v2），支持 Windows 10/11 与 Android 8.0 以上。
+> 2026 iCAN AI / DuMate 竞赛实现，版本 2.6.0（contract-v2.2.0-algo-v2），支持 Windows 10/11、Android 8.0 以上与鸿蒙（原生 ArkUI）。
 >
 > 名称规范：全称「知债：星穹学途（Knowledge Debt: Astral Path）」，中文简称「知债：星穹学途」，代码标识 AstralPath。
 
@@ -121,6 +121,7 @@ AstralPath.Core/          纯函数：公式 / 图 / OCR / 画像 / 销账 / 计
 AstralPath.Api/           ASP.NET Core（Web 与 Windows 共用）
 AstralPath.Desktop/       WebView2 壳
 AstralPath.Native/        Android WebView 壳（已上架）
+AstralPath.NativeApp/     原生安卓端（Kotlin/View 体系，无 WebView；构建见其 README）
 AstralPath.Monolith/      无微服务 Windows 壳（Setup-2.6.0）
 AstralPath.Persistence/   Postgres（默认）+ memory 回退
 tests/                    Core 114 · Persistence 8 · Desktop 50 · Api 70 · Eval 2（合计见 §7，由 scripts/verify_metrics.py 自动对拍）
@@ -167,6 +168,8 @@ dotnet run --project src/AstralPath.Api --urls http://127.0.0.1:5190
 # 打 Android APK（路径必须纯 ASCII，否则 AAPT2265）
 $env:JAVA_HOME="C:\Temp\jdk-17"
 & "C:\Gradle\bin\gradle.bat" -p src/AstralPath.Native assembleRelease
+# 原生安卓端（无 WebView；独立 Gradle 工程，构建说明见 src/AstralPath.NativeApp/README.md）
+& "C:\Gradle\bin\gradle.bat" -p src/AstralPath.NativeApp assembleDebug testDebugUnitTest
 
 # 打 Windows 单体安装包
 dotnet publish src/AstralPath.Monolith -c Release -r win-x64 --self-contained -o src/AstralPath.Monolith/publish

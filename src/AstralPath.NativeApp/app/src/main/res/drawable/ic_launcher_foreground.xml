@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 图标前景：白色「债」字取形过于复杂，用「债网」抽象形——三个节点两条先修边 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M38,38 m-9,0 a9,9 0 1,1 18,0 a9,9 0 1,1 -18,0" />
+    <path android:fillColor="#BFD6FA"
+        android:pathData="M70,46 m-11,0 a11,11 0 1,1 22,0 a11,11 0 1,1 -22,0" />
+    <path android:fillColor="#FFD9D2"
+        android:pathData="M56,76 m-10,0 a10,10 0 1,1 20,0 a10,10 0 1,1 -20,0" />
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="3"
+        android:pathData="M45,42 L61,48 M69,55 L59,68" />
+</vector>

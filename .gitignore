@@ -58,6 +58,10 @@ materials/ocr-debug/
 src/AstralPath.Android/.gradle/
 src/AstralPath.Android/build-manual/
 src/AstralPath.Android/local.properties
+src/AstralPath.NativeApp/local.properties
+src/AstralPath.NativeApp/.gradle/
+src/AstralPath.NativeApp/build/
+src/AstralPath.NativeApp/app/build/
 *.keystore
 src/AstralPath.Android/dist/test-shots/
 

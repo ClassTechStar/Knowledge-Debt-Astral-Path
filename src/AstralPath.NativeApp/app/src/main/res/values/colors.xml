@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 与 Web 单文件版 :root 色板同源（deploy/monolith-web/index.html §style） -->
+    <color name="brand">#2F6FED</color>
+    <color name="brand_soft">#E4EDFD</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="bg">#F3F5F8</color>
+    <color name="soft">#F0F3F7</color>
+    <color name="rule">#D4D9DE</color>
+    <color name="ink">#1E2228</color>
+    <color name="muted">#6B7077</color>
+    <color name="danger">#C0392B</color>
+    <color name="ok">#2EA05A</color>
+    <color name="warn">#B8860B</color>
+</resources>
