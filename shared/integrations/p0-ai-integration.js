@@ -106,6 +106,8 @@
 
   // 4. 并发闸 + 完整 SSE/非流式补全（源 complete L6318-6376，T15 修复点）──
   var _active = 0, _waiters = [];
+  var _lastCtrl = null;      // 当前在飞请求的中止柄（complete() 每次刷新）
+  var _userCancel = false;   // 本次中止是否由用户主动触发
   function _acquire() { if (_active < 2) { _active++; return Promise.resolve(); } return new Promise(function (res) { _waiters.push(res); }); }
   function _release() { var w = _waiters.shift(); if (w) w(); else _active--; }
 
@@ -114,7 +116,11 @@
     opts = opts || {};
     var onDelta = opts.onDelta; // T15 修复：SSE 分支引用未定义 onDelta（原意图 opts.onDelta），流式必抛 ReferenceError
     return _acquire().then(function () {
+      // 用户取消语义（借鉴 DeepTutor cancel_turn：取消≠失败，已产出内容要保住）：
+      // _lastCtrl 供 cancelActive() 中止当前流；_userCancel 区分「主动停止」与「超时/网络中断」
       var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+      _lastCtrl = ctrl || null;
+      _userCancel = false;
       var timer = ctrl ? setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, opts.timeoutMs || 60000) : null;
       var body = { model: _cfg.model, messages: messages, max_tokens: opts.maxTokens || 1600, stream: true };
       if (opts.temperature != null) body.temperature = opts.temperature;
@@ -157,7 +163,16 @@
               while ((nl = buf.indexOf("\n")) >= 0) { consumeLine(buf.slice(0, nl)); buf = buf.slice(nl + 1); if (sseDone) break; }
               return pump(); // 读到 [DONE] 就停，别继续往下读
             });
-          })().then(function () {
+          })().catch(function (e) {
+            // 用户主动停止：把已收到的正文（或推理兜底）当正常结果返回，标 cancelled，
+            // 上层据此显示「已手动停止」而不是当失败冷却（DeepTutor cancel ACK 同语义）
+            var isAbort = e && (e.name === "AbortError" || /abort/i.test(String(e && e.message || e)));
+            if (_userCancel && isAbort) {
+              var partial = (out.trim() || reason.trim());
+              if (partial) return { text: partial, model: model, cancelled: true };
+            }
+            throw e;
+          }).then(function () {
             if (!out.trim() && reason.trim().length >= 4) { out = reason.trim(); safeDelta(out, false); } // T13 推理兜底
             if (!out.trim()) throw new Error("模型返回空内容（流式与非流式均无文本）");
             return { text: out.trim(), model: model };
@@ -188,6 +203,11 @@
   window.__AP_MIMO__ = {
     ready: ready, ensureCfg: ensureCfg, complete: complete, parseJsonLoose: jsonLoose,
     isTransportError: isTransportError,
+    cancelActive: function () {
+      // 中止当前在飞的流式请求；没有在飞请求时返回 false（按钮态由调用方管）
+      if (_lastCtrl) { _userCancel = true; try { _lastCtrl.abort(); } catch (e) {} return true; }
+      return false;
+    },
     clear: function () { _cfg = null; _cfgLoaded = false; try { localStorage.removeItem(MIMO_LS); } catch (e) {} }
   };
 

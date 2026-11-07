@@ -37,6 +37,7 @@ REGIONS = [
     ("shared/agent-router.js", None, "shared/agent-router.js"),
     ("shared/plan-scheduler.js", None, "shared/plan-scheduler.js"),
     ("shared/notify.js", None, "shared/notify.js"),
+    ("shared/stream-ui.js", None, "shared/stream-ui.js"),
     ("shared/plan-runtime.js", None, "shared/plan-runtime.js"),
     ("shared/app-glue.js", None, "shared/app-glue.js"),
 ]

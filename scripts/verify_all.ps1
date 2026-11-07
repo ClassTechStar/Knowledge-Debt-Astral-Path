@@ -156,6 +156,14 @@ if (Test-Path scripts/verify_inline_js.py) {
     Step "inline-js" { python scripts/verify_inline_js.py --check }
 }
 
+# 6h) 分层架构三契约（Core 纯净 / API 不下探宿主 / 壳不做业务；思想来自 DeepTutor import-linter）
+if (Test-Path scripts/verify_architecture.py) {
+    Step "architecture" { python scripts/verify_architecture.py }
+}
+
+if (Test-Path scripts/verify_no_empty_catch.py) {
+}
+
 # 6e) 空 catch 检查：每个 catch 必须有记录或降级动作
 if (Test-Path scripts/verify_no_empty_catch.py) {
     Step "no-empty-catch" { python scripts/verify_no_empty_catch.py }

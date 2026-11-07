@@ -51,6 +51,19 @@ python scripts/build-single.py                    # 重建 17MB 单文件产物�
 约定：新增纯逻辑模块时，同时交付一个 `scripts/<name>_runner.js` 金样用例并在
 `verify_all.ps1` 登记；改 C# 壳后至少 `dotnet build src/AstralPath.Monolith` 过一遍。
 
+## 最小有用证据矩阵（改什么，跑什么）
+
+| 改动类型 | 最小证据 |
+|---|---|
+| JS 常量/词表 | `verify_constants` + `verify_agent_intents`（词表还涉及鸿蒙方对拍） |
+| shared/ 模块 | 对应 runner（如 `store_runner.js`）+ `check-js` + `frontend-regions` |
+| 页面交互 | `npx playwright test`（演示链路两条） |
+| 公式/调度 | `plan_scheduler_runner.js`（金样源在 shared，先改 JS 侧） |
+| C# 逻辑 | `dotnet test`（对应套件）+ `dotnet format --verify` |
+| C# 壳 | `dotnet build src/AstralPath.Monolith` + 手工冒烟 |
+| 样式/HTML | `sync-monolith-html` md5 一致 + 单文件重建基线 |
+| 公开数字 | `verify_metrics.py`（先回写 README 再提交） |
+
 ## 代码风格
 
 - 中文注释，写「为什么」而不是「做了什么」。

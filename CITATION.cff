@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+title: "知债：星穹学途（Knowledge Debt: Astral Path）——基于知识债模型的自学辅导智能应用"
+message: >-
+  如在研究或教学中引用本项目，请使用以下元数据。
+type: software
+authors:
+  - name: "星穹学途团队（ClassTechStar）"
+    website: "https://github.com/ClassTechStar/Knowledge-Debt-Astral-Path"
+version: "2.6.0"
+date-released: "2026-11-04"
+license: MIT
+repository-code: "https://github.com/ClassTechStar/Knowledge-Debt-Astral-Path"
+keywords:
+  - knowledge debt
+  - knowledge graph
+  - spaced repetition
+  - constrained LLM agent
+  - OCR
+  - offline-first
+  - education
+abstract: >-
+  将扫描版教材解析为含先修关系的知识图谱，以可解释公式（score-v2 / impact-v2 /
+  sale-v2）定位跨课程"知识债"并生成通过 K1–K5 合约校验的 14 天修复计划；
+  受约束智能体承担口语路由与讲解，评估数字只由本地公式产生；
+  交付形态为浏览器自包含单文件（离线可用）与 Windows / Android / 鸿蒙宿主。
+preferred-citation:
+  type: unpublished
+  title: "知债：星穹学途——基于知识债模型的自学辅导智能应用设计与实现"
+  notes: "毕业设计论文（湛江科技学院），随项目材料分发"
