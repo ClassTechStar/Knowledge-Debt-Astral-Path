@@ -128,6 +128,10 @@ object PagesAgent {
                         r == null -> {
                             addBubble("智能体：（网络不可用或模型异常）${localReply(q)}", isUser = false)
                         }
+                        r.second && r.first.isEmpty() -> {
+                            // 一个字都没收到就停止：回退本地兜底，不出空泡
+                            addBubble("智能体：（已停止）${localReply(q)}", isUser = false)
+                        }
                         r.second -> addBubble("智能体：${r.first}\n\n（已手动停止，以上为已生成部分）", isUser = false)
                         else -> addBubble("智能体：${com.astralpath.nativeapp.service.SanitizeService.mask(r.first)}", isUser = false)
                     }

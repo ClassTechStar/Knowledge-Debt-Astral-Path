@@ -18,6 +18,12 @@ module.exports = [
       // 构建输出与部署副本
       ".cloudflare/**",
       "release/**",
+      // 各端构建输出（NativeApp 的 Gradle 产物、Harmony 的 hvigor 产物等）
+      "**/build/**",
+      "**/.hvigor/**",
+      "**/oh_modules/**",
+      "**/test-results/**",
+      "**/playwright-report/**",
       "deploy/monolith-web/astralpath-monolith.html",
       "src/**/wwwroot/**",
       "src/**/Resources/**",

@@ -2911,7 +2911,7 @@ window.APDiag=(function(){
       lastTs = now;
       var backlog = full.length - shown;
       if (backlog <= 0) {
-        if (!doneFlag) schedule(); // 还没 finish：继续等下一个 push
+        // 没有积压就停帧（push() 会重新调度）；空转 rAF 白耗电池
         return;
       }
       shown += Math.max(minBurst, Math.ceil(backlog / catchUpDivisor));
