@@ -105,13 +105,31 @@ object KgService {
     fun build(name: String, text: String, maxTerms: Int = 24): Book {
         val chapters = splitChapters(text)
         val terms = extractTerms(chapters, maxTerms)
-        val nodes = terms.mapIndexed { i, t ->
-            KNode(idOf(t), t, diff = if (i < terms.size / 3) 1 else 2, course = name)
+        // 章节节点（kind="chapter"，对齐 Web .dnode.chapter 章节蓝）
+        val chapterNodes = chapters.map { ch ->
+            KNode(ch.id, ch.title, diff = 1, course = name, kind = "chapter", body = (ch.body ?: "").take(200))
+        }
+        val nodes = chapterNodes + terms.mapIndexed { i, t ->
+            KNode(idOf(t), t, diff = if (i < terms.size / 3) 1 else 2, course = name, kind = "term")
+        }
+        val edges = buildEdges(chapters, terms).toMutableList()
+        // 归属边：章节 → 章内术语，tg=true 教材边
+        val seen = HashSet<String>()
+        for (ch in chapters) {
+            val body = (ch.body ?: "") + " " + ch.title
+            for (t in terms) {
+                if (body.contains(t)) {
+                    val tid = idOf(t)
+                    if (seen.add(tid)) {
+                        edges.add(KEdge(ch.id, tid, 1.0, tg = true))
+                    }
+                }
+            }
         }
         return Book(
             id = "book-${System.currentTimeMillis()}", name = name, source = "text",
             sourceText = text.take(20000), chapters = chapters, nodes = nodes,
-            edges = buildEdges(chapters, terms), qs = emptyList(), created = System.currentTimeMillis(),
+            edges = edges, qs = emptyList(), created = System.currentTimeMillis(),
         )
     }
 }

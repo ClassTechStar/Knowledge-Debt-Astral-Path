@@ -5,6 +5,8 @@
 import { Book, Mastery } from '../model/Models';
 import { StoreService } from '../service/StoreService';
 import { FormulaService } from '../service/FormulaService';
+import { Theme } from '../common/Theme';
+import { PageHeaderView, PanelView, StatView, CardView, BadgeView, StatusView, BarView } from '../components/UiKit';
 
 interface AggRow {
   kp: string;
@@ -52,28 +54,83 @@ export struct TeacherPage {
   }
 
   build() {
-    Column({ space: 10 }) {
-      Text('教师').fontSize(17).fontWeight(FontWeight.Bold);
-      Text(this.msg).fontSize(12).fontColor($r('app.color.muted'));
-      ForEach(this.rows, (r: AggRow) => {
-        Row() {
-          Text(r.title).fontSize(13).fontColor($r('app.color.ink')).layoutWeight(1);
-          Text(r.weakRate > 0 ? '薄弱占多数' : '掌握良好')
-            .fontSize(11)
-            .fontColor(r.weakRate > 0 ? $r('app.color.danger') : $r('app.color.ok'));
-          Text(`${r.samples} 份`)
-            .fontSize(11)
-            .fontColor($r('app.color.muted'))
-            .margin({ left: 8 });
+    Scroll() {
+      Column({ space: 0 }) {
+        PageHeaderView({
+          title: '教师视图',
+          hint: 'k-匿名聚合（默认 k=5）；样本 < 3 人只显示「样本不足」，不产出个体明细'
+        })
+
+        Flex({ wrap: FlexWrap.Wrap }) {
+          StatView({ label: '样本足够的点', value: `${this.rows.length}` })
+          StatView({ label: '薄弱占多数', value: `${this.rows.filter((r: AggRow) => r.weakRate > 0).length}` })
+          StatView({ label: '匿名阈值', value: `k=${this.kAnon}` })
         }
         .width('100%')
-        .padding(10)
-        .borderRadius(12)
-        .backgroundColor($r('app.color.soft'));
-      }, (r: AggRow) => r.kp);
+
+        PanelView({
+          title: '授权门控',
+          hint: '默认不可见（fail-closed），学生授权后才展示聚合结果'
+        }) {
+          Column({ space: 8 }) {
+            Text('教师侧仅展示「知识点聚合薄弱率」，不展示个体、不排名、不输出学号。学生可在「账户」页随时撤销授权。')
+              .fontSize(Theme.FS_BODY)
+              .fontColor(Theme.INK)
+              .width('100%')
+            StatusView({
+              text: '样本少于 3 人的薄弱点会显示「样本不足」，不会推断具体是谁',
+              kind: 'warn'
+            })
+          }
+          .width('100%')
+          .alignItems(HorizontalAlign.Start)
+        }
+
+        PanelView({
+          title: '学情视图',
+          hint: this.msg
+        }) {
+          if (this.rows.length === 0) {
+            Text('当前没有样本足够的知识点。学生多练几道题，样本凑够 3 份后会自动出现。')
+              .fontSize(Theme.FS_HINT)
+              .fontColor(Theme.MUTED)
+              .width('100%')
+          } else {
+            ForEach(this.rows, (r: AggRow) => {
+              CardView() {
+                Column({ space: 6 }) {
+                  Flex({ wrap: FlexWrap.Wrap }) {
+                    Text(r.title)
+                      .fontSize(Theme.FS_BODY)
+                      .fontColor(Theme.INK)
+                      .layoutWeight(1)
+                    BadgeView({
+                      text: r.weakRate > 0 ? '薄弱占多数' : '掌握良好',
+                      kind: r.weakRate > 0 ? 'err' : 'ok'
+                    })
+                    BadgeView({ text: `${r.samples} 份`, kind: 'warn' })
+                  }
+                  .width('100%')
+
+                  BarView({ ratio: r.weakRate > 0 ? 1 : 0 })
+                }
+                .width('100%')
+                .alignItems(HorizontalAlign.Start)
+              }
+            }, (r: AggRow) => r.kp)
+          }
+        }
+
+        StatusView({
+          text: 'k-匿名聚合由服务端在真机侧实现，客户端只做展示与样本不足抑制',
+          kind: 'plain'
+        })
+      }
+      .width('100%')
+      .padding(Theme.PAD_PANEL)
     }
     .width('100%')
-    .padding(16)
-    .alignItems(HorizontalAlign.Start);
+    .height('100%')
+    .backgroundColor(Theme.CANVAS)
   }
 }

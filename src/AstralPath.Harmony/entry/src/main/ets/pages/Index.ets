@@ -16,6 +16,7 @@ import { ProfilePage } from './ProfilePage';
 import { TeacherPage } from './TeacherPage';
 import { AccountPage } from './AccountPage';
 import { HelpPanel } from '../components/HelpPanel';
+import { Theme } from '../common/Theme';
 
 @Entry
 @Component
@@ -33,23 +34,27 @@ struct Index {
 
   @Builder
   navPills() {
-    Row() {
+    // Web nav.pills：soft 底胶囊容器 + 选中项 surface 底/ink 加粗
+    Flex({ wrap: FlexWrap.Wrap }) {
       ForEach(PAGE_ORDER, (p: string) => {
         Text(PAGE_LABEL[p])
-          .fontSize(13)
+          .fontSize(Theme.FS_BTN)
           .fontWeight(this.current === p ? FontWeight.Bold : FontWeight.Normal)
-          .fontColor(this.current === p ? $r('app.color.brand') : $r('app.color.muted'))
-          .padding({ left: 10, right: 10, top: 5, bottom: 5 })
-          .borderRadius(14)
-          .backgroundColor(this.current === p ? $r('app.color.brand_soft') : Color.Transparent)
+          .fontColor(this.current === p ? Theme.INK : Theme.MUTED)
+          .padding({ left: 14, right: 14, top: 8, bottom: 8 })
+          .borderRadius(Theme.R_PILL)
+          .backgroundColor(this.current === p ? Theme.SURFACE : Color.Transparent)
           .onClick(() => {
             this.current = p;
             AppStorage.setOrCreate('currentPage', p);
           });
-      }, (p: string) => p);
+      }, (p: string) => p)
     }
     .width('100%')
-    .padding({ left: 8, right: 8, top: 6, bottom: 6 })
+    .padding(5)
+    .borderRadius(Theme.R_PILL)
+    .backgroundColor(Theme.SOFT)
+    .margin({ left: 16, right: 16, bottom: 6 })
   }
 
   @Builder
@@ -60,12 +65,12 @@ struct Index {
           Text(PAGE_LABEL[p])
             .fontSize(14)
             .fontWeight(this.current === p ? FontWeight.Bold : FontWeight.Normal)
-            .fontColor(this.current === p ? $r('app.color.brand') : $r('app.color.ink'))
+            .fontColor(this.current === p ? Theme.PRIMARY : Theme.INK)
         }
         .width('100%')
         .padding({ left: 14, right: 14, top: 10, bottom: 10 })
         .borderRadius(12)
-        .backgroundColor(this.current === p ? $r('app.color.brand_soft') : Color.Transparent)
+        .backgroundColor(this.current === p ? Theme.SURFACE : Color.Transparent)
         .onClick(() => {
           this.current = p;
           AppStorage.setOrCreate('currentPage', p);
@@ -75,7 +80,7 @@ struct Index {
     .width(140)
     .height('100%')
     .padding(6)
-    .backgroundColor($r('app.color.soft'));
+    .backgroundColor(Theme.SOFT);
   }
 
   build() {
@@ -84,31 +89,47 @@ struct Index {
         this.navSide();
       }
       Column() {
-        // 顶部栏：标题 + 用户 + 模式标识（对应 Web 版 header 右侧）
-        Row() {
-          Text('知债：星穹学途')
-            .fontSize(17)
+        // Web header：mark（40x30 圆角 12）+ 标题 + 小字说明 + 头像
+        Row({ space: 10 }) {
+          Text('债')
+            .fontSize(15)
             .fontWeight(FontWeight.Bold)
-            .fontColor($r('app.color.strong'));
-          Blank();
+            .fontColor(Theme.STRONG)
+            .width(40)
+            .height(30)
+            .borderRadius(12)
+            .backgroundColor(Theme.SOFT)
+            .textAlign(TextAlign.Center)
+          Column({ space: 1 }) {
+            Text('知债：星穹学途')
+              .fontSize(17)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(Theme.INK)
+            Text('知识债诊断与修复')
+              .fontSize(Theme.FS_SMALL)
+              .fontColor(Theme.MUTED)
+          }
+          .alignItems(HorizontalAlign.Start)
+          Blank()
           Button('？')
             .fontSize(12)
-            .backgroundColor($r('app.color.soft'))
-            .fontColor($r('app.color.ink'))
+            .backgroundColor(Theme.SOFT)
+            .fontColor(Theme.INK)
             .width(28)
-            .height(24)
+            .height(28)
+            .borderRadius(14)
             .onClick(() => {
               this.showHelp = true;
-            });
-          Text(this.userName)
-            .fontSize(12)
-            .fontColor($r('app.color.muted'));
-          Text($r('app.string.mode_local'))
-            .fontSize(11)
-            .fontColor($r('app.color.muted'))
-            .padding({ left: 8, right: 8, top: 2, bottom: 2 })
-            .borderRadius(8)
-            .backgroundColor($r('app.color.soft'));
+            })
+          Text(this.userName.substring(0, 1))
+            .fontSize(14)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(Color.White)
+            .width(34)
+            .height(34)
+            .borderRadius(17)
+            .backgroundColor(Theme.STRONG)
+            .textAlign(TextAlign.Center)
         }
         .width('100%')
         .padding({ left: 16, right: 16, top: 10, bottom: 6 });
@@ -161,6 +182,6 @@ struct Index {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor($r('app.color.surface'));
+    .backgroundColor(Theme.CANVAS);
   }
 }

@@ -5,6 +5,8 @@
 import { Book, Question, Mastery } from '../model/Models';
 import { StoreService } from '../service/StoreService';
 import { FormulaService } from '../service/FormulaService';
+import { Theme } from '../common/Theme';
+import { PageHeaderView, PanelView, CardView, BtnView, BadgeView, StatusView, BarView } from '../components/UiKit';
 
 interface TaskItem {
   kp: string;
@@ -88,85 +90,145 @@ export struct TodayPage {
   build() {
     // 内容会超过一屏（任务列表 + 题卡），必须能滚，否则提交按钮被底部挤住
     Scroll() {
-        Column({ space: 10 }) {
-      Row() {
-        Text('今日')
-          .fontSize(17)
-          .fontWeight(FontWeight.Bold);
-        Blank();
-        Button($r('app.string.today_load'))
-          .fontSize(12)
-          .onClick(() => this.loadToday());
-      }
-      .width('100%');
+      Column({ space: 0 }) {
+        PageHeaderView({
+          title: '今日任务',
+          hint: '先修不稳且低分的知识点优先，做完一道刷新一次掌握度'
+        })
 
-      ForEach(this.tasks, (t: TaskItem) => {
-        Row() {
-          Column({ space: 2 }) {
-            Text(t.title).fontSize(14).fontColor($r('app.color.ink'));
-            Text(`掌握度 ${(t.score * 100).toFixed(0)}%`)
-              .fontSize(11)
-              .fontColor(t.score < 0.55 ? $r('app.color.danger') : $r('app.color.muted'));
-          }
-          .alignItems(HorizontalAlign.Start);
-          Blank();
-          Button($r('app.string.today_start'))
-            .fontSize(11)
-            .onClick(() => this.start(t.kp));
-        }
-        .width('100%')
-        .padding(12)
-        .borderRadius(14)
-        .backgroundColor($r('app.color.soft'));
-      }, (t: TaskItem) => t.kp);
-
-      if (this.quiz) {
-        Column({ space: 8 }) {
-          Text(this.quiz.stem)
-            .fontSize(14)
-            .fontWeight(FontWeight.Bold)
-            .fontColor($r('app.color.ink'));
-          ForEach(this.quiz.opts, (opt: string, idx: number) => {
-            Text(opt)
-              .fontSize(13)
-              .fontColor(this.picked === idx ? $r('app.color.brand') : $r('app.color.ink'))
+        PanelView({
+          title: '今日清单',
+          hint: '按当前掌握度升序排列，最多 5 项'
+        }) {
+          if (this.tasks.length === 0) {
+            Text('还没有今日任务。先在藏书阁解析教材，或在起点页导入示例教材。')
+              .fontSize(Theme.FS_HINT)
+              .fontColor(Theme.MUTED)
               .width('100%')
-              .padding(10)
-              .borderRadius(10)
-              .backgroundColor(this.picked === idx ? $r('app.color.brand_soft') : $r('app.color.surface'))
-              .border({ width: 1, color: $r('app.color.soft') })
-              .onClick(() => {
-                this.picked = idx;
-              });
-          }, (opt: string, idx: number) => `${idx}-${opt}`);
-          Row() {
-            Text(`信心 ${this.conf}/5`).fontSize(11).fontColor($r('app.color.muted')).width(64);
-            Slider({ value: this.conf, min: 1, max: 5, step: 1 })
-              .layoutWeight(1)
-              .onChange((v: number) => {
-                this.conf = v;
-              });
+          } else {
+            ForEach(this.tasks, (t: TaskItem) => {
+              CardView() {
+                Column({ space: 6 }) {
+                  Flex({ wrap: FlexWrap.Wrap }) {
+                    Text(t.title)
+                      .fontSize(Theme.FS_BODY)
+                      .fontWeight(FontWeight.Bold)
+                      .fontColor(Theme.INK)
+                    if (t.score < 0.55) {
+                      BadgeView({ text: '待巩固', kind: 'err' })
+                    } else if (t.score < 0.75) {
+                      BadgeView({ text: '进行中', kind: 'warn' })
+                    } else {
+                      BadgeView({ text: '良好', kind: 'ok' })
+                    }
+                  }
+                  .width('100%')
+
+                  Text(`掌握度 ${(t.score * 100).toFixed(0)}%`)
+                    .fontSize(Theme.FS_HINT)
+                    .fontColor(t.score < 0.55 ? Theme.DANGER : Theme.MUTED)
+                    .width('100%')
+
+                  BarView({ ratio: t.score })
+
+                  Flex({ wrap: FlexWrap.Wrap }) {
+                    BtnView({
+                      label: '开始练习',
+                      kind: 'primary',
+                      click: () => this.start(t.kp)
+                    })
+                  }
+                  .width('100%')
+                  .margin({ top: 4 })
+                }
+                .width('100%')
+                .alignItems(HorizontalAlign.Start)
+              }
+            }, (t: TaskItem) => t.kp)
           }
-          .width('100%');
-          Button('提交')
-            .onClick(() => this.submit());
-          if (this.result) {
-            Text(this.result).fontSize(12).fontColor($r('app.color.ok'));
+
+          Flex({ wrap: FlexWrap.Wrap }) {
+            BtnView({
+              label: '加载今日任务',
+              kind: 'plain',
+              click: () => this.loadToday()
+            })
+          }
+          .width('100%')
+          .margin({ top: 8 })
+        }
+
+        if (this.quiz) {
+          PanelView({
+            title: '题目练习',
+            hint: '选一个答案，然后拉信心滑杆，提交后写回掌握度'
+          }) {
+            Column({ space: 10 }) {
+              Text(this.quiz.stem)
+                .fontSize(Theme.FS_BODY)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(Theme.INK)
+                .width('100%')
+
+              ForEach(this.quiz.opts, (opt: string, idx: number) => {
+                Text(opt)
+                  .fontSize(Theme.FS_BODY)
+                  .fontColor(this.picked === idx ? Theme.PRIMARY : Theme.INK)
+                  .width('100%')
+                  .padding(Theme.PAD_CARD)
+                  .borderRadius(Theme.R_C)
+                  .backgroundColor(this.picked === idx ? Theme.SOFT : Theme.SURFACE)
+                  .border({
+                    width: this.picked === idx ? 2 : 1,
+                    color: this.picked === idx ? Theme.PRIMARY : Theme.RULE
+                  })
+                  .onClick(() => {
+                    this.picked = idx;
+                  });
+              }, (opt: string, idx: number) => `${idx}-${opt}`)
+
+              Row() {
+                Text(`信心 ${this.conf}/5`)
+                  .fontSize(Theme.FS_HINT)
+                  .fontColor(Theme.MUTED)
+                  .width(72)
+                Slider({ value: this.conf, min: 1, max: 5, step: 1 })
+                  .layoutWeight(1)
+                  .onChange((v: number) => {
+                    this.conf = v;
+                  });
+              }
+              .width('100%')
+
+              Flex({ wrap: FlexWrap.Wrap }) {
+                BtnView({
+                  label: '提交',
+                  kind: 'primary',
+                  click: () => this.submit()
+                })
+              }
+              .width('100%')
+
+              if (this.result) {
+                StatusView({ text: this.result, kind: 'ok' })
+              }
+            }
+            .width('100%')
+            .alignItems(HorizontalAlign.Start)
           }
         }
-        .width('100%')
-        .padding(14)
-        .borderRadius(16)
-        .backgroundColor($r('app.color.soft'));
+
+        if (!this.quiz && this.result.length > 0) {
+          StatusView({ text: this.result, kind: 'warn' })
+        }
       }
-        }
-        .width('100%')
-        .padding(16)
-        .alignItems(HorizontalAlign.Start);
+      .width('100%')
+      .padding(Theme.PAD_PANEL)
     }
     .width('100%')
     .height('100%')
+    .backgroundColor(Theme.CANVAS)
     .scrollBar(BarState.Auto)
-    .align(Alignment.TopStart);
+    .align(Alignment.TopStart)
   }
 }

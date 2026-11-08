@@ -1,6 +1,5 @@
 package com.astralpath.nativeapp.ui
 
-import android.graphics.Color
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -11,11 +10,13 @@ import com.astralpath.nativeapp.data.DemoData
 import com.astralpath.nativeapp.data.K
 import com.astralpath.nativeapp.data.PlanItem
 import com.astralpath.nativeapp.service.FormulaService
-import com.astralpath.nativeapp.service.NotifyBus
 import com.astralpath.nativeapp.service.PlanScheduler
 import com.astralpath.nativeapp.service.StoreService
 
-/** 知债页 / 今日页 —— 对应 Web 版 p-debt / p-today */
+/**
+ * 知债页 / 今日页 —— 对应 Web 版 p-debt / p-today。
+ * 版式对齐 Web：page-h 标题区 + panel 卡片流；业务功能与数据逻辑保持不变。
+ */
 object PagesDebt {
 
     private fun titlesOf(): Map<String, String> =
@@ -38,16 +39,19 @@ object PagesDebt {
     fun debtPage(a: MainActivity): View {
         val c = a
         val content = Ui.page(c)
-        content.addView(Ui.label(c, "债边诊断", 18f, Ui.INK, bold = true))
-        val msg = Ui.label(c, "点「重新诊断」查看红边与解读；点「生成 14 天计划」走完整调度器（K1–K5）。", 12f, Ui.MUTED)
-        val warn = Ui.label(c, "", 12f, Ui.OK)
-        val buttons = Ui.row(c)
+        content.addView(Ui.pageHeader(
+            c, "债边诊断",
+            "点「重新诊断」查看红边与解读；点「生成 14 天计划」走完整调度器（K1–K5）。",
+        ), Ui.fill(content, 22))
+
+        val msg = Ui.label(c, "", Ui.FS_HINT, Ui.MUTED)
+        val warn = Ui.label(c, "", Ui.FS_HINT, Ui.OK)
         val debtsBox = LinearLayout(c).apply { orientation = LinearLayout.VERTICAL }
         val planBox = LinearLayout(c).apply { orientation = LinearLayout.VERTICAL }
 
         var debts = listOf<com.astralpath.nativeapp.data.DebtEdge>()
         var selected: com.astralpath.nativeapp.data.DebtEdge? = null
-        val narrative = Ui.label(c, "", 12f, Ui.INK)
+        val narrative = Ui.label(c, "", Ui.FS_BADGE, Ui.INK)
 
         fun renderNarrative() {
             val d = selected
@@ -62,12 +66,13 @@ object PagesDebt {
             debtsBox.removeAllViews()
             titlesOf().let { titles ->
                 debts.forEach { d ->
-                    val card = Ui.card(c, bg = if (selected?.id == d.id) Ui.DANGER_SOFT else Ui.SOFT)
-                    card.addView(Ui.label(c, "${titles[d.a] ?: d.a} → ${titles[d.b] ?: d.b}", 14f, Ui.DANGER, bold = selected?.id == d.id))
-                    card.addView(Ui.label(c, "影响分 ${"%.3f".format(d.impact)}", 11f, Ui.MUTED))
-                    d.why?.let { card.addView(Ui.label(c, it, 11f, Ui.MUTED)) }
+                    // 对齐 Web .card.active：选中债边 2dp primary 描边；.dnode.debt 配色（err 底/字）
+                    val card = Ui.card(c, bg = if (selected?.id == d.id) Ui.ERR_BG else Ui.SURFACE, selected = selected?.id == d.id)
+                    card.addView(Ui.label(c, "${titles[d.a] ?: d.a} → ${titles[d.b] ?: d.b}", Ui.FS_BODY, Ui.DANGER, bold = selected?.id == d.id))
+                    card.addView(Ui.badge(c, "影响分 ${"%.3f".format(d.impact)}", Ui.Kind.ERR))
+                    d.why?.let { card.addView(Ui.label(c, it, Ui.FS_BADGE, Ui.MUTED)) }
                     card.setOnClickListener { selected = d; rebuildList(); renderNarrative() }
-                    debtsBox.addView(card, Ui.fill(card))
+                    debtsBox.addView(card, Ui.fillCard(card))
                 }
             }
         }
@@ -96,16 +101,16 @@ object PagesDebt {
             msg.text = "已生成 ${plan.size} 条计划（三遍复习、每天不超过 $budget 分钟）"
             planBox.removeAllViews()
             plan.forEach { p ->
-                val card = Ui.card(c, bg = Ui.SURFACE)
+                val card = Ui.card(c)
                 val row = Ui.row(c)
-                row.addView(Ui.label(c, "D${p.day}", 12f, Ui.BRAND))
-                row.addView(Ui.label(c, p.label ?: p.kp, 13f, Ui.INK))
+                row.addView(Ui.label(c, "D${p.day}", Ui.FS_BADGE, Ui.PRIMARY))
+                row.addView(Ui.label(c, p.label ?: p.kp, Ui.FS_HINT, Ui.INK))
                 val spacer = View(c)
                 row.addView(spacer, LinearLayout.LayoutParams(0, 1, 1f))
-                row.addView(Ui.label(c, "${p.minutes} 分钟", 11f, Ui.MUTED))
-                card.addView(row, Ui.fill(row))
-                p.why?.let { card.addView(Ui.label(c, it, 11f, Ui.MUTED)) }
-                planBox.addView(card, Ui.fill(card))
+                row.addView(Ui.label(c, "${p.minutes} 分钟", Ui.FS_BADGE, Ui.MUTED))
+                card.addView(row, Ui.fill(row, 0))
+                p.why?.let { card.addView(Ui.label(c, it, Ui.FS_BADGE, Ui.MUTED)) }
+                planBox.addView(card, Ui.fillCard(card))
             }
         }
 
@@ -140,28 +145,35 @@ object PagesDebt {
             warn.text = "计划 ${plan.size} 条：达标 $done · 进行中 $partial · 未开始 ${plan.size - done - partial}；已销账 $clearedCount 条"
         }
 
-        buttons.addView(Ui.button(c, "重新诊断", primary = true) { diag() })
-        buttons.addView(Ui.button(c, "生成 14 天计划") { buildPlan() })
-        buttons.addView(Ui.button(c, "销账检查") { checkSale() })
-        buttons.addView(Ui.button(c, "计划复盘") { reviewPlan() })
-        content.addView(buttons, Ui.fill(buttons))
-        content.addView(msg, Ui.fill(msg))
-        content.addView(warn, Ui.fill(warn))
-        content.addView(debtsBox)
+        // 操作面板（对齐 Web .panel + .actions 按钮组）
+        val actions = Ui.panel(c, "操作", "诊断、排计划、销账都由本地公式把关。")
+        val buttons = Ui.row(c)
+        buttons.addView(Ui.btn(c, "重新诊断", primary = true) { diag() })
+        buttons.addView(Ui.btn(c, "生成 14 天计划") { buildPlan() })
+        buttons.addView(Ui.btn(c, "销账检查") { checkSale() })
+        buttons.addView(Ui.btn(c, "计划复盘") { reviewPlan() })
+        actions.addView(buttons, Ui.fill(buttons, 0))
+        actions.addView(msg, Ui.fill(msg, 0))
+        actions.addView(warn, Ui.fill(warn, 0))
+        content.addView(actions, Ui.fill(actions))
+
+        // 开放红边列表（panel 卡片流）
+        val debtsPanel = Ui.panel(c, "开放红边", "点一条债边看解读。")
+        debtsPanel.addView(debtsBox, Ui.fill(debtsBox, 0))
+        content.addView(debtsPanel, Ui.fill(debtsPanel))
         diag()
 
-        // What-if 模拟
-        val whatCard = Ui.card(c)
-        whatCard.addView(Ui.label(c, "What-if 模拟", 13f, Ui.INK, bold = true))
+        // What-if 模拟（对齐 Web What-if 面板）
+        val whatCard = Ui.panel(c, "What-if 模拟", "拖动滑杆实时看影响分变化。")
         var wSp = 30; var wSc = 25; var wFq = 5
-        val whatOut = Ui.label(c, "", 12f, Ui.MUTED)
+        val whatOut = Ui.label(c, "", Ui.FS_HINT, Ui.MUTED)
         fun simulate() {
             val impact = FormulaService.impactV2(wSp / 100.0, wSc / 100.0, 1.0, false, wFq, 1)
             whatOut.text = "前置 ${wSp}% / 目标 ${wSc}% / 频次 $wFq → 影响分 ${"%.3f".format(impact)}（${if (FormulaService.isOpen(impact)) "命中红边 ≥0.08" else "未达红线"}）"
         }
         fun slider(from: Int, init: Int, maxV: Int, onChange: (Int) -> Unit): View {
             val row = Ui.row(c)
-            val tv = TextView(c); tv.text = "$from"; tv.textSize = 11f; tv.setTextColor(Ui.MUTED)
+            val tv = TextView(c); tv.text = "$from"; tv.textSize = Ui.FS_BADGE; tv.setTextColor(Ui.MUTED)
             tv.layoutParams = LinearLayout.LayoutParams(Ui.dp(c, 90), LinearLayout.LayoutParams.WRAP_CONTENT)
             val sb = SeekBar(c); sb.max = maxV; sb.progress = init
             sb.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -176,14 +188,15 @@ object PagesDebt {
         whatCard.addView(slider(0, wSc, 100) { wSc = it })
         whatCard.addView(slider(0, wFq, 20) { wFq = it })
         simulate()
-        whatCard.addView(whatOut, Ui.fill(whatOut))
+        whatCard.addView(whatOut, Ui.fill(whatOut, 0))
         content.addView(whatCard, Ui.fill(whatCard))
 
         if (StoreService.loadPlan().isNotEmpty()) {
-            content.addView(Ui.label(c, "修复计划（已有 ${StoreService.loadPlan().size} 条）", 14f, Ui.INK, bold = true))
-            content.addView(planBox)
+            val planPanel = Ui.panel(c, "修复计划（已有 ${StoreService.loadPlan().size} 条）")
+            planPanel.addView(planBox, Ui.fill(planBox, 0))
+            content.addView(planPanel, Ui.fill(planPanel))
         }
-        val sv = ScrollView(c); sv.addView(content); sv.setBackgroundColor(Ui.BG)
+        val sv = ScrollView(c); sv.addView(content); sv.setBackgroundColor(Ui.CANVAS)
         return sv
     }
 
@@ -191,17 +204,19 @@ object PagesDebt {
     fun todayPage(a: MainActivity): View {
         val c = a
         val content = Ui.page(c)
-        val head = Ui.row(c)
-        head.addView(Ui.label(c, "今日", 18f, Ui.INK, bold = true))
-        content.addView(head, Ui.fill(head))
         val optOut = StoreService.loadMeta().optOut
+        content.addView(Ui.pageHeader(
+            c, "今日",
+            if (optOut) "已关闭个性化：以下按教材章节顺序安排，不依据你的知识债推断。"
+            else "按掌握度从低到高列 5 条任务，点开始练习。",
+        ), Ui.fill(content, 22))
         if (optOut) {
-            content.addView(Ui.label(c, "已关闭个性化：以下按教材章节顺序安排，不依据你的知识债推断。", 12f, Ui.WARN))
+            content.addView(Ui.status(c, "已关闭个性化：以下按教材章节顺序安排，不依据你的知识债推断。", Ui.Kind.WARN), Ui.fill(content))
         }
         val book = PagesCore.activeBook()
         if (book == null) {
-            content.addView(Ui.label(c, "还没有资料，先到起点页导入示例教材。", 13f, Ui.MUTED))
-            val sv = ScrollView(c); sv.addView(content); return sv
+            content.addView(Ui.status(c, "还没有资料，先到起点页导入示例教材。"), Ui.fill(content))
+            val sv = ScrollView(c); sv.addView(content); sv.setBackgroundColor(Ui.CANVAS); return sv
         }
         val ans = StoreService.loadAnswers()
         val tasks = if (optOut) {
@@ -221,25 +236,24 @@ object PagesDebt {
             if (pool.isEmpty()) {
                 quiz = null
                 quizBox.removeAllViews()
-                quizBox.addView(Ui.label(c, "该知识点暂无题目", 12f, Ui.MUTED))
+                quizBox.addView(Ui.status(c, "该知识点暂无题目"))
                 return
             }
             quiz = pool.random()
             picked = -1
             quizBox.removeAllViews()
             val q = quiz!!
-            val card = Ui.card(c)
-            card.addView(Ui.label(c, q.stem, 14f, Ui.INK, bold = true))
+            val card = Ui.panel(c, q.stem) // 题干作为面板标题
             q.opts.forEachIndexed { idx, opt ->
-                val optView = Ui.label(c, opt, 13f, if (picked == idx) Ui.BRAND else Ui.INK)
+                val optView = Ui.label(c, opt, Ui.FS_HINT, if (picked == idx) Ui.PRIMARY else Ui.INK)
                 optView.setPadding(Ui.dp(c, 10), Ui.dp(c, 8), Ui.dp(c, 10), Ui.dp(c, 8))
-                optView.setOnClickListener { picked = idx; loadQuiz(kp); /* 重绘选中态 */ 
-                    quizBox.findViewWithTag<TextView>("opt$idx")?.setTextColor(Ui.BRAND) }
+                optView.setOnClickListener { picked = idx; loadQuiz(kp); /* 重绘选中态 */
+                    quizBox.findViewWithTag<TextView>("opt$idx")?.setTextColor(Ui.PRIMARY) }
                 optView.tag = "opt$idx"
-                card.addView(optView, Ui.fill(optView))
+                card.addView(optView, Ui.fill(optView, 0))
             }
             val confRow = Ui.row(c)
-            val confLabel = Ui.label(c, "信心 $conf/5", 11f, Ui.MUTED)
+            val confLabel = Ui.label(c, "信心 $conf/5", Ui.FS_BADGE, Ui.MUTED)
             confLabel.layoutParams = LinearLayout.LayoutParams(Ui.dp(c, 76), LinearLayout.LayoutParams.WRAP_CONTENT)
             val sb = SeekBar(c); sb.max = 4; sb.progress = conf - 1
             sb.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -248,10 +262,10 @@ object PagesDebt {
                 override fun onStopTrackingTouch(s: SeekBar?) {}
             })
             confRow.addView(confLabel); confRow.addView(sb, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-            card.addView(confRow, Ui.fill(confRow))
-            val result = Ui.label(c, "", 12f, Ui.OK)
-            card.addView(Ui.button(c, "提交", primary = true) {
-                if (picked < 0) return@button
+            card.addView(confRow, Ui.fill(confRow, 0))
+            val result = Ui.label(c, "", Ui.FS_HINT, Ui.OK)
+            card.addView(Ui.btn(c, "提交", primary = true) {
+                if (picked < 0) return@btn
                 val ok = picked == q.ci
                 val m = ans.mastery[q.kp] ?: com.astralpath.nativeapp.data.Mastery(0, 0, 3, 0, 0)
                 m.n += 1
@@ -262,23 +276,27 @@ object PagesDebt {
                 StoreService.saveAnswers(ans)
                 result.text = "${if (ok) "答对了" else "答错了"} · 信心 $conf/5 · 掌握度 ${(FormulaService.scoreV2(m.n, m.s, m.c, m.age, m.st, emptyList()) * 100).toInt()}%"
             })
-            card.addView(result, Ui.fill(result))
+            card.addView(result, Ui.fill(result, 0))
             quizBox.addView(card, Ui.fill(card))
         }
 
+        // 任务列表（panel 卡片流 + .bar 掌握度进度）
+        val tasksPanel = Ui.panel(c, "今日任务")
         tasks.forEach { (kp, title, score) ->
             val card = Ui.card(c)
             val row = Ui.row(c)
             val col = LinearLayout(c).apply { orientation = LinearLayout.VERTICAL }
-            col.addView(Ui.label(c, title, 14f, Ui.INK))
-            col.addView(Ui.label(c, "掌握度 ${(score * 100).toInt()}%", 11f, if (score < 0.55) Ui.DANGER else Ui.MUTED))
+            col.addView(Ui.label(c, title, Ui.FS_BODY, Ui.INK))
+            col.addView(Ui.label(c, "掌握度 ${(score * 100).toInt()}%", Ui.FS_BADGE, if (score < 0.55) Ui.DANGER else Ui.MUTED))
             row.addView(col, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-            row.addView(Ui.button(c, "开始练习") { loadQuiz(kp) })
-            card.addView(row, Ui.fill(row))
-            content.addView(card, Ui.fill(card))
+            row.addView(Ui.btn(c, "开始练习") { loadQuiz(kp) })
+            card.addView(row, Ui.fill(row, 0))
+            card.addView(Ui.bar(c, score.toFloat())) // 对齐 Web .bar：进度条规范
+            tasksPanel.addView(card, Ui.fillCard(card))
         }
-        content.addView(quizBox)
-        val sv = ScrollView(c); sv.addView(content); sv.setBackgroundColor(Ui.BG)
+        content.addView(tasksPanel, Ui.fill(tasksPanel))
+        content.addView(quizBox, Ui.fill(quizBox))
+        val sv = ScrollView(c); sv.addView(content); sv.setBackgroundColor(Ui.CANVAS)
         return sv
     }
 }

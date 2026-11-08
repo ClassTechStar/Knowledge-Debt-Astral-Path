@@ -1,11 +1,14 @@
 /**
- * 图谱力导向图 —— 用 Canvas 自绘，对齐 Web 版识网页的「节点 + 边 + 点选」。
+ * 图谱力导向图 —— 复刻 Web 版识网页的 CanvasRenderer。
  *
- * 布局：斥力（节点互推）+ 弹簧（边拉近）+ 向心力（防止飘走），迭代若干轮后定型。
- * 不做动画循环（省电、不抖），数据变化时重算一次；点击按最近节点命中。
- * 折叠屏展开态画布更宽，节点会自动铺开（坐标按画布尺寸归一化）。
+ * 变换模型与 Web 一致：screen = world*scale + offset。
+ * - 单指拖拽平移；双指捏合以手势中心缩放；点按命中选中；双击放大到指针
+ * - 命中半径 = 20/scale（世界单位），与 Web 的 minDist 一致
+ * - 节点三色：章节蓝 / 词绿 / 债红（对应 Web .dnode.chapter/term/debt）
+ * - 数据或画布尺寸变化时先布局再「适应视图」，不会出现空白或跑出画面
  */
 import { KNode, KEdge } from '../model/Models';
+import { Theme } from '../common/Theme';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
 interface Pt {
@@ -15,40 +18,59 @@ interface Pt {
   vy: number;
 }
 
+/** 世界坐标系尺寸（布局画布，与屏幕解耦） */
+const WORLD_W: number = 1000;
+const WORLD_H: number = 800;
+
 @Component
 export struct GraphCanvas {
   @Prop nodes: KNode[];
   @Prop edges: KEdge[];
   @Prop selectedId: string;
+  /** 债节点集合（用于「债红」配色），由页面注入 */
+  @Prop debtIds: string[];
   private ctx: CanvasRenderingContext2D = new CanvasRenderingContext2D(new RenderingContextSettings(true));
   @State private w: number = 300;
   @State private h: number = 300;
   private pos: Map<string, Pt> = new Map();
   onSelect: (id: string) => void = () => {};
 
+  // ── 视图变换（与 Web scale/offsetX/offsetY 同语义）──
+  private viewScale: number = 1;
+  private voffX: number = 0;
+  private voffY: number = 0;
+
+  // ── 手势状态 ──
+  private dragging: boolean = false;
+  private moved: boolean = false;
+  private lastX: number = 0;
+  private lastY: number = 0;
+  private pinchBaseDist: number = 0;
+  private pinchBaseScale: number = 1;
+  private lastTapTime: number = 0;
+
   aboutToAppear(): void {
-    this.layout(300, 300);
+    this.layoutWorld();
   }
 
-  /** 力导向布局：迭代 220 轮，温度递减 */
-  private layout(w: number, h: number): void {
+  /** 力导向布局：在世界坐标系里跑，屏幕尺寸只影响适应视图 */
+  private layoutWorld(): void {
     const n = this.nodes.length;
     if (n === 0) {
+      this.pos.clear();
       return;
     }
-    const cx = w / 2;
-    const cy = h / 2;
-    // 初始位置：圆周均匀分布，带一点确定性抖动，避免完全对称导致斥力抵消
+    const cx = WORLD_W / 2;
+    const cy = WORLD_H / 2;
     for (let i = 0; i < n; i++) {
       const id = this.nodes[i].id;
       const ang = (2 * Math.PI * i) / n;
-      const r = Math.min(w, h) * 0.3;
+      const r = Math.min(WORLD_W, WORLD_H) * 0.3;
       this.pos.set(id, { x: cx + r * Math.cos(ang), y: cy + r * Math.sin(ang), vx: 0, vy: 0 });
     }
-    const k = Math.sqrt((w * h) / Math.max(n, 1)) * 0.6; // 理想边长
+    const k = Math.sqrt((WORLD_W * WORLD_H) / Math.max(n, 1)) * 0.6;
     for (let step = 0; step < 220; step++) {
       const temp = Math.max(1, 20 * (1 - step / 220));
-      // 斥力
       for (let i = 0; i < n; i++) {
         const a = this.pos.get(this.nodes[i].id)!;
         for (let j = i + 1; j < n; j++) {
@@ -69,7 +91,6 @@ export struct GraphCanvas {
           b.vy -= (dy / d) * f;
         }
       }
-      // 弹簧
       for (const e of this.edges) {
         const a = this.pos.get(e.a);
         const b = this.pos.get(e.b);
@@ -85,29 +106,67 @@ export struct GraphCanvas {
         b.vx -= dx * f;
         b.vy -= dy * f;
       }
-      // 向心 + 积分
       for (let i = 0; i < n; i++) {
         const p = this.pos.get(this.nodes[i].id)!;
         p.vx += (cx - p.x) * 0.012;
         p.vy += (cy - p.y) * 0.012;
         const v = Math.sqrt(p.vx * p.vx + p.vy * p.vy) || 1;
-        const scale = Math.min(v, temp) / v;
-        p.x += p.vx * scale;
-        p.y += p.vy * scale;
-        p.x = Math.max(16, Math.min(w - 16, p.x));
-        p.y = Math.max(16, Math.min(h - 16, p.y));
+        const s = Math.min(v, temp) / v;
+        p.x += p.vx * s;
+        p.y += p.vy * s;
+        p.x = Math.max(24, Math.min(WORLD_W - 24, p.x));
+        p.y = Math.max(24, Math.min(WORLD_H - 24, p.y));
         p.vx = 0;
         p.vy = 0;
       }
     }
+    this.fitView();
+  }
+
+  /** 适应视图：让世界包围盒缩放居中到屏幕内 */
+  private fitView(): void {
+    if (this.w < 8 || this.h < 8 || this.pos.size === 0) {
+      return;
+    }
+    let minX = WORLD_W;
+    let minY = WORLD_H;
+    let maxX = 0;
+    let maxY = 0;
+    this.pos.forEach((p: Pt) => {
+      minX = Math.min(minX, p.x);
+      minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x);
+      maxY = Math.max(maxY, p.y);
+    });
+    const bw = Math.max(maxX - minX, 1) + 60;
+    const bh = Math.max(maxY - minY, 1) + 60;
+    const s = Math.max(0.1, Math.min(10, Math.min(this.w / bw, this.h / bh)));
+    this.viewScale = s;
+    this.voffX = (this.w - (maxX + minX) * s) / 2;
+    this.voffY = (this.h - (maxY + minY) * s) / 2;
+    this.draw();
+  }
+
+  /** 世界坐标 → 屏幕坐标 */
+  private sx(wx: number): number {
+    return wx * this.viewScale + this.voffX;
+  }
+
+  private sy(wy: number): number {
+    return wy * this.viewScale + this.voffY;
   }
 
   private draw(): void {
     const ctx = this.ctx;
+    const s = this.viewScale;
     ctx.clearRect(0, 0, this.w, this.h);
-    // 边
-    ctx.strokeStyle = '#C9D2DE';
-    ctx.lineWidth = 1.2;
+    ctx.fillStyle = Theme.SURFACE;
+    ctx.fillRect(0, 0, this.w, this.h);
+
+    // 边（Web 用 #55a77b）
+    ctx.strokeStyle = Theme.EDGE;
+    ctx.globalAlpha = 0.75;
+    ctx.lineWidth = 1.2 * Math.max(0.6, Math.min(1.6, s));
     for (const e of this.edges) {
       const a = this.pos.get(e.a);
       const b = this.pos.get(e.b);
@@ -115,78 +174,200 @@ export struct GraphCanvas {
         continue;
       }
       ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
+      ctx.moveTo(this.sx(a.x), this.sy(a.y));
+      ctx.lineTo(this.sx(b.x), this.sy(b.y));
       ctx.stroke();
     }
+    ctx.globalAlpha = 1;
+
     // 节点
-    const r = Math.max(6, Math.min(10, 120 / Math.max(this.nodes.length, 1)));
-    ctx.font = '11px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    const r = Math.max(5, Math.min(11, 9 * Math.sqrt(s)));
+    const isDebt = (id: string): boolean => {
+      for (const d of this.debtIds) {
+        if (d === id) {
+          return true;
+        }
+      }
+      return false;
+    };
     for (const n of this.nodes) {
       const p = this.pos.get(n.id);
       if (!p) {
         continue;
       }
-      const on = n.id === this.selectedId;
-      ctx.fillStyle = on ? '#2F6BFF' : (n.diff >= 3 ? '#C77700' : '#1F9254');
+      const x = this.sx(p.x);
+      const y = this.sy(p.y);
+      const debt = isDebt(n.id);
+      const chapter = n.kind === 'chapter';
+      // 填充与描边按 Web .dnode 三色
+      ctx.fillStyle = debt ? Theme.NODE_DEBT_FILL :
+        (chapter ? Theme.NODE_CHAPTER_FILL : Theme.NODE_TERM_FILL);
+      ctx.strokeStyle = debt ? Theme.NODE_DEBT_BORDER :
+        (chapter ? Theme.NODE_CHAPTER_BORDER : Theme.NODE_TERM_BORDER);
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = on ? '#2F6BFF' : '#1E2228';
-      const title = n.title.length > 6 ? `${n.title.substring(0, 6)}…` : n.title;
-      ctx.fillText(title, p.x, p.y + r + 9);
+      ctx.stroke();
+      // 选中：外圈主色高亮
+      if (n.id === this.selectedId) {
+        ctx.strokeStyle = Theme.PRIMARY;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(x, y, r + 3.5, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      // 标签（Web：12.5px 加粗，章节用 11px）
+      const fs = chapter ? 11 : 12.5;
+      ctx.font = `${fs}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = debt ? Theme.NODE_DEBT_INK : (chapter ? Theme.NODE_CHAPTER_INK : Theme.NODE_TERM_INK);
+      const title = n.title.length > 8 ? `${n.title.substring(0, 8)}…` : n.title;
+      ctx.fillText(title, x, y + r + fs * 0.8);
     }
-    // 画布基准点与节点坐标（vp）打印出来，自动化点击靠它对位
     const dbg: string[] = [];
     this.pos.forEach((p: Pt, id: string) => {
-      dbg.push(`${id}@${Math.round(p.x)},${Math.round(p.y)}`);
+      dbg.push(`${id}@${Math.round(this.sx(p.x))},${Math.round(this.sy(p.y))}`);
     });
     hilog.info(0x0000, 'GRAPHCANVAS',
-      `canvas ${Math.round(this.w)}x${Math.round(this.h)} selected=${this.selectedId} nodes=${dbg.join(' ')}`);
+      `canvas ${Math.round(this.w)}x${Math.round(this.h)} scale=${s.toFixed(2)} ` +
+      `off=${Math.round(this.voffX)},${Math.round(this.voffY)} selected=${this.selectedId} ` +
+      `nodes=${dbg.join(' ')}`);
+  }
+
+  /** 命中判定：世界距离 < 20/scale（与 Web minDist 一致） */
+  private hitTest(tx: number, ty: number): string {
+    const wx = (tx - this.voffX) / this.viewScale;
+    const wy = (ty - this.voffY) / this.viewScale;
+    const maxD = 20 / this.viewScale;
+    let best = '';
+    let bestD = maxD * maxD;
+    this.pos.forEach((p: Pt, id: string) => {
+      const dx = p.x - wx;
+      const dy = p.y - wy;
+      const d = dx * dx + dy * dy;
+      if (d < bestD) {
+        bestD = d;
+        best = id;
+      }
+    });
+    return best;
+  }
+
+  private zoomAt(mx: number, my: number, factor: number): void {
+    const wx = (mx - this.voffX) / this.viewScale;
+    const wy = (my - this.voffY) / this.viewScale;
+    this.viewScale = Math.max(0.1, Math.min(10, this.viewScale * factor));
+    this.voffX = mx - wx * this.viewScale;
+    this.voffY = my - wy * this.viewScale;
+    this.draw();
   }
 
   build() {
-    Canvas(this.ctx)
-      .width('100%')
-      .height('100%')
-      .backgroundColor('#FFFFFF')
-      .onAreaChange((oldVal: Area, newVal: Area) => {
-        const w = Number(newVal.width);
-        const h = Number(newVal.height);
-        if (w > 0 && h > 0 && (Math.abs(w - this.w) > 4 || Math.abs(h - this.h) > 4)) {
-          this.w = w;
-          this.h = h;
-          this.layout(w, h);
-          // 关键：重新布局后必须重绘，否则画面还是旧坐标，
-          // 而命中判定用的是新坐标 —— 点节点永远点不中（实测踩过）
-          this.draw();
-        }
-      })
-      .onReady(() => {
-        this.layout(this.w, this.h);
-        this.draw();
-      })
-      .onTouch((e: TouchEvent) => {
-        if (e.touches.length === 0 || e.type !== TouchType.Down) {
-          return;
-        }
-        const tx = e.touches[0].x;
-        const ty = e.touches[0].y;
-        let best = '';
-        let bestD = 1e9;
-        this.pos.forEach((p: Pt, id: string) => {
-          const d = (p.x - tx) * (p.x - tx) + (p.y - ty) * (p.y - ty);
-          if (d < bestD) {
-            bestD = d;
-            best = id;
+    Stack() {
+      Canvas(this.ctx)
+        .width('100%')
+        .height('100%')
+        .onAreaChange((oldVal: Area, newVal: Area) => {
+          const w = Number(newVal.width);
+          const h = Number(newVal.height);
+          if (w > 0 && h > 0 && (Math.abs(w - this.w) > 4 || Math.abs(h - this.h) > 4)) {
+            this.w = w;
+            this.h = h;
+            // 尺寸变化后必须重新适应视图并重绘，否则画面坐标与命中坐标错位
+            this.fitView();
           }
-        });
-      // 容差 50px：节点半径只有 6~10px，按 30px 判手指点不准
-        if (bestD < 2500 && best) {
-          this.onSelect(best);
-        }
-      });
+        })
+        .onReady(() => {
+          this.layoutWorld();
+        })
+        .onTouch((e: TouchEvent) => {
+          if (e.type === TouchType.Down) {
+            if (e.touches.length === 1) {
+              this.lastX = e.touches[0].x;
+              this.lastY = e.touches[0].y;
+              this.dragging = true;
+              this.moved = false;
+            } else if (e.touches.length === 2) {
+              // 双指捏合：以手势中心为定点缩放
+              const dx = e.touches[0].x - e.touches[1].x;
+              const dy = e.touches[0].y - e.touches[1].y;
+              this.pinchBaseDist = Math.sqrt(dx * dx + dy * dy) || 1;
+              this.pinchBaseScale = this.viewScale;
+              this.dragging = false;
+            }
+            return;
+          }
+          if (e.type === TouchType.Move) {
+            if (e.touches.length === 2 && this.pinchBaseDist > 0) {
+              const dx = e.touches[0].x - e.touches[1].x;
+              const dy = e.touches[0].y - e.touches[1].y;
+              const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+              const mx = (e.touches[0].x + e.touches[1].x) / 2;
+              const my = (e.touches[0].y + e.touches[1].y) / 2;
+              const target = Math.max(0.1, Math.min(10,
+                this.pinchBaseScale * (dist / this.pinchBaseDist)));
+              this.zoomAt(mx, my, target / this.viewScale);
+              this.moved = true;
+              return;
+            }
+            if (this.dragging && e.touches.length === 1) {
+              const dx = e.touches[0].x - this.lastX;
+              const dy = e.touches[0].y - this.lastY;
+              if (Math.abs(dx) > 1.5 || Math.abs(dy) > 1.5) {
+                this.moved = true;
+              }
+              this.voffX += dx;
+              this.voffY += dy;
+              this.lastX = e.touches[0].x;
+              this.lastY = e.touches[0].y;
+              this.draw();
+            }
+            return;
+          }
+          if (e.type === TouchType.Up || e.type === TouchType.Cancel) {
+            this.pinchBaseDist = 0;
+            if (!this.dragging) {
+              return;
+            }
+            this.dragging = false;
+            if (this.moved) {
+              return; // 拖拽过就不算点击
+            }
+            const tx = this.lastX;
+            const ty = this.lastY;
+            // 双击：放大到指针
+            const now = Date.now();
+            if (now - this.lastTapTime < 280) {
+              this.zoomAt(tx, ty, 1.6);
+              this.lastTapTime = 0;
+              return;
+            }
+            this.lastTapTime = now;
+            const hit = this.hitTest(tx, ty);
+            if (hit.length > 0) {
+              this.onSelect(hit);
+              // 选中后立即重绘高亮圈；否则日志与画面都是旧状态（实测踩过）
+              this.draw();
+            }
+          }
+        })
+      // 角标：复位视图（触屏没有滚轮，给个等价入口）
+      Button('适应')
+        .fontSize(11)
+        .fontColor(Theme.MUTED)
+        .backgroundColor(Theme.SOFT)
+        .borderRadius(Theme.R_PILL)
+        .height(28)
+        .padding({ left: 12, right: 12 })
+        .margin({ right: 10, bottom: 10 })
+        .position({ x: this.w - 66, y: this.h - 40 })
+        .onClick(() => {
+          this.fitView();
+        })
+    }
+    .width('100%')
+    .height('100%')
   }
 }

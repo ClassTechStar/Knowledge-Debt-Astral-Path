@@ -12,6 +12,8 @@ import { Paper, PaperItem } from '../model/Models';
 import { StoreService } from '../service/StoreService';
 import { OcrService } from '../service/OcrService';
 import { SanitizeService } from '../service/SanitizeService';
+import { Theme } from '../common/Theme';
+import { PageHeaderView, PanelView, CardView, BtnView, BadgeView, StatusView } from '../components/UiKit';
 
 interface AnswerPair {
   no: number | null;
@@ -176,41 +178,91 @@ export struct PapersPage {
   }
 
   build() {
-    Column({ space: 10 }) {
-      Row({ space: 6 }) {
-        Text('试卷作业').fontSize(17).fontWeight(FontWeight.Bold);
-        Blank();
-        Button(this.busy ? '识别中' : '拍照识别').fontSize(11).onClick(() => this.shoot());
-        Button('选图识别').fontSize(11).onClick(() => this.pickImage());
-        Button('示例识别').fontSize(11).onClick(() => this.addDemo());
-      }
-      .width('100%');
+    Scroll() {
+      Column({ space: 0 }) {
+        PageHeaderView({
+          title: '试卷作业',
+          hint: '拍照 / 截图 / 粘贴 / 文件四类入口，识别后自动结构化'
+        })
 
-      if (this.demo) {
-        Text(this.demo).fontSize(12).fontColor($r('app.color.ok'));
-      }
+        PanelView({
+          title: '导入入口',
+          hint: '选一种方式把试卷或作业喂给 OCR'
+        }) {
+          Flex({ wrap: FlexWrap.Wrap }) {
+            BtnView({
+              label: this.busy ? '识别中…' : '拍照',
+              kind: 'primary',
+              click: () => this.shoot()
+            })
+            BtnView({
+              label: '截图',
+              kind: 'plain',
+              click: () => this.pickImage()
+            })
+            BtnView({
+              label: '粘贴文本',
+              kind: 'plain',
+              click: () => this.addDemo()
+            })
+            BtnView({
+              label: '文件',
+              kind: 'plain',
+              click: () => this.pickImage()
+            })
+          }
+          .width('100%')
 
-      ForEach(this.papers, (p: Paper) => {
-        Column({ space: 4 }) {
-          Text(p.name).fontSize(14).fontWeight(FontWeight.Bold);
-          Text(`${p.items.length} 题 · ${p.type === 'exam' ? '试卷' : (p.type === 'hw' ? '作业' : '错题')}`)
-            .fontSize(11)
-            .fontColor($r('app.color.muted'));
-          ForEach(p.items, (it: PaperItem) => {
-            Text(`${it.no}. ${it.stem} ${it.answer ? `（答案 ${it.answer}）` : ''}`)
-              .fontSize(12)
-              .fontColor($r('app.color.ink'));
-          }, (it: PaperItem) => `${p.id}-${it.no}`);
+          if (this.demo.length > 0) {
+            StatusView({ text: this.demo, kind: 'ok' })
+          }
         }
-        .width('100%')
-        .padding(12)
-        .borderRadius(14)
-        .backgroundColor($r('app.color.soft'))
-        .alignItems(HorizontalAlign.Start);
-      }, (p: Paper) => p.id);
+
+        PanelView({
+          title: `识别结果（${this.papers.length}）`,
+          hint: '入库前自动脱敏：手机号 / 身份证 / 邮箱打码'
+        }) {
+          if (this.papers.length === 0) {
+            Text('还没有识别结果。点「拍照」或「文件」识别一张试卷/作业。')
+              .fontSize(Theme.FS_HINT)
+              .fontColor(Theme.MUTED)
+              .width('100%')
+          } else {
+            ForEach(this.papers, (p: Paper) => {
+              CardView() {
+                Column({ space: 6 }) {
+                  Flex({ wrap: FlexWrap.Wrap }) {
+                    Text(p.name)
+                      .fontSize(Theme.FS_BODY)
+                      .fontWeight(FontWeight.Bold)
+                      .fontColor(Theme.INK)
+                    BadgeView({
+                      text: p.type === 'exam' ? '试卷' : (p.type === 'hw' ? '作业' : '错题'),
+                      kind: p.type === 'exam' ? 'ok' : (p.type === 'hw' ? 'warn' : 'err')
+                    })
+                    BadgeView({ text: `${p.items.length} 题`, kind: 'ok' })
+                  }
+                  .width('100%')
+
+                  ForEach(p.items, (it: PaperItem) => {
+                    Text(`${it.no}. ${it.stem} ${it.answer ? `（答案 ${it.answer}）` : ''}`)
+                      .fontSize(Theme.FS_HINT)
+                      .fontColor(Theme.INK)
+                      .width('100%')
+                  }, (it: PaperItem) => `${p.id}-${it.no}`)
+                }
+                .width('100%')
+                .alignItems(HorizontalAlign.Start)
+              }
+            }, (p: Paper) => p.id)
+          }
+        }
+      }
+      .width('100%')
+      .padding(Theme.PAD_PANEL)
     }
     .width('100%')
-    .padding(16)
-    .alignItems(HorizontalAlign.Start);
+    .height('100%')
+    .backgroundColor(Theme.CANVAS)
   }
 }

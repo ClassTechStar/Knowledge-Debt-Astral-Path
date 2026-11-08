@@ -2,6 +2,7 @@
  * 帮助面板 —— 对应 Web 版「帮助中心」：3 步上手 + 术语词典。
  * 用覆盖层实现（不引入 CustomDialog 控制器），折叠/展开态都能铺满内容区。
  */
+import { Theme } from '../common/Theme';
 
 interface GlossItem {
   term: string;
@@ -44,14 +45,14 @@ export struct HelpPanel {
         Column({ space: 10 }) {
           Text('3 步上手').fontSize(14).fontWeight(FontWeight.Bold);
           ForEach(this.guide, (g: string) => {
-            Text(g).fontSize(12).fontColor($r('app.color.ink'));
+            Text(g).fontSize(12).fontColor(Theme.INK);
           }, (g: string) => g.slice(0, 8));
 
           Text('术语词典').fontSize(14).fontWeight(FontWeight.Bold).margin({ top: 8 });
           ForEach(this.glossary, (t: GlossItem) => {
             Column({ space: 2 }) {
               Text(t.term).fontSize(12).fontWeight(FontWeight.Bold);
-              Text(t.desc).fontSize(11).fontColor($r('app.color.muted'));
+              Text(t.desc).fontSize(11).fontColor(Theme.MUTED);
             }
             .width('100%')
             .alignItems(HorizontalAlign.Start)
@@ -66,6 +67,6 @@ export struct HelpPanel {
     .width('100%')
     .height('100%')
     .padding(16)
-    .backgroundColor($r('app.color.surface'));
+    .backgroundColor(Theme.SURFACE);
   }
 }

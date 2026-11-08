@@ -11,6 +11,8 @@ import { promptAction } from '@kit.ArkUI';
 import { AiService, AiConfig } from '../service/AiService';
 import { StoreService, AiCfg } from '../service/StoreService';
 import { DemoKey } from '../common/DemoKey';
+import { Theme } from '../common/Theme';
+import { PageHeaderView, PanelView, BtnView, StatusView } from '../components/UiKit';
 
 interface IntentDef {
   id: string;
@@ -182,45 +184,94 @@ export struct AgentPage {
   }
 
   build() {
-    Column({ space: 10 }) {
-      Text('智能体').fontSize(17).fontWeight(FontWeight.Bold);
-      List() {
-        ForEach(this.transcript, (line: string, idx: number) => {
-          ListItem() {
-            Text(line)
-              .fontSize(13)
-              .fontColor($r('app.color.ink'))
-              .width('100%')
-              .padding(8);
+    Column({ space: 0 }) {
+      Scroll() {
+        Column({ space: 0 }) {
+          PageHeaderView({
+            title: '智能体',
+            hint: '口语化提问 → 意图路由 → 本地答复或模型流式答复；未配置密钥时走演示模式'
+          })
+
+          PanelView({
+            title: '对话',
+            hint: this.streaming ? '模型思考中…' : '问我任何关于学债、计划、图谱的问题'
+          }) {
+            List() {
+              ForEach(this.transcript, (line: string, idx: number) => {
+                ListItem() {
+                  Text(line)
+                    .fontSize(Theme.FS_BODY)
+                    .fontColor(Theme.INK)
+                    .width('100%')
+                    .padding(Theme.PAD_CARD)
+                    .borderRadius(Theme.R_C)
+                    .backgroundColor(Theme.SURFACE)
+                    .border({ width: 1, color: Theme.RULE })
+                    .margin({ top: 4, bottom: 4 })
+                }
+              }, (line: string, idx: number) => `${idx}-${line.slice(0, 10)}`)
+              if (this.streaming && this.liveText) {
+                ListItem() {
+                  Text(`智能体：${this.liveText}`)
+                    .fontSize(Theme.FS_BODY)
+                    .fontColor(Theme.MUTED)
+                    .width('100%')
+                    .padding(Theme.PAD_CARD)
+                    .borderRadius(Theme.R_C)
+                    .backgroundColor(Theme.SOFT)
+                    .margin({ top: 4, bottom: 4 })
+                }
+              }
+              if (this.transcript.length === 0 && !this.streaming) {
+                ListItem() {
+                  Text('还没有对话。可以问「今日该做什么」「帮我诊断债边」「14 天计划怎么排」。')
+                    .fontSize(Theme.FS_HINT)
+                    .fontColor(Theme.MUTED)
+                    .width('100%')
+                    .padding(Theme.PAD_CARD)
+                }
+              }
+            }
+            .width('100%')
+            .height(360)
+            .scrollBar(BarState.Auto)
           }
-        }, (line: string, idx: number) => `${idx}-${line.slice(0, 10)}`);
-        if (this.streaming && this.liveText) {
-          ListItem() {
-            Text(`智能体：${this.liveText}`)
-              .fontSize(13)
-              .fontColor($r('app.color.muted'))
-              .width('100%')
-              .padding(8);
-          }
+
+          StatusView({
+            text: '四条红线：危机词不作答、意图按锚点路由、演示模式明示、模型失败静默回退',
+            kind: 'plain'
+          })
         }
+        .width('100%')
+        .padding(Theme.PAD_PANEL)
       }
       .layoutWeight(1)
-      .backgroundColor($r('app.color.soft'))
-      .borderRadius(14);
+      .align(Alignment.TopStart)
 
-      Row() {
-        TextInput({ placeholder: '问点什么，例如「帮我讲讲会计等式」', text: this.input })
-          .layoutWeight(1)
-          .onChange((v: string) => {
-            this.input = v;
-          });
-        Button(this.streaming ? '思考中' : '发送')
-          .onClick(() => this.send());
+      PanelView({
+        title: '提问',
+        hint: '输入一段口语化问题，回车或点发送'
+      }) {
+        Row({ space: 8 }) {
+          TextInput({ placeholder: '问点什么，例如「帮我讲讲会计等式」', text: this.input })
+            .layoutWeight(1)
+            .height(44)
+            .borderRadius(Theme.R_C)
+            .backgroundColor(Theme.FIELD)
+            .onChange((v: string) => {
+              this.input = v;
+            })
+          BtnView({
+            label: this.streaming ? '思考中…' : '发送',
+            kind: 'primary',
+            click: () => this.send()
+          })
+        }
+        .width('100%')
       }
-      .width('100%');
     }
     .width('100%')
     .height('100%')
-    .padding(16);
+    .backgroundColor(Theme.CANVAS)
   }
 }

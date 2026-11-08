@@ -8,6 +8,8 @@ import { FormulaConstants as K } from '../model/FormulaConstants';
 import { StoreService } from '../service/StoreService';
 import { FormulaService } from '../service/FormulaService';
 import { PlanScheduler, DebtInput, ScheduleCtx, SchedItem, CtxEdge, K5Debt } from '../service/PlanScheduler';
+import { Theme } from '../common/Theme';
+import { PageHeaderView, PanelView, CardView, BtnView, BadgeView, StatusView, StatView, BarView } from '../components/UiKit';
 
 @Component
 export struct DebtPage {
@@ -230,124 +232,201 @@ export struct DebtPage {
 
   build() {
     Scroll() {
-      Column({ space: 10 }) {
-      Text('债边诊断').fontSize(17).fontWeight(FontWeight.Bold).width('100%');
-      Row({ space: 6 }) {
-        Button($r('app.string.debt_diag')).fontSize(11).onClick(() => this.diag());
-        Button($r('app.string.debt_plan')).fontSize(11).onClick(() => this.buildPlan());
-        Button($r('app.string.debt_sale')).fontSize(11).onClick(() => this.checkSale());
-        Button('计划复盘').fontSize(11).onClick(() => this.reviewPlan());
-      }
-      .width('100%');
+      Column({ space: 0 }) {
+        PageHeaderView({
+          title: '债边诊断',
+          hint: '用 impact-v2 找出拖累最重的先修债边，再生成 14 天修复计划'
+        })
 
-      Text(this.msg).fontSize(12).fontColor($r('app.color.muted'));
-      if (this.review) {
-        Text(this.review).fontSize(12).fontColor($r('app.color.brand'));
-      }
-
-      ForEach(this.debts, (d: DebtEdge) => {
-        Column({ space: 3 }) {
-          Text(`${d.a} → ${d.b}`)
-            .fontSize(14)
-            .fontWeight(this.selected?.id === d.id ? FontWeight.Bold : FontWeight.Normal)
-            .fontColor($r('app.color.danger'));
-          Text(`影响分 ${d.impact.toFixed(3)}`).fontSize(11).fontColor($r('app.color.muted'));
-          if (d.why) {
-            Text(d.why).fontSize(11).fontColor($r('app.color.muted'));
-          }
+        Flex({ wrap: FlexWrap.Wrap }) {
+          StatView({ label: '开放红边', value: `${this.debts.length}` })
+          StatView({ label: '计划条数', value: `${this.plan.length}` })
+          StatView({ label: '待复盘', value: `${Math.max(0, this.plan.length - (this.review ? 1 : 0))}` })
         }
         .width('100%')
-        .padding(12)
-        .borderRadius(14)
-        .backgroundColor(this.selected?.id === d.id ? '#FDECEC' : $r('app.color.soft'))
-        .alignItems(HorizontalAlign.Start)
-        .onClick(() => {
-          this.selected = d;
-        });
-      }, (d: DebtEdge) => d.id);
 
-      // 债边叙事
-      Column({ space: 4 }) {
-        Text('债边叙事').fontSize(13).fontWeight(FontWeight.Bold);
-        Text(this.narrative(this.selected)).fontSize(12).fontColor($r('app.color.ink'));
-      }
-      .width('100%')
-      .padding(12)
-      .borderRadius(14)
-      .backgroundColor($r('app.color.soft'))
-      .alignItems(HorizontalAlign.Start);
-
-      // What-if 模拟
-      Column({ space: 6 }) {
-        Text('What-if 模拟').fontSize(13).fontWeight(FontWeight.Bold);
-        Row() {
-          Text(`前置掌握 ${(this.wSp / 100).toFixed(2)}`).fontSize(11).width(110);
-          Slider({ value: this.wSp, min: 0, max: 100, step: 5 })
-            .layoutWeight(1)
-            .onChange((v: number) => {
-              this.wSp = v;
-              this.simulate();
-            });
-        }
-        .width('100%');
-        Row() {
-          Text(`目标掌握 ${(this.wSc / 100).toFixed(2)}`).fontSize(11).width(110);
-          Slider({ value: this.wSc, min: 0, max: 100, step: 5 })
-            .layoutWeight(1)
-            .onChange((v: number) => {
-              this.wSc = v;
-              this.simulate();
-            });
-        }
-        .width('100%');
-        Row() {
-          Text(`错题频次 ${this.wFq}`).fontSize(11).width(110);
-          Slider({ value: this.wFq, min: 0, max: 20, step: 1 })
-            .layoutWeight(1)
-            .onChange((v: number) => {
-              this.wFq = v;
-              this.simulate();
-            });
-        }
-        .width('100%');
-        Text(this.whatOut).fontSize(12).fontColor($r('app.color.muted'));
-      }
-      .width('100%')
-      .padding(12)
-      .borderRadius(14)
-      .backgroundColor($r('app.color.soft'))
-      .alignItems(HorizontalAlign.Start);
-
-      if (this.plan.length > 0) {
-        Text(`修复计划（${this.plan.length} 条）`).fontSize(14).fontWeight(FontWeight.Bold).margin({ top: 6 });
-        ForEach(this.plan, (p: PlanItem) => {
-          Column({ space: 2 }) {
-            Row() {
-              Text(`D${p.day}`).fontSize(12).fontColor($r('app.color.brand')).width(36);
-              Text(p.label ?? p.kp).fontSize(13).fontColor($r('app.color.ink'));
-              Blank();
-              Text(`${p.minutes} 分钟`).fontSize(11).fontColor($r('app.color.muted'));
-            }
-            .width('100%');
-            if (p.why) {
-              Text(p.why).fontSize(11).fontColor($r('app.color.muted'));
-            }
+        PanelView({
+          title: '诊断操作',
+          hint: '重新诊断会重算 impact-v2；生成计划走三遍复习 + K1–K5 合约'
+        }) {
+          Flex({ wrap: FlexWrap.Wrap }) {
+            BtnView({ label: '重新诊断', kind: 'plain', click: () => this.diag() })
+            BtnView({ label: '生成 14 天计划', kind: 'primary', click: () => this.buildPlan() })
+            BtnView({ label: '销账检查', kind: 'plain', click: () => this.checkSale() })
+            BtnView({ label: '计划复盘', kind: 'plain', click: () => this.reviewPlan() })
           }
           .width('100%')
-          .padding(10)
-          .borderRadius(10)
-          .backgroundColor($r('app.color.surface'))
-          .alignItems(HorizontalAlign.Start);
-        }, (p: PlanItem) => p.id);
-      }
+        }
+
+        if (this.msg.length > 0) {
+          StatusView({ text: this.msg, kind: this.debts.length > 0 ? 'warn' : 'plain' })
+        }
+        if (this.review.length > 0) {
+          StatusView({ text: this.review, kind: 'ok' })
+        }
+
+        PanelView({
+          title: '红边列表',
+          hint: '点一条红边看叙事与 What-if 模拟'
+        }) {
+          if (this.debts.length === 0) {
+            Text('当前没有开放红边。先修与后续掌握度都在门限之上，或教材尚未解析。')
+              .fontSize(Theme.FS_HINT)
+              .fontColor(Theme.MUTED)
+              .width('100%')
+          } else {
+            ForEach(this.debts, (d: DebtEdge) => {
+              CardView({ selected: this.selected?.id === d.id }) {
+                Column({ space: 6 }) {
+                  Flex({ wrap: FlexWrap.Wrap }) {
+                    Text(`${d.a} → ${d.b}`)
+                      .fontSize(Theme.FS_BODY)
+                      .fontWeight(this.selected?.id === d.id ? FontWeight.Bold : FontWeight.Normal)
+                      .fontColor(Theme.DANGER)
+                    BadgeView({ text: '红边', kind: 'err' })
+                  }
+                  .width('100%')
+
+                  Text(`影响分 ${d.impact.toFixed(3)}`)
+                    .fontSize(Theme.FS_HINT)
+                    .fontColor(Theme.MUTED)
+                    .width('100%')
+
+                  if (d.why) {
+                    Text(d.why)
+                      .fontSize(Theme.FS_HINT)
+                      .fontColor(Theme.MUTED)
+                      .width('100%')
+                  }
+
+                  Flex({ wrap: FlexWrap.Wrap }) {
+                    BtnView({
+                      label: '查看叙事',
+                      kind: this.selected?.id === d.id ? 'primary' : 'plain',
+                      click: () => {
+                        this.selected = d;
+                        this.simulate();
+                      }
+                    })
+                  }
+                  .width('100%')
+                  .margin({ top: 4 })
+                }
+                .width('100%')
+                .alignItems(HorizontalAlign.Start)
+              }
+            }, (d: DebtEdge) => d.id)
+          }
+        }
+
+        PanelView({
+          title: '债边叙事',
+          hint: '把公式里的每个因子翻译成一句人话'
+        }) {
+          Text(this.narrative(this.selected))
+            .fontSize(Theme.FS_BODY)
+            .fontColor(Theme.INK)
+            .width('100%')
+        }
+
+        PanelView({
+          title: 'What-if 模拟',
+          hint: '拖动滑杆，看它对这条债边的影响（本地公式实时计算）'
+        }) {
+          Column({ space: 8 }) {
+            Row() {
+              Text(`前置掌握 ${(this.wSp / 100).toFixed(2)}`)
+                .fontSize(Theme.FS_HINT)
+                .fontColor(Theme.MUTED)
+                .width(110)
+              Slider({ value: this.wSp, min: 0, max: 100, step: 5 })
+                .layoutWeight(1)
+                .onChange((v: number) => {
+                  this.wSp = v;
+                  this.simulate();
+                });
+            }
+            .width('100%')
+
+            Row() {
+              Text(`目标掌握 ${(this.wSc / 100).toFixed(2)}`)
+                .fontSize(Theme.FS_HINT)
+                .fontColor(Theme.MUTED)
+                .width(110)
+              Slider({ value: this.wSc, min: 0, max: 100, step: 5 })
+                .layoutWeight(1)
+                .onChange((v: number) => {
+                  this.wSc = v;
+                  this.simulate();
+                });
+            }
+            .width('100%')
+
+            Row() {
+              Text(`错题频次 ${this.wFq}`)
+                .fontSize(Theme.FS_HINT)
+                .fontColor(Theme.MUTED)
+                .width(110)
+              Slider({ value: this.wFq, min: 0, max: 20, step: 1 })
+                .layoutWeight(1)
+                .onChange((v: number) => {
+                  this.wFq = v;
+                  this.simulate();
+                });
+            }
+            .width('100%')
+
+            StatusView({ text: this.whatOut, kind: 'plain' })
+          }
+          .width('100%')
+          .alignItems(HorizontalAlign.Start)
+        }
+
+        if (this.plan.length > 0) {
+          PanelView({
+            title: `修复计划（${this.plan.length} 条）`,
+            hint: '三遍复习、每天不超过 40 分钟，K1–K5 已过'
+          }) {
+            ForEach(this.plan, (p: PlanItem) => {
+              CardView() {
+                Column({ space: 4 }) {
+                  Flex({ wrap: FlexWrap.Wrap }) {
+                    Text(`D${p.day}`)
+                      .fontSize(Theme.FS_HINT)
+                      .fontColor(Theme.PRIMARY)
+                      .fontWeight(FontWeight.Bold)
+                    Text(p.label ?? p.kp)
+                      .fontSize(Theme.FS_BODY)
+                      .fontColor(Theme.INK)
+                    BadgeView({ text: `${p.minutes} 分钟`, kind: 'ok' })
+                  }
+                  .width('100%')
+
+                  if (p.why) {
+                    Text(p.why)
+                      .fontSize(Theme.FS_HINT)
+                      .fontColor(Theme.MUTED)
+                      .width('100%')
+                  }
+                }
+                .width('100%')
+                .alignItems(HorizontalAlign.Start)
+              }
+            }, (p: PlanItem) => p.id)
+          }
+        }
+
+        if (this.deferredMsg.length > 0) {
+          StatusView({ text: this.deferredMsg, kind: 'warn' })
+        }
       }
       .width('100%')
-      .padding(16)
-      .alignItems(HorizontalAlign.Start);
+      .padding(Theme.PAD_PANEL)
     }
     .width('100%')
     .height('100%')
+    .backgroundColor(Theme.CANVAS)
     .scrollBar(BarState.Auto)
-    .align(Alignment.TopStart);
+    .align(Alignment.TopStart)
   }
 }

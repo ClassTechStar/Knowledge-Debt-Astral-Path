@@ -12,6 +12,8 @@ import { DocService, DocResult } from '../service/DocService';
 import { OcrService } from '../service/OcrService';
 import { SanitizeService } from '../service/SanitizeService';
 import { BatchTest, BatchItem } from '../service/BatchTest';
+import { Theme } from '../common/Theme';
+import { PageHeaderView, PanelView, CardView, BtnView, BadgeView, StatusView } from '../components/UiKit';
 
 @Component
 export struct MaterialsPage {
@@ -136,79 +138,104 @@ export struct MaterialsPage {
   }
 
   build() {
-    Column({ space: 10 }) {
-      Row() {
-        Text('藏书阁')
-          .fontSize(17)
-          .fontWeight(FontWeight.Bold);
-        Blank();
-        Button('导入示例资料')
-          .fontSize(12)
-          .onClick(() => this.seed());
-        Button('选择文本资料')
-          .fontSize(12)
-          .onClick(() => this.pickAndParse());
-        Button(this.busy ? '测试中' : '批量测试')
-          .fontSize(12)
-          .onClick(() => this.runBatch());
-      }
-      .width('100%');
+    Scroll() {
+      Column({ space: 0 }) {
+        PageHeaderView({
+          title: '藏书阁',
+          hint: '解析 PDF / TXT / Markdown / DOCX，抽出知识点建识网'
+        })
 
-      if (this.batch) {
-        Text(this.batch)
-          .fontSize(12)
-          .fontColor($r('app.color.brand'))
-          .padding({ left: 4, bottom: 4 });
-      }
-
-      if (this.tip) {
-        Text(this.tip)
-          .fontSize(12)
-          .fontColor($r('app.color.muted'))
-          .padding({ left: 4, bottom: 4 });
-      }
-
-      if (this.books.length === 0) {
-        Text('暂无资料。点「导入示例资料」，或选择 PDF / TXT 文件解析。')
-          .fontSize(12)
-          .fontColor($r('app.color.muted'))
-          .padding(14);
-      }
-
-      ForEach(this.books, (b: Book) => {
-        Row() {
-          Column({ space: 3 }) {
-            Text(b.name)
-              .fontSize(14)
-              .fontWeight(this.activeId === b.id ? FontWeight.Bold : FontWeight.Normal)
-              .fontColor($r('app.color.ink'));
-            Text(`${b.nodes?.length ?? 0} 节点 · ${b.edges?.length ?? 0} 边 · ${b.qs?.length ?? 0} 题`)
-              .fontSize(11)
-              .fontColor($r('app.color.muted'));
+        PanelView({
+          title: '导入与测试',
+          hint: '先导入一份示例教材，或选择本地文件解析'
+        }) {
+          Flex({ wrap: FlexWrap.Wrap }) {
+            BtnView({
+              label: '导入示例资料',
+              kind: 'primary',
+              click: () => this.seed()
+            })
+            BtnView({
+              label: '选择文本资料',
+              kind: 'plain',
+              click: () => this.pickAndParse()
+            })
+            BtnView({
+              label: this.busy ? '测试中…' : '批量测试',
+              kind: 'quiet',
+              click: () => this.runBatch()
+            })
           }
-          .alignItems(HorizontalAlign.Start);
-          Blank();
-          if (this.activeId === b.id) {
-            Text('当前')
-              .fontSize(11)
-              .fontColor($r('app.color.brand'))
-              .padding({ left: 8, right: 8, top: 2, bottom: 2 })
-              .borderRadius(8)
-              .backgroundColor($r('app.color.brand_soft'));
-          } else {
-            Button('设为当前')
-              .fontSize(11)
-              .onClick(() => this.use(b.id));
+          .width('100%')
+
+          if (this.batch.length > 0) {
+            StatusView({ text: this.batch, kind: 'ok' })
+          }
+          if (this.tip.length > 0) {
+            StatusView({ text: this.tip, kind: 'plain' })
           }
         }
-        .width('100%')
-        .padding(14)
-        .borderRadius(16)
-        .backgroundColor($r('app.color.soft'));
-      }, (b: Book) => b.id);
+
+        PanelView({
+          title: `教材列表（${this.books.length}）`,
+          hint: '选中的教材是「当前教材」，识网与今日任务都从这里出'
+        }) {
+          if (this.books.length === 0) {
+            Text('暂无资料。点「导入示例资料」，或选择 PDF / TXT 文件解析。')
+              .fontSize(Theme.FS_HINT)
+              .fontColor(Theme.MUTED)
+              .width('100%')
+          } else {
+            ForEach(this.books, (b: Book) => {
+              CardView({ selected: this.activeId === b.id }) {
+                Column({ space: 6 }) {
+                  Flex({ wrap: FlexWrap.Wrap }) {
+                    Text(b.name)
+                      .fontSize(Theme.FS_BODY)
+                      .fontWeight(this.activeId === b.id ? FontWeight.Bold : FontWeight.Normal)
+                      .fontColor(Theme.INK)
+                    if (this.activeId === b.id) {
+                      BadgeView({ text: '当前', kind: 'ok' })
+                    }
+                  }
+                  .width('100%')
+
+                  Text(`${b.nodes?.length ?? 0} 节点 · ${b.edges?.length ?? 0} 边 · ${b.qs?.length ?? 0} 题`)
+                    .fontSize(Theme.FS_HINT)
+                    .fontColor(Theme.MUTED)
+                    .width('100%')
+
+                  Flex({ wrap: FlexWrap.Wrap }) {
+                    if (this.activeId !== b.id) {
+                      BtnView({
+                        label: '设为当前',
+                        kind: 'primary',
+                        click: () => this.use(b.id)
+                      })
+                    }
+                    BtnView({
+                      label: '查看详情',
+                      kind: 'quiet',
+                      click: () => {
+                        this.tip = `《${b.name}》共 ${b.nodes?.length ?? 0} 个知识点、${b.edges?.length ?? 0} 条关系`;
+                      }
+                    })
+                  }
+                  .width('100%')
+                  .margin({ top: 4 })
+                }
+                .width('100%')
+                .alignItems(HorizontalAlign.Start)
+              }
+            }, (b: Book) => b.id)
+          }
+        }
+      }
+      .width('100%')
+      .padding(Theme.PAD_PANEL)
     }
     .width('100%')
-    .padding(16)
-    .alignItems(HorizontalAlign.Start);
+    .height('100%')
+    .backgroundColor(Theme.CANVAS)
   }
 }

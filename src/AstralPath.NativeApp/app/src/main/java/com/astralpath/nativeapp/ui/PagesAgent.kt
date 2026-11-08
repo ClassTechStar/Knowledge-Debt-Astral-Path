@@ -1,20 +1,21 @@
 package com.astralpath.nativeapp.ui
 
-import android.app.AlertDialog
-import android.graphics.Color
 import android.view.View
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
-import android.widget.Toast
 import com.astralpath.nativeapp.MainActivity
 import com.astralpath.nativeapp.data.AiCfg
 import com.astralpath.nativeapp.service.AiService
 import com.astralpath.nativeapp.service.NotifyBus
 import com.astralpath.nativeapp.service.StoreService
 
-/** 智能体页 —— 意图路由 + 危机转介 + 模型流式（可停止），移植自鸿蒙版 AgentPage.ets */
+/**
+ * 智能体页 —— 意图路由 + 危机转介 + 模型流式（可停止），移植自鸿蒙版 AgentPage.ets。
+ * 版式对齐 Web：page-h 标题区 + panel 卡片流（对话面板 / 输入行 / 快捷入口）；
+ * 业务功能与数据逻辑保持不变。
+ */
 object PagesAgent {
     /** 危机词：与 tools/agent-intents.json 的 crisis 列表一致（11 个，verify_agent_intents 对拍） */
     val CRISIS = listOf("不想活", "自杀", "轻生", "结束生命", "自残", "伤害自己", "跳楼", "上吊", "suicide", "kill myself", "活不下去")
@@ -52,30 +53,62 @@ object PagesAgent {
 
     fun page(a: MainActivity): View {
         val c = a
-        val root = LinearLayout(c).apply { orientation = LinearLayout.VERTICAL; setPadding(Ui.dp(c, 16), Ui.dp(c, 12), Ui.dp(c, 16), Ui.dp(c, 12)) }
-        root.addView(Ui.label(c, "受约束智能体", 18f, Ui.INK, bold = true))
-        root.addView(Ui.label(c, "意图路由 · 危机转人工 · 敏感词脱敏。数字只来自本地公式。", 12f, Ui.MUTED))
+        val root = Ui.page(c)
+        root.addView(Ui.pageHeader(
+            c, "受约束智能体",
+            "意图路由 · 危机转人工 · 敏感词脱敏。数字只来自本地公式。",
+        ), Ui.fill(root, 22))
 
+        // 对话面板（对齐 Web .panel + .chat：面板内滚动对话区）
+        val chatPanel = Ui.panel(c, "对话", "可问「我的知识债」「生成计划」「这周学不完」等。")
         val transcript = ScrollView(c).apply {
             setBackgroundColor(Ui.SOFT)
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0).apply { weight = 1f; topMargin = Ui.dp(c, 8) }
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0,
+            ).apply { weight = 1f }
         }
-        val transcriptInner = LinearLayout(c).apply { orientation = LinearLayout.VERTICAL; setPadding(Ui.dp(c, 8), Ui.dp(c, 8), Ui.dp(c, 8), Ui.dp(c, 8)) }
+        val transcriptInner = LinearLayout(c).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(Ui.dp(c, 8), Ui.dp(c, 8), Ui.dp(c, 8), Ui.dp(c, 8))
+        }
         transcript.addView(transcriptInner)
-        root.addView(transcript)
+        chatPanel.addView(transcript)
+        root.addView(chatPanel, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f,
+        ).apply { bottomMargin = Ui.dp(c, Ui.GAP_PANEL) })
 
-        val input = EditText(c).apply { hint = "问点什么，例如「帮我讲讲会计等式」"; textSize = 13f }
-        val sendBtnHolder = arrayOfNulls<android.widget.Button>(1)
+        val input = EditText(c).apply {
+            hint = "问点什么，例如「帮我讲讲会计等式」"
+            setTextSize(0, Ui.sp(c, Ui.FS_HINT))
+            background = Ui.shape(Ui.FIELD, Ui.dpF(c, Ui.R_CTRL), Ui.dp(c, 1), Ui.RULE)
+            setPadding(Ui.dp(c, 12), Ui.dp(c, 8), Ui.dp(c, 12), Ui.dp(c, 8))
+        }
+        val sendBtnHolder = arrayOfNulls<TextView>(1)
         val chat = LinearLayout(c).apply { orientation = LinearLayout.VERTICAL }
         transcriptInner.addView(chat)
 
+        // 气泡（对齐 Web .bub.user / .bub.bot）
         fun addBubble(text: String, isUser: Boolean) {
             val t = TextView(c).apply {
-                this.text = text; textSize = 13f
-                setTextColor(if (isUser) Ui.INK else Ui.INK)
-                setPadding(Ui.dp(c, 8), Ui.dp(c, 6), Ui.dp(c, 8), Ui.dp(c, 6))
+                this.text = text
+                setTextSize(0, Ui.sp(c, Ui.FS_HINT))
+                setTextColor(if (isUser) 0xFFFFFFFF.toInt() else Ui.INK)
+                setPadding(Ui.dp(c, 10), Ui.dp(c, 6), Ui.dp(c, 10), Ui.dp(c, 6))
+                background = Ui.shape(
+                    if (isUser) Ui.PRIMARY else Ui.SOFT,
+                    Ui.dpF(c, 14f),
+                )
             }
-            chat.addView(t)
+            val wrap = LinearLayout(c).apply { orientation = LinearLayout.HORIZONTAL }
+            val lp = LinearLayout.LayoutParams(
+                if (isUser) LinearLayout.LayoutParams.WRAP_CONTENT else LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply {
+                topMargin = Ui.dp(c, 4); bottomMargin = Ui.dp(c, 4)
+                gravity = if (isUser) android.view.Gravity.END else android.view.Gravity.START
+            }
+            wrap.addView(t)
+            chat.addView(wrap, lp)
             transcript.post { transcript.fullScroll(ScrollView.FOCUS_DOWN) }
         }
 
@@ -108,7 +141,9 @@ object PagesAgent {
             }
             // 模型流式：按钮变「■ 停止」；取消≠失败，保留已生成部分（DeepTutor cancel 语义）
             sendBtnHolder[0]?.text = "■ 停止"
-            val live = TextView(c).apply { textSize = 13f; setTextColor(Ui.MUTED); text = "▍思考中…" }
+            val live = TextView(c).apply {
+                setTextSize(0, Ui.sp(c, Ui.FS_HINT)); setTextColor(Ui.MUTED); text = "▍思考中…"
+            }
             chat.addView(live)
             transcript.post { transcript.fullScroll(ScrollView.FOCUS_DOWN) }
             val ctx = buildString {
@@ -139,15 +174,20 @@ object PagesAgent {
             }.start()
         }
 
-        val row = LinearLayout(c).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, Ui.dp(c, 8), 0, 0) }
+        // 输入行（对齐 Web input.chatin + .btn.primary）
+        val row = Ui.row(c)
         row.addView(input, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-        row.addView(sendBtnHolder[0], LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { leftMargin = Ui.dp(c, 8) })
+        val sendBtn = Ui.btn(c, "发送", primary = true) { send() }
+        sendBtnHolder[0] = sendBtn
+        row.addView(sendBtn, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT,
+        ).apply { leftMargin = Ui.dp(c, 8) })
         root.addView(row, Ui.fill(row))
 
         // 快捷入口（对齐 Web 版 data-q 快捷按钮）
-        val quick = LinearLayout(c).apply { orientation = LinearLayout.HORIZONTAL }
+        val quick = Ui.row(c)
         listOf("压力求助" to "我这周学不完计划了", "诊断债" to "帮我诊断知识债", "生成计划" to "生成14天计划").forEach { (label, q) ->
-            quick.addView(Ui.button(c, label) { input.setText(q); send() })
+            quick.addView(Ui.btn(c, label, quiet = true) { input.setText(q); send() })
         }
         root.addView(quick, Ui.fill(quick))
         addBubble("你好，我是知债学习助手。可问「我的知识债」「生成计划」「这周学不完」等。", isUser = false)

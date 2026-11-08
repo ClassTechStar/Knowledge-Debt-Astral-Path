@@ -142,11 +142,30 @@ export class KgService {
     const chapters = KgService.splitChapters(text);
     const terms = KgService.extractTerms(chapters, maxTerms);
     const nodes: KNode[] = [];
+    // 章节节点（Web 侧 kind='chapter'，配色章节蓝），并给每章建归属边
+    for (const ch of chapters) {
+      nodes.push({ id: ch.id, title: ch.title, diff: 1, course: name, kind: 'chapter', body: (ch.body ?? '').slice(0, 200) });
+    }
     for (let i = 0; i < terms.length; i++) {
       const t: string = terms[i];
-      const node: KNode = { id: KgService.idOf(t), title: t, diff: i < terms.length / 3 ? 1 : 2, course: name };
+      // 词节点（Web 侧 kind='term'，配色词绿）
+      const node: KNode = { id: KgService.idOf(t), title: t, diff: i < terms.length / 3 ? 1 : 2, course: name, kind: 'term' };
       nodes.push(node);
     }
+    // 归属边：章节 → 章内术语，tg=true 标记为教材边（不计入先修债边语义）
+    const edges: KEdge[] = KgService.buildEdges(chapters, terms);
+    const chOf = new Map<string, string>();
+    for (const ch of chapters) {
+      const body = (ch.body ?? '') + ' ' + ch.title;
+      for (const t of terms) {
+        if (body.indexOf(t) >= 0 && !chOf.has(KgService.idOf(t))) {
+          chOf.set(KgService.idOf(t), ch.id);
+        }
+      }
+    }
+    chOf.forEach((cid: string, tid: string) => {
+      edges.push({ a: cid, b: tid, w: 1, tg: true });
+    });
     return {
       id: `book-${Date.now()}`,
       name: name,
@@ -154,7 +173,7 @@ export class KgService {
       sourceText: text.slice(0, 20000),
       chapters: chapters,
       nodes: nodes,
-      edges: KgService.buildEdges(chapters, terms),
+      edges: edges,
       qs: [],
       created: Date.now()
     };

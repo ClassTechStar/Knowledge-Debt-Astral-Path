@@ -5,6 +5,8 @@
 import { Book } from '../model/Models';
 import { DemoData } from '../model/DemoData';
 import { StoreService } from '../service/StoreService';
+import { Theme } from '../common/Theme';
+import { PageHeaderView, PanelView, StatView, BadgeView, BtnView, StatusView } from '../components/UiKit';
 
 @Component
 export struct HomePage {
@@ -64,41 +66,70 @@ export struct HomePage {
   }
 
   build() {
-    Column({ space: 12 }) {
-      Text('把讲义变成识网，再把欠债算清楚')
-        .fontSize(18)
-        .fontWeight(FontWeight.Bold)
-        .fontColor($r('app.color.strong'));
-      Text('ASTRALPATH WORKSPACE · 全部计算在设备本机完成')
-        .fontSize(11)
-        .fontColor($r('app.color.muted'));
+    Scroll() {
+      Column({ space: 0 }) {
+        PageHeaderView({
+          title: '把讲义变成识网，再把欠债算清楚',
+          hint: 'ASTRALPATH WORKSPACE · 全部计算在设备本机完成'
+        })
 
-      Row({ space: 10 }) {
-        Button($r('app.string.home_seed'))
-          .onClick(() => this.seed());
-        Button($r('app.string.home_open_materials'))
-          .onClick(() => {
-            AppStorage.setOrCreate('currentPage', 'materials');
-          });
-      }
+        // Web 起点页 stats 网格：资料数 / 自动图谱 / 今日任务 / 开放债边
+        Flex({ wrap: FlexWrap.Wrap }) {
+          StatView({ label: '资料数', value: this.hasBook ? '1' : '0' })
+          StatView({ label: '自动图谱', value: `${this.nodes}` })
+          StatView({ label: '题库', value: `${this.questions}` })
+          StatView({ label: '图谱边', value: `${this.edges}` })
+        }
+        .width('100%')
 
-      Column() {
-        Text(this.bookName)
-          .fontSize(15)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(this.hasBook ? $r('app.color.ink') : $r('app.color.muted'));
-        Text(`${this.nodes} 节点 · ${this.edges} 边 · ${this.questions} 题`)
-          .fontSize(12)
-          .fontColor($r('app.color.muted'))
-          .margin({ top: 4 });
+        PanelView({ title: '当前教材', hint: this.hasBook ? '已选择教材，可直接进入识网与今日任务' : '尚未选择教材' }) {
+          Column({ space: 8 }) {
+            Text(this.bookName)
+              .fontSize(Theme.FS_BODY)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(this.hasBook ? Theme.INK : Theme.MUTED)
+              .width('100%')
+            Flex({ wrap: FlexWrap.Wrap }) {
+              BadgeView({ text: `${this.nodes} 节点`, kind: 'ok' })
+              BadgeView({ text: `${this.edges} 边`, kind: 'ok' })
+              BadgeView({ text: `${this.questions} 题`, kind: 'ok' })
+            }
+            .width('100%')
+          }
+          .width('100%')
+          .alignItems(HorizontalAlign.Start)
+        }
+
+        PanelView({ title: '快速开始', hint: '导入资料 → 查看识网 → 开始任务' }) {
+          Flex({ wrap: FlexWrap.Wrap }) {
+            BtnView({
+              label: '导入示例教材',
+              kind: 'primary',
+              click: () => {
+                this.seed();
+              }
+            })
+            BtnView({
+              label: '进入藏书阁',
+              kind: 'plain',
+              click: () => {
+                AppStorage.setOrCreate('currentPage', 'materials');
+              }
+            })
+          }
+          .width('100%')
+        }
+
+        StatusView({
+          text: '解析 → 构图 → 识网 → 今日任务，全部在这台设备上完成，不上传任何数据',
+          kind: 'ok'
+        })
       }
       .width('100%')
-      .padding(14)
-      .borderRadius(16)
-      .backgroundColor($r('app.color.soft'));
+      .padding(Theme.PAD_PANEL)
     }
     .width('100%')
-    .padding(16)
-    .alignItems(HorizontalAlign.Start);
+    .height('100%')
+    .backgroundColor(Theme.CANVAS)
   }
 }

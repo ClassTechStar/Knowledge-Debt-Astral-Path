@@ -5,6 +5,8 @@
 import { Book, Mastery } from '../model/Models';
 import { StoreService } from '../service/StoreService';
 import { FormulaService } from '../service/FormulaService';
+import { Theme } from '../common/Theme';
+import { PageHeaderView, PanelView, StatView, BarView, BadgeView, BtnView, StatusView, CardView } from '../components/UiKit';
 
 @Component
 export struct ProfilePage {
@@ -52,43 +54,137 @@ export struct ProfilePage {
   }
 
   build() {
-    Column({ space: 10 }) {
-      Text('画像').fontSize(17).fontWeight(FontWeight.Bold);
-      Row({ space: 12 }) {
-        this.statCard('已掌握', `${this.solid}`);
-        this.statCard('薄弱', `${this.weak}`);
-        this.statCard('累计作答', `${this.attempts}`);
-      }
-      Text(`共 ${this.total} 个知识点`)
-        .fontSize(12)
-        .fontColor($r('app.color.muted'));
+    Scroll() {
+      Column({ space: 0 }) {
+        PageHeaderView({
+          title: '画像',
+          hint: '掌握度分布、练习量、错题本与学习风格；可随时关闭个性化'
+        })
 
-      Row() {
-        Text('关闭个性化（按章节顺序安排，不依据知识债推断）')
-          .fontSize(13)
-          .layoutWeight(1);
-        Toggle({ type: ToggleType.Switch, isOn: this.optOut })
-          .onChange(() => this.toggleOptOut());
+        Flex({ wrap: FlexWrap.Wrap }) {
+          StatView({ label: '已掌握', value: `${this.solid}` })
+          StatView({ label: '薄弱', value: `${this.weak}` })
+          StatView({ label: '累计作答', value: `${this.attempts}` })
+        }
+        .width('100%')
+
+        PanelView({
+          title: '掌握度分布',
+          hint: `共 ${this.total} 个知识点`
+        }) {
+          Column({ space: 8 }) {
+            Row({ space: 8 }) {
+              Text('已掌握')
+                .fontSize(Theme.FS_HINT)
+                .fontColor(Theme.MUTED)
+                .width(72)
+              BarView({ ratio: this.total > 0 ? this.solid / this.total : 0 })
+                .layoutWeight(1)
+              Text(`${this.total > 0 ? ((this.solid / this.total) * 100).toFixed(0) : 0}%`)
+                .fontSize(Theme.FS_HINT)
+                .fontColor(Theme.INK)
+                .width(48)
+                .textAlign(TextAlign.End)
+            }
+            .width('100%')
+
+            Row({ space: 8 }) {
+              Text('薄弱')
+                .fontSize(Theme.FS_HINT)
+                .fontColor(Theme.MUTED)
+                .width(72)
+              BarView({ ratio: this.total > 0 ? this.weak / this.total : 0 })
+                .layoutWeight(1)
+              Text(`${this.total > 0 ? ((this.weak / this.total) * 100).toFixed(0) : 0}%`)
+                .fontSize(Theme.FS_HINT)
+                .fontColor(Theme.INK)
+                .width(48)
+                .textAlign(TextAlign.End)
+            }
+            .width('100%')
+
+            Flex({ wrap: FlexWrap.Wrap }) {
+              BadgeView({ text: `薄弱 ${this.weak}`, kind: 'err' })
+              BadgeView({ text: `已掌握 ${this.solid}`, kind: 'ok' })
+              BadgeView({ text: `共 ${this.total}`, kind: 'warn' })
+            }
+            .width('100%')
+          }
+          .width('100%')
+          .alignItems(HorizontalAlign.Start)
+        }
+
+        PanelView({
+          title: '错题本',
+          hint: '累计作答与薄弱点，优先推给今日练习'
+        }) {
+          if (this.attempts === 0) {
+            Text('还没有作答记录。到「今日」页点开始练习，会自动记入错题本。')
+              .fontSize(Theme.FS_HINT)
+              .fontColor(Theme.MUTED)
+              .width('100%')
+          } else {
+            Column({ space: 8 }) {
+              Flex({ wrap: FlexWrap.Wrap }) {
+                BadgeView({ text: `累计 ${this.attempts} 次`, kind: 'warn' })
+                if (this.weak > 0) {
+                  BadgeView({ text: `${this.weak} 个薄弱点待巩固`, kind: 'err' })
+                } else {
+                  BadgeView({ text: '当前没有薄弱点', kind: 'ok' })
+                }
+              }
+              .width('100%')
+              BtnView({
+                label: '回到今日任务',
+                kind: 'primary',
+                click: () => {
+                  AppStorage.setOrCreate('currentPage', 'today');
+                }
+              })
+            }
+            .width('100%')
+            .alignItems(HorizontalAlign.Start)
+          }
+        }
+
+        PanelView({
+          title: '学习风格',
+          hint: '按作答信心分布自动归类，不影响算法排序'
+        }) {
+          Text(this.attempts < 5
+            ? '样本还不够，再做几道题就能给出学习风格判断。'
+            : (this.solid > this.weak ? '偏「稳扎稳打」：先把基础补牢，再推后续。' : '偏「集中突击」：可以加练习频次，缩短间隔。'))
+            .fontSize(Theme.FS_BODY)
+            .fontColor(Theme.INK)
+            .width('100%')
+        }
+
+        PanelView({
+          title: '个性化',
+          hint: '关掉后只按教材章节顺序安排，不依据知识债推断'
+        }) {
+          Row({ space: 8 }) {
+            Text('关闭个性化')
+              .fontSize(Theme.FS_BODY)
+              .fontColor(Theme.INK)
+              .layoutWeight(1)
+            Toggle({ type: ToggleType.Switch, isOn: this.optOut })
+              .onChange(() => this.toggleOptOut());
+          }
+          .width('100%')
+
+          if (this.optOut) {
+            StatusView({ text: '已关闭个性化：今日任务、修复计划都按章节顺序排。', kind: 'warn' })
+          } else {
+            StatusView({ text: '已开启个性化：会优先推薄弱与低掌握度的知识点。', kind: 'ok' })
+          }
+        }
       }
       .width('100%')
-      .padding(12)
-      .borderRadius(14)
-      .backgroundColor($r('app.color.soft'));
+      .padding(Theme.PAD_PANEL)
     }
     .width('100%')
-    .padding(16)
-    .alignItems(HorizontalAlign.Start);
-  }
-
-  @Builder
-  statCard(label: string, value: string) {
-    Column({ space: 2 }) {
-      Text(value).fontSize(20).fontWeight(FontWeight.Bold).fontColor($r('app.color.ink'));
-      Text(label).fontSize(11).fontColor($r('app.color.muted'));
-    }
-    .padding(14)
-    .borderRadius(14)
-    .backgroundColor($r('app.color.soft'))
-    .alignItems(HorizontalAlign.Center);
+    .height('100%')
+    .backgroundColor(Theme.CANVAS)
   }
 }
