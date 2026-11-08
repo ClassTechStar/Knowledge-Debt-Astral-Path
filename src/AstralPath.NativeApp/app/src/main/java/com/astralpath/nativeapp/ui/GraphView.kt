@@ -51,6 +51,11 @@ class GraphView(
     private var offY = 0f
     private var selected: String? = null
 
+    init {
+        // 供仪器化测试（UiAutomator / Espresso）按内容描述定位图谱视图
+        contentDescription = TAG_GRAPH
+    }
+
     private val density = resources.displayMetrics.density
     private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop.toFloat()
 
@@ -257,6 +262,25 @@ class GraphView(
             pillRect.centerY() + paintPillText.textSize / 2.5f,
             paintPillText,
         )
+    }
+
+    // ── 测试探针（internal：androidTest 同模块可见，不污染公开 API）──
+    internal fun debugScale(): Float = scale
+    internal fun debugOffX(): Float = offX
+    internal fun debugOffY(): Float = offY
+    internal fun debugSelected(): String? = selected
+    internal fun debugNodeCount(): Int = pos.size
+    /** 节点当前屏幕坐标（px），供测试计算点击位置 */
+    internal fun debugNodeScreenPos(id: String): FloatArray? {
+        val p = pos[id] ?: return null
+        return floatArrayOf(p.x * scale + offX, p.y * scale + offY)
+    }
+    internal fun debugFirstNodeId(): String? = pos.keys.firstOrNull()
+    /** 适应按钮的屏幕矩形（px），供测试点击复位 */
+    internal fun debugFitRect(): RectF = pillRect
+
+    companion object {
+        const val TAG_GRAPH = "astralpath-graph"
     }
 
     // ── 手势：捏合缩放 + 拖拽平移 + 点按选中 + 双击放大 ──

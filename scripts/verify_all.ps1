@@ -30,6 +30,13 @@ function Step($name, $cmd) {
     }
 }
 
+# 跳过（例如没有连接设备）：不计入失败，但如实记录到结果里
+function SkipStep($name, $reason) {
+    Write-Host "`n=== $name ===" -ForegroundColor Cyan
+    Write-Host "[SKIP] $reason" -ForegroundColor Yellow
+    [void]$script:results.Add([pscustomobject]@{ name = $name; status = "skipped"; reason = $reason })
+}
+
 # 1) 常量对齐：JS 的 K 对象 ↔ C# 的 FormulaConstants.cs
 Step "constants-K-vs-FormulaConstants" { python scripts/verify_constants.py }
 
@@ -181,6 +188,47 @@ if (Test-Path node_modules/eslint) {
     Step "eslint" { npx --no-install eslint . }
 } else {
     Write-Host "[SKIP] 未安装 eslint（npm ci 后可用）" -ForegroundColor Yellow
+}
+
+# 9) 设备端手势回归（识网缩放/拖拽/点选）：有设备才跑，无设备跳过
+#    鸿蒙：hdc 连到设备 → 跑 src/AstralPath.Harmony/scripts/verify-graph-gestures.ps1
+#    安卓：adb 连到设备 → 跑 GraphGestureTest（UiAutomator 注入，含双指捏合）
+$hdcCandidates = @(
+    'C://Program Files\Huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe',
+    (Join-Path $env:LOCALAPPDATA 'OpenHarmony\Sdk\26.0.0\toolchains\hdc.exe')
+)
+$hdcExe = $hdcCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+$harmonyDevice = $false
+if ($hdcExe) {
+    $targets = (& $hdcExe list targets 2>$null) -join ' '
+    $harmonyDevice = $targets -match '\d+\.\d+\.\d+\.\d+:\d+'
+}
+if ($harmonyDevice) {
+    Step "harmony-graph-gestures" {
+        & (Join-Path $PSScriptRoot '..\src\AstralPath.Harmony\scripts\verify-graph-gestures.ps1')
+    }
+} else {
+    SkipStep "harmony-graph-gestures" "未连接鸿蒙设备/模拟器（hdc list targets 为空）"
+}
+
+$adbExe = Join-Path $env:LOCALAPPDATA 'Android\Sdk\platform-tools\adb.exe'
+$androidDevice = $false
+if (Test-Path $adbExe) {
+    $devs = (& $adbExe devices 2>$null) -join "`n"
+    $androidDevice = $devs -match "\tdevice\s*$"
+}
+if ($androidDevice) {
+    Step "android-graph-gestures" {
+        Push-Location (Join-Path $root 'src\AstralPath.NativeApp')
+        $env:JAVA_HOME = 'C://Program Files\Huawei\DevEco Studio\jbr'
+        try {
+            & 'C://Gradle//bin//gradle.bat' :app:connectedDebugAndroidTest `
+                "-Pandroid.testInstrumentationRunnerArguments.class=com.astralpath.nativeapp.GraphGestureTest" `
+                --console=plain
+        } finally { Pop-Location }
+    }
+} else {
+    SkipStep "android-graph-gestures" "未连接安卓设备/模拟器（adb devices 无 device）"
 }
 
 # 结论
