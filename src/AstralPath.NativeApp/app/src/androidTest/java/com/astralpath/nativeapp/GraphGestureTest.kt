@@ -1,6 +1,5 @@
 package com.astralpath.nativeapp
 
-import android.graphics.RectF
 import android.os.SystemClock
 import android.view.MotionEvent
 import android.view.View
@@ -227,6 +226,21 @@ class GraphGestureTest {
     }
 
     @Test
+    fun resetButton_setsScaleToOne() {
+        val g = requireGraph()
+        val c = toScreen(g, g.width / 2f, g.height / 2f)
+        doubleTap(c[0], c[1]) // 先把缩放改掉
+        SystemClock.sleep(300)
+        assumeTrue("缩放未生效，跳过 100% 断言", kotlin.math.abs(g.debugScale() - 1f) > 0.01f)
+        // 控件已移到画布上方，按文本定位（不再用画布内矩形）
+        val btn = device.wait(Until.findObject(By.text("100%")), 3_000)
+        assumeTrue("未找到 100% 控件", btn != null)
+        btn!!.click()
+        SystemClock.sleep(400)
+        assertEquals("点 100% 后缩放应为 1.0", 1f, g.debugScale(), 0.001f)
+    }
+
+    @Test
     fun fitButton_restoresView() {
         val g = requireGraph()
         val s0 = g.debugScale(); val x0 = g.debugOffX(); val y0 = g.debugOffY()
@@ -234,9 +248,9 @@ class GraphGestureTest {
         doubleTap(c[0], c[1])           // 先改变视图
         SystemClock.sleep(300)
         assumeTrue("缩放未生效，跳过复位断言", kotlin.math.abs(g.debugScale() - s0) > 0.01f)
-        val r: RectF = g.debugFitRect()
-        val s = toScreen(g, r.centerX(), r.centerY())
-        device.click(s[0].toInt(), s[1].toInt())
+        val btn = device.wait(Until.findObject(By.text("适应")), 3_000)
+        assumeTrue("未找到适应控件", btn != null)
+        btn!!.click()
         SystemClock.sleep(400)
         assertEquals("适应后缩放应回到基线", s0, g.debugScale(), 0.02f)
         assertEquals("适应后 X 偏移应回到基线", x0, g.debugOffX(), 6f)

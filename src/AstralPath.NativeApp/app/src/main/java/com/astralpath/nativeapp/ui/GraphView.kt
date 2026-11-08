@@ -145,7 +145,7 @@ class GraphView(
     }
 
     /** 「适应视图」：按节点包围盒计算 scale/offset 居中（对齐 Web 初始视图自适应思路） */
-    private fun fitView() {
+    internal fun fitView() {
         if (nodes.isEmpty() || width == 0 || height == 0) return
         var minX = Float.MAX_VALUE; var minY = Float.MAX_VALUE
         var maxX = -Float.MAX_VALUE; var maxY = -Float.MAX_VALUE
@@ -225,7 +225,6 @@ class GraphView(
             canvas.drawText(shortLabel(node.title), cx, cy + r + paintLabel.textSize + 2f * density, paintLabel)
         }
 
-        drawFitPill(canvas)
     }
 
     /** 标签截断：【前缀】不占标签位 + 8 字截断省略（对齐 Web P1-2/P2-3 口径） */
@@ -240,28 +239,21 @@ class GraphView(
             android.util.TypedValue.COMPLEX_UNIT_SP, v, resources.displayMetrics,
         )
 
-    // ── 角落「适应」胶囊按钮（触屏没有滚轮，一键复位视图）──
-    private val pillRect = RectF()
-    private fun drawFitPill(canvas: Canvas) {
-        val padH = 16f * density
-        val padV = 8f * density
-        val tw = paintPillText.measureText("适应")
-        val bw = tw + padH * 2
-        val bh = paintPillText.textSize + padV * 2
-        val left = width - bw - 12f * density
-        val top = 12f * density
-        pillRect.set(left, top, left + bw, top + bh)
-        paintFill.color = Ui.SURFACE
-        canvas.drawRoundRect(pillRect, bh / 2, bh / 2, paintFill)
-        paintStroke.color = Ui.RULE
-        paintStroke.strokeWidth = 1f * density
-        canvas.drawRoundRect(pillRect, bh / 2, bh / 2, paintStroke)
-        canvas.drawText(
-            "适应",
-            pillRect.centerX(),
-            pillRect.centerY() + paintPillText.textSize / 2.5f,
-            paintPillText,
-        )
+    /** 重置到 100%：缩放固定 1.0，包围盒中心对齐视图中心（对齐鸿蒙 resetZoom） */
+    internal fun resetZoom() {
+        if (pos.isEmpty()) return
+        var minX = Float.MAX_VALUE
+        var minY = Float.MAX_VALUE
+        var maxX = -Float.MAX_VALUE
+        var maxY = -Float.MAX_VALUE
+        pos.values.forEach { p ->
+            minX = minOf(minX, p.x); minY = minOf(minY, p.y)
+            maxX = maxOf(maxX, p.x); maxY = maxOf(maxY, p.y)
+        }
+        scale = 1f
+        offX = width / 2f - (minX + maxX) / 2f
+        offY = height / 2f - (minY + maxY) / 2f
+        invalidate()
     }
 
     // ── 测试探针（internal：androidTest 同模块可见，不污染公开 API）──
@@ -276,8 +268,6 @@ class GraphView(
         return floatArrayOf(p.x * scale + offX, p.y * scale + offY)
     }
     internal fun debugFirstNodeId(): String? = pos.keys.firstOrNull()
-    /** 适应按钮的屏幕矩形（px），供测试点击复位 */
-    internal fun debugFitRect(): RectF = pillRect
 
     companion object {
         const val TAG_GRAPH = "astralpath-graph"
@@ -361,11 +351,6 @@ class GraphView(
     }
 
     override fun onTouchEvent(ev: MotionEvent): Boolean {
-        // 角落「适应」按钮优先（触屏没有滚轮，一键复位）
-        if (ev.actionMasked == MotionEvent.ACTION_DOWN && pillRect.contains(ev.x, ev.y)) {
-            fitView()
-            return true
-        }
         scaleDet.onTouchEvent(ev)
         gestureDet.onTouchEvent(ev)
         return true

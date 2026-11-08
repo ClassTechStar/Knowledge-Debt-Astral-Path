@@ -18,6 +18,12 @@ interface Pt {
   vy: number;
 }
 
+/** 画布控制器：把 fit/reset 暴露给页面上的按钮（避免按钮压在画布上吞掉节点点击） */
+export class GraphCtrl {
+  fit: () => void = () => {};
+  reset: () => void = () => {};
+}
+
 /** 世界坐标系尺寸（布局画布，与屏幕解耦） */
 const WORLD_W: number = 1000;
 const WORLD_H: number = 800;
@@ -37,6 +43,8 @@ export struct GraphCanvas {
   @State private originY: number = 0;
   private pos: Map<string, Pt> = new Map();
   onSelect: (id: string) => void = () => {};
+  /** 页面传入的控制器；aboutToAppear 时把 fit/reset 挂上 */
+  ctrl: GraphCtrl = new GraphCtrl();
 
   // ── 视图变换（与 Web scale/offsetX/offsetY 同语义）──
   private viewScale: number = 1;
@@ -53,6 +61,8 @@ export struct GraphCanvas {
   private lastTapTime: number = 0;
 
   aboutToAppear(): void {
+    this.ctrl.fit = () => this.fitView();
+    this.ctrl.reset = () => this.resetZoom();
     this.layoutWorld();
   }
 
@@ -147,6 +157,27 @@ export struct GraphCanvas {
     this.viewScale = s;
     this.voffX = (this.w - (maxX + minX) * s) / 2;
     this.voffY = (this.h - (maxY + minY) * s) / 2;
+    this.draw();
+  }
+
+  /** 重置到 100%：缩放固定 1.0，把世界包围盒中心对齐到画布中心 */
+  private resetZoom(): void {
+    if (this.w < 8 || this.h < 8 || this.pos.size === 0) {
+      return;
+    }
+    let minX = WORLD_W;
+    let minY = WORLD_H;
+    let maxX = 0;
+    let maxY = 0;
+    this.pos.forEach((p: Pt) => {
+      minX = Math.min(minX, p.x);
+      minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x);
+      maxY = Math.max(maxY, p.y);
+    });
+    this.viewScale = 1;
+    this.voffX = this.w / 2 - (minX + maxX) / 2;
+    this.voffY = this.h / 2 - (minY + maxY) / 2;
     this.draw();
   }
 
@@ -359,19 +390,6 @@ export struct GraphCanvas {
               this.draw();
             }
           }
-        })
-      // 角标：复位视图（触屏没有滚轮，给个等价入口）
-      Button('适应')
-        .fontSize(11)
-        .fontColor(Theme.MUTED)
-        .backgroundColor(Theme.SOFT)
-        .borderRadius(Theme.R_PILL)
-        .height(28)
-        .padding({ left: 12, right: 12 })
-        .margin({ right: 10, bottom: 10 })
-        .position({ x: this.w - 66, y: this.h - 40 })
-        .onClick(() => {
-          this.fitView();
         })
     }
     .width('100%')

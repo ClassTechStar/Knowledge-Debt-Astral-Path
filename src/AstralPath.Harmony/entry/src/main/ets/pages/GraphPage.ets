@@ -6,7 +6,7 @@ import { Book, KNode, KEdge, AnswersShard, AnswerLog } from '../model/Models';
 import { StoreService } from '../service/StoreService';
 import { FormulaService } from '../service/FormulaService';
 import { FormulaConstants as K } from '../model/FormulaConstants';
-import { GraphCanvas } from '../components/GraphCanvas';
+import { GraphCanvas, GraphCtrl } from '../components/GraphCanvas';
 import { PageHeaderView, PanelView, BadgeView, BtnView, StatusView } from '../components/UiKit';
 import { Theme } from '../common/Theme';
 
@@ -18,6 +18,8 @@ export struct GraphPage {
   @State debtIds: string[] = [];
   @State bookName: string = '';
   @State debtMsg: string = '点节点看先修关系';
+  /** 图谱视图控制器：100% / 适应 两个按钮通过它操作画布 */
+  private ctrl: GraphCtrl = new GraphCtrl();
 
   aboutToAppear(): void {
     this.refresh();
@@ -166,11 +168,33 @@ export struct GraphPage {
             title: '知识图谱',
             hint: '点节点看先修/后续；右下角「适应」复位视图'
           }) {
+            // 视图控件放在画布上方，不遮挡任何节点
+            Row({ space: 8 }) {
+              BtnView({
+                label: '100%',
+                kind: 'plain',
+                click: () => {
+                  this.ctrl.reset();
+                }
+              })
+              BtnView({
+                label: '适应',
+                kind: 'plain',
+                click: () => {
+                  this.ctrl.fit();
+                }
+              })
+            }
+            .width('100%')
+            .justifyContent(FlexAlign.End)
+            .margin({ bottom: 8 })
+
             GraphCanvas({
               nodes: this.nodes,
               edges: this.edges,
               selectedId: this.selected ? this.selected.id : '',
               debtIds: this.debtIds,
+              ctrl: this.ctrl,
               onSelect: (id: string) => this.pick(id)
             })
               .width('100%')

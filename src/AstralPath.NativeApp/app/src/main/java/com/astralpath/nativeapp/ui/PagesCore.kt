@@ -183,6 +183,23 @@ object PagesCore {
             val t = book.nodes.find { it.id == id }?.title ?: id
             detail.text = "「$t」掌握 ${((scores[id] ?: 0.0) * 100).toInt()}% · 先修：${pre.joinToString("、").ifEmpty { "无" }} · 后续：${post.joinToString("、").ifEmpty { "无" }}"
         }
+        // 视图控件：100% / 适应（放在画布上方，避免压住节点吞掉点击）
+        val ctrlRow = LinearLayout(c).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.END
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT,
+            )
+        }
+        val btnReset = Ui.btn(c, "100%") { graph.resetZoom() }
+        val btnFit = Ui.btn(c, "适应") { graph.fitView() }
+        btnReset.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT,
+        ).apply { rightMargin = Ui.dp(c, 8) }
+        ctrlRow.addView(btnReset)
+        ctrlRow.addView(btnFit)
+        root.addView(ctrlRow)
+
         // 图谱占满剩余空间（世界坐标 + 缩放/平移由 GraphView 内部处理）
         graph.layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, 0,

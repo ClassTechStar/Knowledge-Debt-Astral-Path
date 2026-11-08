@@ -57,6 +57,33 @@ function Get-State {
     return $st
 }
 
+function Click-ByText([string]$label) {
+    # 用 layout dump 的绝对 bounds 点击，避免画布位移导致坐标失效
+    Invoke-Hdc @('shell', 'uitest dumpLayout -p /data/local/tmp/gl_btn.json') | Out-Null
+    Invoke-Hdc @('file', 'recv', '/data/local/tmp/gl_btn.json', "$env:TEMP\gl_btn.json") | Out-Null
+    $raw = Get-Content "$env:TEMP\gl_btn.json" -Raw -Encoding UTF8
+    foreach ($m in [regex]::Matches($raw, '\{[^{}]*\}')) {
+        $seg = $m.Value
+        if ($seg -notmatch '"text":"' + [regex]::Escape($label) + '"') { continue }
+        if ($seg -notmatch '"bounds":"\[(\d+),(\d+)\]\[(\d+),(\d+)\]"') { continue }
+        $x = [int](([int]$Matches[1] + [int]$Matches[3]) / 2)
+        $y = [int](([int]$Matches[2] + [int]$Matches[4]) / 2)
+        Invoke-Hdc @('shell', "uitest uiInput click $x $y") | Out-Null
+        return $true
+    }
+    return $false
+}
+
+function Get-CanvasBox {
+    # 每次点击前都要重取：点选节点后详情面板高度变化，画布原点会移动
+    $st = Get-State
+    $ox = [int]([double]$st.origin[0] * $d)
+    $oy = [int]([double]$st.origin[1] * $d)
+    $w = 484; $h = 378
+    if ($st.raw -match 'canvas (\d+)x(\d+)') { $w = [int]$Matches[1]; $h = [int]$Matches[2] }
+    return @($ox, $oy, [int]($w * $d), [int]($h * $d), $w, $h)
+}
+
 function Get-CanvasOrigin {
     Invoke-Hdc @('shell', 'uitest dumpLayout -p /data/local/tmp/gv_layout.json') | Out-Null
     Invoke-Hdc @('file', 'recv', '/data/local/tmp/gv_layout.json', "$env:TEMP\gv_layout.json") | Out-Null
@@ -94,6 +121,9 @@ if (-not $connected) { Say '设备未连接，退出'; exit 1 }
 
 # ---------- 1. 装包并进入识网 ----------
 Invoke-Hdc @('install', '-r', $Hap) | Select-Object -Last 1
+# 必须先强杀：装了新包但进程还在跑旧代码时，点新控件会落到画布上（踩过）
+Invoke-Hdc @('shell', 'aa force-stop com.astralpath.harmony') | Out-Null
+Start-Sleep -Seconds 1
 Invoke-Hdc @('shell', 'aa start -a EntryAbility -b com.astralpath.harmony') | Out-Null
 Start-Sleep -Seconds 6
 Invoke-Hdc @('shell', 'uitest uiInput click 105 421') | Out-Null   # 顶部胶囊导航第 3 项（识网）
@@ -158,16 +188,25 @@ if ($nodeId) {
     Add-Result '点按选中' $false '日志里没有节点坐标'
 }
 
+# ---------- 4.5 重置到 100%（新控件）----------
+# 按文本定位点击（dump 出来的绝对 bounds，不受布局回流影响）
+$hit100 = Click-ByText '100%'
+Start-Sleep -Seconds 1
+$s100 = Get-State
+$ok100 = [math]::Abs($s100.scale - 1.0) -lt 0.001
+$tag100 = '失败'
+if ($hit100) { $tag100 = '成功' }
+Add-Result '重置到 100%' ($ok100 -and $hit100) ("点击 100%（定位{0}）→ scale={1}（期望 1.0）" -f $tag100, $s100.scale)
+
 # ---------- 5. 适应复位 ----------
-# 「适应」按钮中心：vp(w-33,h-26) → px = 原点 + vp×pxPerVp
-$btnX = $cl + [int](($cw / $d - 33) * $d); $btnY = $ct + [int](($ch / $d - 26) * $d)
-Invoke-Hdc @('shell', "uitest uiInput click $btnX $btnY") | Out-Null
+# 「适应」同样按文本定位
+$hitFit = Click-ByText '适应'
 Start-Sleep -Seconds 1
 $fit = Get-State
 $okFit = [math]::Abs($fit.scale - $base.scale) -lt 0.02 -and
          [math]::Abs($fit.offx - $base.offx) -le 6 -and
          [math]::Abs($fit.offy - $base.offy) -le 6
-Add-Result '适应复位' $okFit ("scale/off 回到基线：{0} {1},{2}（基线 {3} {4},{5}）" -f `
+Add-Result '适应复位' ($okFit -and $hitFit) ("scale/off 回到基线：{0} {1},{2}（基线 {3} {4},{5}）" -f `
     $fit.scale, $fit.offx, $fit.offy, $base.scale, $base.offx, $base.offy)
 
 # ---------- 6. 双指捏合的静态检查（uitest 无多指注入）----------
