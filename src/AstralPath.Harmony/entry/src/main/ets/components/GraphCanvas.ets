@@ -32,6 +32,9 @@ export struct GraphCanvas {
   private ctx: CanvasRenderingContext2D = new CanvasRenderingContext2D(new RenderingContextSettings(true));
   @State private w: number = 300;
   @State private h: number = 300;
+  /** 组件在窗口中的全局位置（vp），自动化测试据此把画布坐标换算成设备坐标 */
+  @State private originX: number = 0;
+  @State private originY: number = 0;
   private pos: Map<string, Pt> = new Map();
   onSelect: (id: string) => void = () => {};
 
@@ -231,7 +234,8 @@ export struct GraphCanvas {
       dbg.push(`${id}@${Math.round(this.sx(p.x))},${Math.round(this.sy(p.y))}`);
     });
     hilog.info(0x0000, 'GRAPHCANVAS',
-      `canvas ${Math.round(this.w)}x${Math.round(this.h)} scale=${s.toFixed(2)} ` +
+      `canvas ${Math.round(this.w)}x${Math.round(this.h)} ` +
+      `origin=${Math.round(this.originX)},${Math.round(this.originY)} scale=${s.toFixed(2)} ` +
       `off=${Math.round(this.voffX)},${Math.round(this.voffY)} selected=${this.selectedId} ` +
       `nodes=${dbg.join(' ')}`);
   }
@@ -272,6 +276,8 @@ export struct GraphCanvas {
         .onAreaChange((oldVal: Area, newVal: Area) => {
           const w = Number(newVal.width);
           const h = Number(newVal.height);
+          this.originX = Number(newVal.globalPosition.x);
+          this.originY = Number(newVal.globalPosition.y);
           if (w > 0 && h > 0 && (Math.abs(w - this.w) > 4 || Math.abs(h - this.h) > 4)) {
             this.w = w;
             this.h = h;
@@ -339,7 +345,8 @@ export struct GraphCanvas {
             const ty = this.lastY;
             // 双击：放大到指针
             const now = Date.now();
-            if (now - this.lastTapTime < 280) {
+            // 阈值取 450ms：系统双击间隔通常 300ms 左右，280ms 会把双击拆成两次单击
+            if (now - this.lastTapTime < 450) {
               this.zoomAt(tx, ty, 1.6);
               this.lastTapTime = 0;
               return;
