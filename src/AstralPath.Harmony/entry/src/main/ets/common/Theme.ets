@@ -42,13 +42,23 @@ export class Theme {
   /** 错误徽标底：#ffe1e5 / 字 #792e38（Web .badge.err） */
   static readonly ERR_BG: string = '#FFE1E5';
   static readonly ERR_INK: string = '#792E38';
+  /** 状态文字（.status.ok / .status.err）：#2f6b50 / #8d2828 */
+  static readonly OK_DEEP: string = '#2F6B50';
+  static readonly ERR_TEXT: string = '#8D2828';
+  /** 危机色（常驻提醒、转介入口）：#c0392b */
+  static readonly CRISIS: string = '#C0392B';
+  /** 默认图谱节点（无分类）：边 #b7bbc0 / 底 #fbfbfc */
+  static readonly NODE_BD: string = '#B7BBC0';
+  static readonly NODE_BG: string = '#FBFBFC';
+  /** 识网连线（Web DOM 模式 .dline）：var(--strong) @45% */
+  static readonly EDGE_GREY: string = '#6B7075';
 
   // ── 图谱节点三色（Web .dnode.chapter/term/debt）──
   static readonly NODE_CHAPTER_BORDER: string = '#4F86C6';
-  static readonly NODE_CHAPTER_FILL: string = '#E0EDF9';
+  static readonly NODE_CHAPTER_FILL: string = '#E8F2FB';
   static readonly NODE_CHAPTER_INK: string = '#1D3D5F';
   static readonly NODE_TERM_BORDER: string = '#55A77B';
-  static readonly NODE_TERM_FILL: string = '#DCF2E8';
+  static readonly NODE_TERM_FILL: string = '#E5F7EE';
   static readonly NODE_TERM_INK: string = '#1E5D43';
   static readonly NODE_DEBT_BORDER: string = '#D95A67';
   static readonly NODE_DEBT_FILL: string = '#FFE1E5';
@@ -76,6 +86,6 @@ export class Theme {
 
   // ── 间距（Web .panel padding 20px、margin-bottom 14px；.card padding 14/16）──
   static readonly PAD_PANEL: number = 20;
-  static readonly GAP_PANEL: number = 14;
+  static readonly GAP_PANEL: number = 16;
   static readonly PAD_CARD: number = 16;
 }

@@ -197,10 +197,10 @@ export struct GraphCanvas {
     ctx.fillStyle = Theme.SURFACE;
     ctx.fillRect(0, 0, this.w, this.h);
 
-    // 边（Web 用 #55a77b）
-    ctx.strokeStyle = Theme.EDGE;
-    ctx.globalAlpha = 0.75;
-    ctx.lineWidth = 1.2 * Math.max(0.6, Math.min(1.6, s));
+    // 边：Web DOM 模式 .dline = var(--strong) @45%，高 2px（债由红节点表达，不在连线上）
+    ctx.strokeStyle = Theme.EDGE_GREY;
+    ctx.globalAlpha = 0.45;
+    ctx.lineWidth = 2;
     for (const e of this.edges) {
       const a = this.pos.get(e.a);
       const b = this.pos.get(e.b);

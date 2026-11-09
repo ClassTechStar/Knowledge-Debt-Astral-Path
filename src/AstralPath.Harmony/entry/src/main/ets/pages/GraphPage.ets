@@ -140,7 +140,7 @@ export struct GraphPage {
       Column({ space: 0 }) {
         PageHeaderView({
           title: '知识图谱',
-          hint: '章节蓝 · 词绿 · 债红 · 拖拽平移、双指缩放、点按选中'
+          hint: '章节蓝、词绿、债红；拖拽平移、双指缩放、点按选中'
         })
 
         PanelView({
@@ -254,7 +254,7 @@ export struct GraphPage {
 
           PanelView({
             title: '图谱导出',
-            hint: '三元组 · 属性图 · 思维导图 · Markdown 大纲'
+            hint: '三元组、属性图、思维导图与 Markdown 大纲'
           }) {
             Flex({ wrap: FlexWrap.Wrap }) {
               BtnView({

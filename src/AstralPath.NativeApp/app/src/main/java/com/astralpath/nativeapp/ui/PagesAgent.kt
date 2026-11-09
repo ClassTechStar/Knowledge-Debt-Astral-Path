@@ -92,7 +92,7 @@ object PagesAgent {
             val t = TextView(c).apply {
                 this.text = text
                 setTextSize(0, Ui.sp(c, Ui.FS_HINT))
-                setTextColor(if (isUser) 0xFFFFFFFF.toInt() else Ui.INK)
+                setTextColor(if (isUser) Ui.SURFACE else Ui.INK)
                 setPadding(Ui.dp(c, 10), Ui.dp(c, 6), Ui.dp(c, 10), Ui.dp(c, 6))
                 background = Ui.shape(
                     if (isUser) Ui.PRIMARY else Ui.SOFT,

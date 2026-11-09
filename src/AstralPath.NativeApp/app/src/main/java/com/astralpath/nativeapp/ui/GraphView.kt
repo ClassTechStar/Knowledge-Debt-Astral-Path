@@ -185,7 +185,7 @@ class GraphView(
             val red = "${e.a}>${e.b}" in redEdgeIds
             paintEdge.color = if (red) Ui.DB_EDGE else Ui.LINK
             paintEdge.alpha = if (red) 204 else 191 // 0.8 / 0.75
-            paintEdge.strokeWidth = if (red) 4.5f * density else max(1.0, e.w * 1.5).toFloat() * density
+            paintEdge.strokeWidth = 2f * density
             canvas.drawLine(
                 worldToScreenX(a.x), worldToScreenY(a.y),
                 worldToScreenX(b.x), worldToScreenY(b.y),

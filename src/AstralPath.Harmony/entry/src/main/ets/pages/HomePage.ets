@@ -70,7 +70,7 @@ export struct HomePage {
       Column({ space: 0 }) {
         PageHeaderView({
           title: '把讲义变成识网，再把欠债算清楚',
-          hint: 'ASTRALPATH WORKSPACE · 全部计算在设备本机完成'
+          hint: '全部计算都在这台设备上完成'
         })
 
         // Web 起点页 stats 网格：资料数 / 自动图谱 / 今日任务 / 开放债边

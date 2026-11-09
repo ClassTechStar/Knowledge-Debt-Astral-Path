@@ -150,8 +150,8 @@ export struct AccountPage {
                   title: '确认清除',
                   message: '将删除本机教材、作答与计划，且不可恢复。',
                   buttons: [
-                    { text: '取消', color: '#5F6672' },
-                    { text: '清除', color: '#D8453F' }
+                    { text: '取消', color: Theme.MUTED },
+                    { text: '清除', color: Theme.DANGER }
                   ]
                 }).then((r) => {
                   if (r.index === 1) {
@@ -165,7 +165,7 @@ export struct AccountPage {
         }
 
         StatusView({
-          text: '版本 2.6.0 · HarmonyOS 版 · 解析 → 构图 → 识网 → 今日任务 → 修复计划，全部在本机完成',
+          text: '版本 2.6.0，HarmonyOS 原生版。解析、构图、识网、今日任务与修复计划，全部在本机完成',
           kind: 'plain'
         })
       }

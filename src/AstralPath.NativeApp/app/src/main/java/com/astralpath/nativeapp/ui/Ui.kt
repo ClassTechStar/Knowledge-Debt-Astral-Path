@@ -42,10 +42,12 @@ object Ui {
     val ERR_TEXT = 0xFF8D2828.toInt()      // .status.err 文字
 
     // ── 图谱节点三色（对齐 Web .dnode.chapter / .term / .debt）──
-    val CH_EDGE = 0xFF4F86C6.toInt(); val CH_FILL = 0xFFE0EDF9.toInt(); val CH_INK = 0xFF1D3D5F.toInt()
-    val TM_EDGE = 0xFF55A77B.toInt(); val TM_FILL = 0xFFDCF2E8.toInt(); val TM_INK = 0xFF1E5D43.toInt()
+    val CH_EDGE = 0xFF4F86C6.toInt(); val CH_FILL = 0xFFE8F2FB.toInt(); val CH_INK = 0xFF1D3D5F.toInt()
+    val TM_EDGE = 0xFF55A77B.toInt(); val TM_FILL = 0xFFE5F7EE.toInt(); val TM_INK = 0xFF1E5D43.toInt()
     val DB_EDGE = 0xFFD95A67.toInt(); val DB_FILL = 0xFFFFE1E5.toInt(); val DB_INK = 0xFF792E38.toInt()
-    val LINK = 0xFF55A77B.toInt()          // 连线 #55A77B（透明度 0.75 绘制时施加）
+    val NODE_BD = 0xFFB7BBC0.toInt()      // .dnode 默认边框
+    val NODE_BG = 0xFFFBFBFC.toInt()      // .dnode 默认底色
+    val LINK = 0xFF6B7075.toInt()          // 连线（Web DOM .dline：var(--strong) @45%）；债由红节点表达
 
     // ── 圆角（对齐 Web --r-c 18 / --r-g 28 / --r-shell 36 / 胶囊 999）──
     const val R_CTRL = 18f
@@ -66,9 +68,9 @@ object Ui {
 
     // ── 间距 dp / 行高（对齐 Web 间距表）──
     const val PAD_PANEL = 20     // 面板内边距
-    const val GAP_PANEL = 14     // 面板间距（.panel 下边距 14）
+    const val GAP_PANEL = 16     // 面板间距（.panel 下边距 16）
     const val PAD_CARD = 16      // 卡片水平内边距
-    const val PAD_CARD_V = 14    // 卡片垂直内边距（.card padding 14px 16px）
+    const val PAD_CARD_V = 16    // 卡片垂直内边距（.card padding 16px 16px）
     const val LINE = 1.55f       // 行高 1.55 倍
 
     // ── 尺寸换算 ──

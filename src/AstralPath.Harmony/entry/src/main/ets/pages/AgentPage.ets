@@ -150,7 +150,7 @@ export struct AgentPage {
       promptAction.showDialog({
         title: '你不是一个人在扛',
         message: '请联系学校心理辅导老师，或拨打心理援助热线（全国 24 小时）。系统不会把这段对话当作处分依据。',
-        buttons: [{ text: '我知道了', color: '#2f6fed' }]
+        buttons: [{ text: '我知道了', color: Theme.PRIMARY }]
       }).catch((e: Error) => {
         // 对话框失败不阻断文字回复
       });

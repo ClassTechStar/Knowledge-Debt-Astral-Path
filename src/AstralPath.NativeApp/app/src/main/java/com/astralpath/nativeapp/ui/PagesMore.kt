@@ -97,7 +97,7 @@ object PagesMore {
             root.addView(Ui.status(c, "该学生未授权——按 fail-closed 口径不展示任何学情。学生可在「账户」页授权。"), Ui.fill(root))
             return scroll(root)
         }
-        root.addView(Ui.status(c, "已授权 · 聚合视图（k-匿名下限 3 人，样本不足只显示「样本不足」）", Ui.Kind.OK), Ui.fill(root))
+        root.addView(Ui.status(c, "已授权：聚合视图（k-匿名下限 3 人，样本不足只显示「样本不足」）", Ui.Kind.OK), Ui.fill(root))
         val book = PagesCore.activeBook()
         val ans = StoreService.loadAnswers()
         val listPanel = Ui.panel(c, "班级学情")
@@ -129,7 +129,7 @@ object PagesMore {
         val cfg = StoreService.loadAiCfg()
 
         // 密钥
-        val keyCard = Ui.panel(c, "云端大脑（小米 MiMo · OpenAI 兼容）")
+        val keyCard = Ui.panel(c, "云端大脑（小米 MiMo，OpenAI 兼容）")
         val keyInput = EditText(c).apply {
             hint = "粘贴你的 API Key（sk-…）"
             setTextSize(0, Ui.sp(c, Ui.FS_HINT))
@@ -213,7 +213,7 @@ object PagesMore {
         val c = a
         val root = Ui.page(c)
         root.addView(Ui.pageHeader(
-            c, "试卷 · 作业 · 错题（文本导入）",
+            c, "试卷作业（文本导入）",
             "粘贴试卷文本 → 本地确定性结构化（板块/题头/选项/答案/题型）。拍照识别请用 Web 单文件版或 Windows 壳（OCR 引擎在浏览器内联）。",
         ), Ui.fill(root, 22))
 
@@ -235,7 +235,7 @@ object PagesMore {
                 return@btn
             }
             resultBox.addView(Ui.status(
-                c, "识别 ${r.items.size} 题 · " + r.sections.joinToString("；") { "${it.first} ${it.second} 题" },
+                c, "识别 ${r.items.size} 题：" + r.sections.joinToString("；") { "${it.first} ${it.second} 题" },
                 Ui.Kind.OK,
             ))
             // 知识点匹配：当前教材节点标题长词优先（与 Web 版口径一致的单题上限 4）
@@ -267,9 +267,9 @@ object PagesMore {
             三步上手：① 起点页「导入示例教材」② 识网看先修关系 ③ 今日页开始练习。
 
             术语：
-            · 知识债——未掌握且拖累后续学习的先修缺口
-            · 红边——影响分 ≥0.08 的先修缺口关系
-            · 销账——连续 2 次达标且累计 ≥3 次作答才结清
+            知识债：未掌握且拖累后续学习的先修缺口
+            红边：影响分 ≥0.08 的先修缺口关系
+            销账：连续 2 次达标且累计 ≥3 次作答才结清
             · K1–K5——修复计划的五项合约（日预算/先修有序/说明含先修点/不重复/覆盖或延期）
         """.trimIndent()
         AlertDialog.Builder(a)

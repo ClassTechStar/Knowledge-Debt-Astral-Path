@@ -85,7 +85,7 @@ export struct CardView {
       this.content()
     }
     .width('100%')
-    .padding({ top: 14, bottom: 14, left: Theme.PAD_CARD, right: Theme.PAD_CARD })
+    .padding({ top: 16, bottom: 16, left: Theme.PAD_CARD, right: Theme.PAD_CARD })
     .borderRadius(Theme.R_G)
     .backgroundColor(Theme.SURFACE)
     .border({ width: this.selected ? 2 : 1, color: this.selected ? Theme.PRIMARY : Theme.RULE })
@@ -133,7 +133,7 @@ export struct BadgeView {
       .backgroundColor(this.kind === 'err' ? Theme.ERR_BG : (this.kind === 'warn' ? Theme.WARN_BG : Theme.OK_BG))
       .borderRadius(Theme.R_PILL)
       .padding({ top: 2, bottom: 2, left: 8, right: 8 })
-      .margin({ right: 6, bottom: 4 })
+      .margin({ right: 8, bottom: 4 })
   }
 }
 
@@ -146,7 +146,7 @@ export struct StatusView {
   build() {
     Text(this.text)
       .fontSize(Theme.FS_HINT)
-      .fontColor(this.kind === 'ok' ? '#2F6B50' : (this.kind === 'err' ? '#8D2828' :
+      .fontColor(this.kind === 'ok' ? Theme.OK_DEEP : (this.kind === 'err' ? Theme.ERR_TEXT :
         (this.kind === 'warn' ? Theme.WARN_INK : Theme.MUTED)))
       .backgroundColor(this.kind === 'warn' ? Theme.WARN_BG : Theme.SOFT)
       .borderRadius(4)
