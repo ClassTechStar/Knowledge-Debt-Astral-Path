@@ -1848,26 +1848,27 @@ long/index.js:
 /* critique: 底子是真实工具界面（数据真实、无编造素材），最重的生成味在玻璃光斑背景、emoji 当图标、游离于 token 的 61 个颜色字面量与满屏药丸圆角；本轮拆除光斑与 emoji、颜色全部入 token、间距归 4px 栅格、圆角收敛三档；WARN 处置：40 对比度已修、F3 balance 已加、报告侧条已改底边线；confirm 3 —— 3 状态左条为状态语义色、玻璃拟态为用户可选功能（账户页开关，非默认态）、报告侧条改底边线 */
 :root{
   /* 色板沿用视觉基线的那套；--muted/--strong 后来提过对比度（4.22→5.19:1、3.16→4.54:1，够 WCAG AA） */
-  --canvas:#f3f4f5;--surface:var(--node-bg);--soft:#e8eaec;--strong:#6b7075;
-  --ink:#303236;--muted:var(--muted);--rule:#c7cacf;--field:#eff0f2;
-  --danger:#b64a58;--primary:#0D72D9;--ok:var(--ok);--ok-bg:#dcf4e7;--ok-ink:var(--ok-ink);
-  --warn:var(--warn);--warn-bg:var(--surface)4d6;
+  --canvas:#f3f4f5;--surface:#fbfbfc;--soft:#e8eaec;--strong:#6b7075;
+  --ink:#303236;--muted:#62676c;--rule:#c7cacf;--field:#eff0f2;
+  --danger:#b64a58;--primary:#0D72D9;--ok:#55a77b;--ok-bg:#dcf4e7;--ok-ink:#1e5d43;
+  --warn:#b8860b;--warn-bg:#fff4d6;
   /* 半径阶梯：控件 18 / 卡组 28 / 外壳 36 */
   --r-c:18px;--r-g:28px;--r-shell:36px;
   /* 统一缓动 */
   --ease:cubic-bezier(.22,1,.36,1);
   /* Hallmark：游离颜色入 token（状态/徽章/图谱节点/玻璃/深色块）+ 圆角三档 */
-  --ok-deep:var(--ok-deep);--err-ink:var(--err-ink);--warn-ink:var(--warn-ink);--err-bg:var(--d-bg);--badge-err-ink:var(--badge-err-ink);
-  --node-bd:var(--node-bd);--node-bg:#fbfbfc;--node-shadow:rgba(45,47,50,.08);
-  --ch-bd:var(--ch-bd);--ch-bg:var(--ch-bg);--ch-bg-2:#d9e9f8;--ch-ink:var(--ch-ink);
-  --t-bg:#e5f7ee;--t-bg-2:#d4f0e2;--d-bd:var(--d-bd);--d-bg:var(--d-bg);--d-ink:var(--d-ink);
+  --ok-deep:#2f6b50;--err-ink:#8d2828;--warn-ink:#6a5010;--err-bg:#ffe1e5;--badge-err-ink:#792e38;
+  --node-bd:#b7bbc0;--node-bg:#fbfbfc;--node-shadow:rgba(45,47,50,.08);
+  --ch-bd:#4f86c6;--ch-bg:#e8f2fb;--ch-bg-2:#d9e9f8;--ch-ink:#1d3d5f;
+  --t-bg:#e5f7ee;--t-bg-2:#d4f0e2;--d-bd:#d95a67;--d-bg:#ffe1e5;--d-ink:#c0505c;
   --glass-nav-bg:rgba(251,251,252,.66);--glass-panel-bg:rgba(251,251,252,.74);--glass-card-bg:rgba(251,251,252,.8);
   --glass-on:rgba(255,255,255,.92);--glass-hi:rgba(255,255,255,.7);--glass-bd:rgba(255,255,255,.6);--glass-bd-55:rgba(255,255,255,.55);
   --sh-ink-10:rgba(48,50,54,.10);--sh-ink-12:rgba(48,50,54,.12);--ring-primary:rgba(13,114,217,.15);
-  --code-bg:var(--code-bg);--code-ink:var(--code-ink);--cam-bg:#0b0e12;--ink-90:var(--ink-90);--ink-deep:var(--ink-deep);--ink-85:var(--ink-85);
-  --ink-70:var(--ink-70);--ink-50:var(--ink-50);--ink-45:var(--ink-45);--ink-40:var(--ink-40);--bd-soft:var(--bd-soft);
-  --well:var(--well);--well-2:var(--well-2);--well-3:var(--well-3);--wash-1:var(--wash-1);--wash-2:var(--wash-2);
-  --ok-vivid:var(--ok-vivid);--err-vivid:var(--err-vivid);--r-s:10px;--r-m:12px;
+  --code-bg:#0f1524;--code-ink:#d7e2ff;--cam-bg:#0b0e12;--ink-90:#222;--ink-deep:#1c2530;--ink-85:#3a4048;
+  --ink-70:#67707a;--ink-50:#a4aab2;--ink-45:#8a9099;--ink-40:#8a9096;--bd-soft:#d8dde3;
+  --well:#eef1f4;--well-2:#e6ebf1;--well-3:#e3e7ec;--wash-1:#f4f7fa;--wash-2:#f6f8fb;
+  --ok-vivid:#1a9e6b;--err-vivid:#c2482b;--crisis:#c0392b;--r-s:10px;--r-m:12px;
+  --bg:#f3f4f5;--brand-hover:rgba(47,111,237,.06);--scrim:rgba(15,20,28,.45);--shadow-ink-14:rgba(0,0,0,.14);--shadow-ink-28:rgba(0,0,0,.28);--d-bg-2:#fdeeea;--body-stack:-apple-system,"PingFang SC","Segoe UI","Microsoft YaHei",sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;overflow-x:clip;background:var(--canvas);color:var(--ink);font:15px/1.55 -apple-system,"PingFang SC","Segoe UI","Microsoft YaHei",sans-serif}
@@ -3022,7 +3023,7 @@ window.APDiag=(function(){
     : (typeof window !== "undefined" ? window : null);
 
   var DWELL = { info: 4000, warn: 6500, crisis: 0 }; // 0 = 常驻，手动关闭
-  var COLORS = { info: "#2f6fed", warn: "#b8860b", crisis: "#c0392b" };
+  var COLORS = { info: "var(--primary)", warn: "var(--warn)", crisis: "var(--crisis)" };
   var TITLES = { info: "提示", warn: "注意", crisis: "重要提醒" };
 
   var queue = [];        // 待展示
@@ -3067,8 +3068,8 @@ window.APDiag=(function(){
 
   function renderCard(n) {
     var card = document.createElement("div");
-    card.style.cssText = "background:#fff;border:1px solid #d4d9de;border-left:4px solid " + (COLORS[n.level] || COLORS.info) +
-      ";border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.14);padding:10px 12px;font:13px/1.6 system-ui,sans-serif;color:#1e2228";
+    card.style.cssText = "background:var(--surface);border:1px solid var(--rule);border-left:4px solid " + (COLORS[n.level] || COLORS.info) +
+      ";border-radius:var(--r-s);box-shadow:0 6px 20px var(--shadow-ink-14);padding:10px 12px;font:13px/1.6 system-ui,sans-serif;color:var(--ink)";
     var head = document.createElement("div");
     head.style.cssText = "font-weight:700;margin-bottom:2px";
     head.textContent = n.title || TITLES[n.level] || TITLES.info;

@@ -23,7 +23,7 @@
     : (typeof window !== "undefined" ? window : null);
 
   var DWELL = { info: 4000, warn: 6500, crisis: 0 }; // 0 = 常驻，手动关闭
-  var COLORS = { info: "#2f6fed", warn: "#b8860b", crisis: "#c0392b" };
+  var COLORS = { info: "var(--primary)", warn: "var(--warn)", crisis: "var(--crisis)" };
   var TITLES = { info: "提示", warn: "注意", crisis: "重要提醒" };
 
   var queue = [];        // 待展示
@@ -68,8 +68,8 @@
 
   function renderCard(n) {
     var card = document.createElement("div");
-    card.style.cssText = "background:#fff;border:1px solid #d4d9de;border-left:4px solid " + (COLORS[n.level] || COLORS.info) +
-      ";border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.14);padding:10px 12px;font:13px/1.6 system-ui,sans-serif;color:#1e2228";
+    card.style.cssText = "background:var(--surface);border:1px solid var(--rule);border-left:4px solid " + (COLORS[n.level] || COLORS.info) +
+      ";border-radius:var(--r-s);box-shadow:0 6px 20px var(--shadow-ink-14);padding:10px 12px;font:13px/1.6 system-ui,sans-serif;color:var(--ink)";
     var head = document.createElement("div");
     head.style.cssText = "font-weight:700;margin-bottom:2px";
     head.textContent = n.title || TITLES[n.level] || TITLES.info;

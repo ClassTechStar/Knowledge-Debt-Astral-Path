@@ -168,6 +168,11 @@ if (Test-Path scripts/verify_architecture.py) {
     Step "architecture" { python scripts/verify_architecture.py }
 }
 
+# 6i) CSS token 完整性（自引用/拼接损坏/未定义引用——rebase 曾引入循环引用且无门禁可查）
+if (Test-Path scripts/verify_tokens.py) {
+    Step "css-tokens" { python scripts/verify_tokens.py }
+}
+
 if (Test-Path scripts/verify_no_empty_catch.py) {
 }
 
