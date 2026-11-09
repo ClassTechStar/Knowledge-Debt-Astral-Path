@@ -56,7 +56,7 @@ object PagesAgent {
         val root = Ui.page(c)
         root.addView(Ui.pageHeader(
             c, "受约束智能体",
-            "意图路由 · 危机转人工 · 敏感词脱敏。数字只来自本地公式。",
+            "意图路由、危机转人工、敏感词脱敏。数字只来自本地公式。",
         ), Ui.fill(root, 22))
 
         // 对话面板（对齐 Web .panel + .chat：面板内滚动对话区）
