@@ -551,8 +551,30 @@
   }
 
   // 输出侧脱敏（源 sanitize，L6717）
+  // ── 注入模式（威胁模型 T13：模型返回不得携带可执行的越权指令）──
+  // 只拦「伪造系统指令/覆写规则/角色伪装/模板标记泄漏」这类注入形态，
+  // 不按敏感词拦自然回答——用户问「怎么撤销授权」，回答里天然含「撤销授权」。
+  var INJECT_PATTERNS = [
+    /^\s*(system|system\s*prompt|系统提示|系统消息|系统指令|指令|instruction)\s*[:：]/im,
+    /ignore\s+(all\s+)?(previous|prior|above|earlier)\s+(instructions?|prompts?|rules?)/i,
+    /忽略(之前|上述|以上|前面)?(的)?(所有)?(指令|提示|要求|规则|对话)/,
+    /disregard\s+(the\s+)?(previous|above|prior)/i,
+    /you\s+are\s+now\s+(a|an|the)\s+/i,
+    /你现在(是|扮演|变成)/,
+    /^\s*>\s*(system|assistant|user)\s*[:：]/im,
+    /new\s+instructions?\s*[:：]/i,
+    /<\|im_start\|>|<\|im_end\|>|\[INST\]|<<SYS>>|<\/s>/i
+  ];
+  function hasInjection(text) {
+    for (var i = 0; i < INJECT_PATTERNS.length; i++) if (INJECT_PATTERNS[i].test(text)) return true;
+    return false;
+  }
+
   function sanitizeOutput(text) {
-    var t = String(text || "");
+    var t = String(text == null ? "" : text);
+    // ① 注入形态直接拒绝（返回文本只作展示，绝不当作指令执行）
+    if (hasInjection(t)) return "这段内容暂时无法展示，请查看教材原文或联系老师。";
+    // ② 敏感词（原有）
     for (var i = 0; i < BANNED.length; i++) if (t.indexOf(BANNED[i]) >= 0) return "这段内容暂时无法展示，请查看教材原文或联系老师。";
     return t;
   }
@@ -568,6 +590,7 @@
     fuzzyConfirm: fuzzyAnchorConfirm,
     score: scoreIntents,
     sanitize: sanitizeOutput,
+    hasInjection: hasInjection,
     thresholds: { exec: TauExec, clarify: TauClarify, maxClarify: MaxClarify }
   };
 

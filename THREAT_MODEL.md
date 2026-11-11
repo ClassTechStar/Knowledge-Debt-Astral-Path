@@ -78,7 +78,7 @@
 |---|---|---|---|
 | T11 | 模型编造分数、影响分或诊断结论 | `shared/integrations/p2-ai-integration.js:583` 系统提示「数字与诊断结论只引用系统上下文，不要编造」；`:596` 本地话术兜底不编造数字；公式真源在 `shared/core.js` 与 `src/AstralPath.Core`，由 `scripts/verify_constants.py`、`scripts/verify_formulas.py` 与金样 runner 对拍 | 已覆盖 |
 | T12 | 模型输出夹带敏感词或越界话术 | `shared/integrations/p2-ai-integration.js:554` `sanitizeOutput()` 输出侧脱敏；`shared/core.js:86` 危机词表、`shared/agent-router.js:74` 危机最高优先级；`shared/notify.js:44` 危机卡常驻且免打扰下仍显示 | 已覆盖 |
-| T13 | 提示词注入让智能体执行越权意图 | `shared/agent-router.js` 意图白名单 + 危机/负例拦截 + 授权前置；`tools/agent-intents.json` 由 `scripts/verify_agent_intents.py` 六方对拍；但**没有对模型返回内容做二次意图校验** | 部分 |
+| T13 | 提示词注入让智能体执行越权意图 | 双层：① **输入侧** `shared/agent-router.js` 意图白名单 + 危机/负例拦截 + 授权前置，`tools/agent-intents.json` 由 `scripts/verify_agent_intents.py` 六方对拍；② **输出侧** `shared/integrations/p2-ai-integration.js` 的 `sanitizeOutput` 拦注入形态（伪造系统指令 / 覆写规则 / 角色伪装 / 模板标记泄漏），并**保持架构不变量：模型返回只作展示、不回喂 `routeWithML`**（执行路径不受模型输出影响）；`scripts/verify_output_guard.py` 四条断言锁死 | 已覆盖 |
 | T14 | 危机求助被免打扰设置吞掉 | `shared/notify.js:4` 危机最高级、`shared/app-glue.js:175` 免打扰仍保留危机提醒 | 已覆盖 |
 
 ### 4.4 产物一致性与供应链
@@ -103,6 +103,7 @@
 | `scripts/gen_frontend_regions.py --check`、`scripts/sync-monolith-html.ps1 -Check`、`scripts/build-single.py` | T15 |
 | `scripts/verify_release_version.py` | T16 |
 | `scripts/verify_cloud_consent.py` | T10 |
+| `scripts/verify_output_guard.py` | T13 |
 | `scripts/verify_threat_model.py` | 本文件自身的结构与证据路径 |
 
 ## 6. 变更记录
@@ -114,3 +115,4 @@
 | 2026-11-11 | T10 从「部分」升「已覆盖」：危机词/禁用词拦截从 replyAgent 单入口下沉到 p0 唯一网络出口 `complete()`，守卫由 app-glue 装配；新增 `scripts/verify_cloud_consent.py` 门禁锁死出网点唯一与装配齐备 | T10 |
 | 2026-11-11 | T10 补授权粒度：新增 `__AP_CLOUD_OPTIN__` 显式同意开关（默认关，fail-closed），账户页可开关；「配了密钥」不再等于「同意出网」 | T10 |
 | 2026-11-11 | T8 吊销清单改为可离线更新：`APRevoked` 合并内置清单与本地导入，账户页粘贴 JSON 即生效；演示密钥可还原仍属不可证 | T8 |
+| 2026-11-11 | T13 从「部分」升「已覆盖」：输出侧加注入形态拦截（伪造指令/覆写规则/角色伪装/模板标记），并用门禁锁死「模型返回不回喂执行路径」的架构不变量 | T13 |

@@ -188,6 +188,11 @@ if (Test-Path scripts/verify_cloud_consent.py) {
     Step "cloud-consent" { python scripts/verify_cloud_consent.py }
 }
 
+# 6m) 模型输出守卫（威胁模型 T13：注入形态拦截 + 模型返回不回喂执行路径）
+if (Test-Path scripts/verify_output_guard.py) {
+    Step "output-guard" { python scripts/verify_output_guard.py }
+}
+
 # 6e) 空 catch 检查：每个 catch 必须有记录或降级动作
 if (Test-Path scripts/verify_no_empty_catch.py) {
     Step "no-empty-catch" { python scripts/verify_no_empty_catch.py }

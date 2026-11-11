@@ -140,6 +140,34 @@
     }
   };
 
+  // ── 模型输出守卫（威胁模型 T13：Web 端出口设卡）────────────────
+  // Web 单体版的 __AP_MIMO__.complete 有 8 个调用入口，在出口统一拦注入形态，
+  // 与部署版 shared/integrations/p2-ai-integration.js 的 sanitizeOutput 同口径。
+  // 只拦「伪造系统指令/覆写规则/角色伪装/模板标记泄漏」，不按敏感词拦自然回答。
+  window.__AP_INJECT_PATTERNS__ = [
+    /^\s*(system|system\s*prompt|系统提示|系统消息|系统指令|指令|instruction)\s*[:：]/im,
+    /ignore\s+(all\s+)?(previous|prior|above|earlier)\s+(instructions?|prompts?|rules?)/i,
+    /忽略(之前|上述|以上|前面)?(的)?(所有)?(指令|提示|要求|规则|对话)/,
+    /disregard\s+(the\s+)?(previous|above|prior)/i,
+    /you\s+are\s+now\s+(a|an|the)\s+/i,
+    /你现在(是|扮演|变成)/,
+    /^\s*>\s*(system|assistant|user)\s*[:：]/im,
+    /new\s+instructions?\s*[:：]/i,
+    /<\|im_start\|>|<\|im_end\|>|\[INST\]|<<SYS>>|<\/s>/i
+  ];
+  window.__AP_HAS_INJECTION__ = function (text) {
+    var t = String(text == null ? "" : text);
+    for (var i = 0; i < window.__AP_INJECT_PATTERNS__.length; i++) {
+      if (window.__AP_INJECT_PATTERNS__[i].test(t)) return true;
+    }
+    return false;
+  };
+  window.__AP_OUTPUT_GUARD__ = function (text) {
+    var t = String(text == null ? "" : text);
+    if (window.__AP_HAS_INJECTION__(t)) return "这段内容暂时无法展示，请查看教材原文或联系老师。";
+    return t;
+  };
+
   // 出口守卫装配（威胁模型 T10）：把危机词/禁用词拦截下沉到唯一网络出口，
   // 任何调用入口（生成/出题/对话）都不得把这类内容送出设备。
   // 词表来自 core.js 生成区（INTENTS/CRISIS/BANNED 由 tools/agent-intents.json 生成）。
