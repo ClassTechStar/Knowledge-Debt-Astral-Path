@@ -10,9 +10,8 @@
     <RootNamespace>AstralPath.Desktop</RootNamespace>
     <Product>知债：星穹学途（Knowledge Debt: Astral Path）</Product>
     <AssemblyTitle>知债：星穹学途（Knowledge Debt: Astral Path）</AssemblyTitle>
-    <Version>1.3.0</Version>
-    <FileVersion>1.3.0.0</FileVersion>
-    <AssemblyVersion>1.3.0.0</AssemblyVersion>
+    <!-- 版本由根 Directory.Build.props 统一供给，避免旧值被 rebase 带回来；
+         门禁 scripts/verify_release_version.py 会拦截任何重新写死的版本号。 -->
     <Description>与 Web 端完全一致的桌面壳：WebView2 内嵌演示 UI + 本地 API</Description>
   </PropertyGroup>
   <ItemGroup>

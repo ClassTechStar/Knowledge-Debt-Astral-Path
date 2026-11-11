@@ -25,7 +25,7 @@ if (-not ${env:ProgramFiles(x86)}) { ${env:ProgramFiles(x86)} = 'C:\Program File
 if (-not $env:ANDROID_HOME) { $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk" }
 
 # 0-1. 快速契约门禁（2.4-L4：常量/意图表/公式跨端对拍不过不打包）
-foreach ($gate in @("verify_constants.py", "verify_agent_intents.py", "verify_formulas.py")) {
+foreach ($gate in @("verify_constants.py", "verify_agent_intents.py", "verify_formulas.py", "verify_release_version.py")) {
     $g = Join-Path $repo "scripts\$gate"
     if (Test-Path $g) {
         Write-Host ">>> gate: $gate" -ForegroundColor Cyan

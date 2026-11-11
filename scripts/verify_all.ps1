@@ -173,7 +173,14 @@ if (Test-Path scripts/verify_tokens.py) {
     Step "css-tokens" { python scripts/verify_tokens.py }
 }
 
-if (Test-Path scripts/verify_no_empty_catch.py) {
+# 6j) 发布版本一致性（借鉴 VeriRandom 发布前 channel gate：单一事实源 + 防回潮）
+if (Test-Path scripts/verify_release_version.py) {
+    Step "release-version" { python scripts/verify_release_version.py }
+}
+
+# 6k) 威胁模型活文档（覆盖状态表、证据路径、日期化变更记录必须自洽）
+if (Test-Path scripts/verify_threat_model.py) {
+    Step "threat-model" { python scripts/verify_threat_model.py }
 }
 
 # 6e) 空 catch 检查：每个 catch 必须有记录或降级动作

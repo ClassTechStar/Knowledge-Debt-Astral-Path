@@ -1,0 +1,46 @@
+name: 功能建议
+description: 提出新功能或改进想法
+title: "[建议] 请简述想法"
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        比起方案，我们更想先知道**场景**：哪类学习者、在哪一步卡住了。
+        一个 issue 只提一个建议。
+
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 使用场景
+      description: 谁、在做什么、遇到了什么不便。请贴出真实或仿真的使用片段。
+      placeholder: 例如：高三学生做完 14 天计划后，想知道自己哪些红边已经销掉，但现在只能翻历史……
+    validations:
+      required: true
+
+  - type: dropdown
+    id: who
+    attributes:
+      label: 主要受益者
+      options:
+        - 学习者（自学 / 复习 / 刷题）
+        - 教师（学情视图 / 作业单）
+        - 开发者 / 贡献者（工程化、门禁、文档）
+        - 其他
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: 范围自查（勾选符合项）
+      options:
+        - label: 这是「知识债诊断与修复」学习闭环内的需求，不是另一个产品
+        - label: 需求在本机离线环境下也成立（或已明确需要联网，并说明依赖）
+        - label: 不需要新增真实学生个人身份数据
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: 你想到的方案（可选）
+      description: 有想法就写，没有也欢迎——我们更看重场景描述。

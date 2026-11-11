@@ -1,0 +1,74 @@
+name: 缺陷反馈
+description: 报告 Web / Windows / 鸿蒙 / 安卓 / API 端的异常、崩溃或错误结果
+title: "[缺陷] 请简述现象"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。**一个 issue 只报一个问题**，方便定位与关闭。
+        请先确认：已在最新版复现、且未搜到相同 issue。
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: 出问题的端
+      options:
+        - Web（浏览器打开 index.html）
+        - Windows 单体版 / 安装包
+        - 鸿蒙端
+        - 原生安卓端
+        - API / 服务端
+        - 多端一致（脚本 / 门禁 / 构建）
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤
+      description: 越具体越好。若涉及导入资料或图谱，请说明用的是哪份教材/哪个操作入口。
+      placeholder: |
+        1. 打开……
+        2. 点击……
+        3. ……
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+      description: 界面问题请附截图；崩溃请附控制台 / hilog / logcat 输出。
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 版本号
+      description: 见「账户」页或 About；不确定就写「不明」，但请写清大致时间。
+      placeholder: "2.6.0"
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 反馈前自查
+      options:
+        - label: 已在最新代码上复现，且未搜到重复 issue
+          required: true
+        - label: 若涉及学生学情/教师聚合视图，已确认不包含真实学生个人身份信息
+          required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: 其他信息（可选）
+      description: 环境、浏览器版本、设备型号、相关截图等。

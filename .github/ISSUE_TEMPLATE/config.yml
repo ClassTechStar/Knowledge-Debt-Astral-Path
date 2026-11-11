@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 先读 AGENTS.md（贡献前必读）
+    url: https://github.com/ClassTechStar/Knowledge-Debt-Astral-Path/blob/main/AGENTS.md
+    about: 仓库结构、前端改动铁律、门禁用法、证据矩阵——能避开绝大多数返工。
+  - name: 安全与隐私边界（THREAT_MODEL.md）
+    url: https://github.com/ClassTechStar/Knowledge-Debt-Astral-Path/blob/main/THREAT_MODEL.md
+    about: 提安全/隐私类问题前，先看我们能证明什么、不能证明什么，可以少走弯路。
