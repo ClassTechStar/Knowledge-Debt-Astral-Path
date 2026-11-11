@@ -18,10 +18,134 @@
 
   /* ── 存储版本与自愈（store.js T1）：版本标记 + 损坏分片修复 ── */
   try {
-    // 出口守卫装配（威胁模型 T10）：把危机词/禁用词拦截下沉到唯一网络出口，
+    // ── 云端调用显式同意（威胁模型 T10：授权粒度）──────────────────
+  // 默认关闭（fail-closed）：不勾就不出网，与「配了密钥即同意」彻底分开。
+  // 持久化在 ap:meta.cloudOptIn（store.js 的 meta 收留未知键，不会丢）；
+  // 这里用同步标志 window.__AP_CLOUD_OPTIN__ 供出口守卫读取，避免守卫里做异步。
+  var AP_CLOUD_LS = "ap:cloudOptIn";
+  window.APCloudConsent = {
+    get: function () {
+      try { return window.localStorage.getItem(AP_CLOUD_LS) === "1"; } catch (e) { return false; }
+    },
+    set: function (on) {
+      try {
+        if (on) window.localStorage.setItem(AP_CLOUD_LS, "1");
+        else window.localStorage.removeItem(AP_CLOUD_LS);
+      } catch (e) {}
+      window.__AP_CLOUD_OPTIN__ = !!on;
+      try { if (window.__AP_ON_CLOUD_CONSENT__) window.__AP_ON_CLOUD_CONSENT__(!!on); } catch (e) {}
+    },
+    sync: function () { window.__AP_CLOUD_OPTIN__ = this.get(); return this.get(); }
+  };
+  window.APCloudConsent.sync();
+
+  // ── 吊销清单离线更新（威胁模型 T8）────────────────────────────
+  // 内置 __AP_REVOKED__（随版本发布）+ 用户离线导入的清单（localStorage）合并。
+  // 不改源码、不重新构建即可吊销被盗/误发的密钥信封（按 env.kid 匹配）。
+  var AP_REVOKE_LS = "ap:revokedKids";
+  window.APRevoked = {
+    load: function () {
+      var extra = [];
+      try {
+        var raw = window.localStorage.getItem(AP_REVOKE_LS);
+        if (raw) {
+          var arr = JSON.parse(raw);
+          if (Array.isArray(arr)) {
+            for (var i = 0; i < arr.length; i++) if (arr[i]) extra.push(String(arr[i]));
+          }
+        }
+      } catch (e) {}
+      return extra;
+    },
+    /** 返回合并后的吊销清单（内置 + 离线导入，去重） */
+    list: function () {
+      var built = [];
+      try { if (Array.isArray(window.__AP_REVOKED__)) built = window.__AP_REVOKED__.slice(); } catch (e) {}
+      var extra = this.load(), out = [];
+      function push(v) {
+        var k = String(v).toLowerCase();
+        for (var i = 0; i < out.length; i++) if (out[i] === k) return;
+        out.push(k);
+      }
+      for (var i = 0; i < built.length; i++) push(built[i]);
+      for (var j = 0; j < extra.length; j++) push(extra[j]);
+      return out;
+    },
+    /** 导入离线吊销清单：JSON 数组（kid 字符串），返回条数；非法输入抛错 */
+    import: function (text) {
+      var arr = JSON.parse(String(text));
+      if (!Array.isArray(arr)) throw new Error("清单必须是 JSON 数组");
+      var clean = [];
+      for (var i = 0; i < arr.length; i++) {
+        var v = String(arr[i] == null ? "" : arr[i]).trim();
+        if (!v) continue;
+        if (!/^[a-z0-9_.:-]{1,128}$/i.test(v)) throw new Error("第 " + (i + 1) + " 项不是合法的密钥标识");
+        clean.push(v);
+      }
+      try { window.localStorage.setItem(AP_REVOKE_LS, JSON.stringify(clean)); } catch (e) {}
+      // 让 __apEnvRevoked 立即看到合并结果
+      try {
+        window.__AP_REVOKED__ = this.list();
+      } catch (e) {}
+      return clean.length;
+    },
+    clear: function () {
+      try { window.localStorage.removeItem(AP_REVOKE_LS); } catch (e) {}
+      try { window.__AP_REVOKED__ = this.list(); } catch (e) {}
+    }
+  };
+  // 启动即合并，__apEnvRevoked 读 window.__AP_REVOKED__ 时自动生效
+  try { window.__AP_REVOKED__ = window.APRevoked.list(); } catch (e) {}
+
+  // ── 账户页 UI 自动接管（云同意 + 吊销清单）────────────────────
+  // 绑定逻辑收在这里，页面只写 HTML、不留手写内联 JS（内联 JS 棘轮只许降不许涨）。
+  window.APCloudUi = {
+    render: function () {
+      function $(id) { return document.getElementById(id); }
+      var chk = $("chkCloud"), line = $("cloudLine"), rline = $("revokeLine");
+      if (!chk) return;
+      var on = window.APCloudConsent.get();
+      chk.checked = !!on;
+      if (line) {
+        line.textContent = on ? "已授权：仅在开放问题且无危机/禁用词时调用云模型。" : "未授权：云端调用已禁用。";
+        line.className = "status" + (on ? " ok" : "");
+      }
+      if (rline) {
+        rline.textContent = "当前生效 " + window.APRevoked.list().length + " 条（内置 + 本地追加）。";
+      }
+    },
+    bind: function () {
+      var self = this;
+      function $(id) { return document.getElementById(id); }
+      var chk = $("chkCloud");
+      if (!chk || chk.__apBound) return;
+      chk.__apBound = true;
+      chk.onchange = function () { window.APCloudConsent.set(this.checked); self.render(); };
+      var imp = $("btnRevokeImport"), clr = $("btnRevokeClear"), rline = $("revokeLine");
+      if (imp) imp.onclick = function () {
+        try {
+          var n = window.APRevoked.import($("revokeInput").value);
+          $("revokeInput").value = "";
+          self.render();
+          if (rline) {
+            rline.textContent = "已导入 " + n + " 条，当前生效 " + window.APRevoked.list().length + " 条。";
+            rline.className = "status ok";
+          }
+        } catch (e) {
+          if (rline) { rline.textContent = "导入失败：" + e.message; rline.className = "status err"; }
+        }
+      };
+      if (clr) clr.onclick = function () { window.APRevoked.clear(); self.render(); };
+      self.render();
+    }
+  };
+
+  // 出口守卫装配（威胁模型 T10）：把危机词/禁用词拦截下沉到唯一网络出口，
   // 任何调用入口（生成/出题/对话）都不得把这类内容送出设备。
   // 词表来自 core.js 生成区（INTENTS/CRISIS/BANNED 由 tools/agent-intents.json 生成）。
   window.__AP_EGRESS_GUARD__ = function (text) {
+    // 云端调用显式同意（T10）：未勾选一律不出网，fail-closed
+    if (window.__AP_CLOUD_OPTIN__ !== true) return false;
     var core = window.APCore || null;
     if (!core) return true; // 词表未就绪：放行，装配本身由 verify_cloud_consent.py 门禁保证
     var t = String(text == null ? "" : text).toLowerCase();

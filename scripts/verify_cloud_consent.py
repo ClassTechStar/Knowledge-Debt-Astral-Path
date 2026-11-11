@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""云调用出口守卫门禁（威胁模型 T10：「逐入口授权」的根治检查）。
+"""云调用出口守卫与授权粒度门禁（威胁模型 T10 + T8）。
 
 背景：`__AP_MIMO__.complete()` 有 4 个调用入口（p0 生成 / p1 图谱与出题 / p2 对话），
 但危机词/禁用词拦截原本只长在 p2 的 replyAgent 里。任何新入口只要绕过它直接调
@@ -12,6 +12,9 @@
   ③ 存在守卫装配点（`__AP_EGRESS_GUARD__` 被定义，且词表取自 core.js 生成区）
   ④ 所有 `M.complete(` / `__AP_MIMO__.complete(` 调用点都落在 shared/integrations/ 下
      （不存在绕过 complete 直接 fetch 的旁路）
+  ⑤ 授权粒度：守卫必须检查 `__AP_CLOUD_OPTIN__`（默认 false，fail-closed），
+     「配了密钥」不得等于「同意出网」
+  ⑥ 吊销清单可离线更新：存在 `APRevoked` 的合并/导入实现，启动时合并到 `__AP_REVOKED__`
 
 用法：python scripts/verify_cloud_consent.py      退出码 0=全绿 1=有缺口
 """
@@ -97,6 +100,36 @@ def main():
         fail("未发现任何 complete() 调用点（约定应有多个调用入口）")
     else:
         print(f"  OK  调用点归口             {len(calls)} 处全部在 shared/integrations/，均经唯一出口")
+
+    # ⑤ 授权粒度：出口守卫必须先看 __AP_CLOUD_OPTIN__（fail-closed）
+    guard_def = None
+    for f in js_files:
+        t = f.read_text(encoding="utf-8", errors="replace")
+        if "__AP_EGRESS_GUARD__ = function" in t:
+            guard_def = (f, t)
+            break
+    if guard_def is None:
+        fail("未找到 __AP_EGRESS_GUARD__ 定义")
+    else:
+        gt = guard_def[1]
+        if "__AP_CLOUD_OPTIN__" not in gt:
+            fail(f"{guard_def[0].relative_to(ROOT)} 的出口守卫未检查 __AP_CLOUD_OPTIN__（配密钥即出网）")
+        else:
+            print("  OK  授权粒度           守卫检查 __AP_CLOUD_OPTIN__（默认拒绝出网）")
+
+    # ⑥ 吊销清单离线更新
+    revoked_ok = False
+    for f in js_files:
+        t = f.read_text(encoding="utf-8", errors="replace")
+        if "APRevoked" in t and "function" in t and "list:" in t:
+            revoked_ok = True
+            if "import" not in t:
+                fail(f"{f.relative_to(ROOT)} 的 APRevoked 缺 import（无法离线导入清单）")
+            else:
+                print(f"  OK  吊销离线更新       {f.relative_to(ROOT).as_posix()}：合并 + import")
+            break
+    if not revoked_ok:
+        fail("未找到 APRevoked 吊销清单离线更新实现")
 
     print()
     if problems:

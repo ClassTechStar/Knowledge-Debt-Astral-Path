@@ -68,9 +68,9 @@
 | T5 | 未授权时教师侧看到学生学情 | `src/AstralPath.Harmony/entry/src/main/ets/pages/AccountPage.ets:121` 授权开关默认不可见；`shared/agent-router.js:92` 撤销优先于授予；`src/AstralPath.Harmony/entry/src/main/ets/pages/TeacherPage.ets:23` k=5、样本少于 3 人只显示「样本不足」 | 已覆盖 |
 | T6 | 从聚合结果反推个体 | 教师视图只消费聚合行，不产出个体明细、不排名（`src/AstralPath.Harmony/entry/src/main/ets/pages/TeacherPage.ets` 文件头红线）；但**服务端聚合口径不在本仓库**，客户端只做展示与抑制 | 部分 |
 | T7 | 自定义密钥明文落盘 | `deploy/monolith-web/index.html:7314` 起：明文只在输入框内存，落盘前 AES-GCM-256 加密，解密用 IndexedDB 中不可导出的 CryptoKey | 已覆盖 |
-| T8 | 内置演示密钥被解出滥用 | `index.html:7322` `__AP_EMBED__` 为密文分片 + iv，`index.html:7325` `__AP_REVOKED__` 吊销清单；须明确：演示密钥与解密材料都在客户端，**任何人都可还原**，它不是保密资产，仅用于免配置体验；额度保护依赖吊销清单而非密码学 | 部分 |
+| T8 | 密钥信封被盗/误发后无法吊销；内置演示密钥被解出滥用 | 吊销清单**可离线更新**：`shared/app-glue.js` 的 `APRevoked` 把内置 `__AP_REVOKED__` 与用户导入清单（localStorage）合并，账户页「密钥吊销清单」粘贴 JSON 即生效，无需重新构建；`index.html` 的 `__apEnvRevoked` 按 `env.kid` 命中后删除信封并回退。须明确：内置演示密钥与解密材料都在客户端，**任何人都可还原**，它不是保密资产，仅用于免配置体验 | 部分（吊销已可离线更新；演示密钥可还原属不可证） |
 | T9 | 本机 localStorage 被直接改写以伪造掌握度 | `shared/store.js:43` 分片 schema 版本、`scripts/verify_store.py` 与 `scripts/store_runner.js` 校验迁移与残缺分片合并；但**无签名/无防篡改**，本机操作者可任意改写 | 不可证 |
-| T10 | 资料在用户未同意时被上传到云模型 / 危机词或禁用词被送出设备 | 危机词、禁用词拦截下沉到**唯一网络出口**：`shared/integrations/p0-ai-integration.js:121` 的 `complete()` 调用 `__AP_EGRESS_GUARD__` 拒绝出网；守卫在 `shared/app-glue.js:24` 装配，词表取自 `shared/core.js` 生成区（CRISIS/BANNED）；`scripts/verify_cloud_consent.py` 锁死「出网点唯一 + 出口设卡 + 装配齐备 + 无旁路」四条 | 已覆盖 |
+| T10 | 资料在用户未同意时被上传到云模型 / 危机词或禁用词被送出设备 | 危机词、禁用词拦截下沉到**唯一网络出口**：`shared/integrations/p0-ai-integration.js:121` 的 `complete()` 调用 `__AP_EGRESS_GUARD__` 拒绝出网；守卫在 `shared/app-glue.js` 装配，词表取自 `shared/core.js` 生成区（CRISIS/BANNED）。**授权粒度**：守卫先查 `__AP_CLOUD_OPTIN__`（默认 false，fail-closed），账户页「云端调用授权」显式开启才出网，「配了密钥」不等于「同意出网」；`scripts/verify_cloud_consent.py` 六条断言锁死 | 已覆盖 |
 
 ### 4.3 AI 输出与数字可信度
 
@@ -112,3 +112,5 @@
 | 2026-11-11 | 建立威胁模型活文档，按当前代码逐项核对防线与证据路径；同步新增 `scripts/verify_threat_model.py` 门禁 | 全文 |
 | 2026-11-11 | 版本口径收敛到 `Directory.Build.props` 单一事实源，新增发布前版本门禁（借鉴 VeriRandom channel gate） | T16 |
 | 2026-11-11 | T10 从「部分」升「已覆盖」：危机词/禁用词拦截从 replyAgent 单入口下沉到 p0 唯一网络出口 `complete()`，守卫由 app-glue 装配；新增 `scripts/verify_cloud_consent.py` 门禁锁死出网点唯一与装配齐备 | T10 |
+| 2026-11-11 | T10 补授权粒度：新增 `__AP_CLOUD_OPTIN__` 显式同意开关（默认关，fail-closed），账户页可开关；「配了密钥」不再等于「同意出网」 | T10 |
+| 2026-11-11 | T8 吊销清单改为可离线更新：`APRevoked` 合并内置清单与本地导入，账户页粘贴 JSON 即生效；演示密钥可还原仍属不可证 | T8 |
