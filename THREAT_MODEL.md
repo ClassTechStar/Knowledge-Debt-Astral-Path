@@ -70,7 +70,7 @@
 | T7 | 自定义密钥明文落盘 | `deploy/monolith-web/index.html:7314` 起：明文只在输入框内存，落盘前 AES-GCM-256 加密，解密用 IndexedDB 中不可导出的 CryptoKey | 已覆盖 |
 | T8 | 内置演示密钥被解出滥用 | `index.html:7322` `__AP_EMBED__` 为密文分片 + iv，`index.html:7325` `__AP_REVOKED__` 吊销清单；须明确：演示密钥与解密材料都在客户端，**任何人都可还原**，它不是保密资产，仅用于免配置体验；额度保护依赖吊销清单而非密码学 | 部分 |
 | T9 | 本机 localStorage 被直接改写以伪造掌握度 | `shared/store.js:43` 分片 schema 版本、`scripts/verify_store.py` 与 `scripts/store_runner.js` 校验迁移与残缺分片合并；但**无签名/无防篡改**，本机操作者可任意改写 | 不可证 |
-| T10 | 资料在用户未同意时被上传到云模型 | `shared/integrations/p2-ai-integration.js:578` 云调用条件含在线、无危机词、无禁用词与模型就绪；`:583` 系统提示限定话题；离线自动回落本地话术 | 部分（云开关的逐入口授权未做统一门禁） |
+| T10 | 资料在用户未同意时被上传到云模型 / 危机词或禁用词被送出设备 | 危机词、禁用词拦截下沉到**唯一网络出口**：`shared/integrations/p0-ai-integration.js:121` 的 `complete()` 调用 `__AP_EGRESS_GUARD__` 拒绝出网；守卫在 `shared/app-glue.js:24` 装配，词表取自 `shared/core.js` 生成区（CRISIS/BANNED）；`scripts/verify_cloud_consent.py` 锁死「出网点唯一 + 出口设卡 + 装配齐备 + 无旁路」四条 | 已覆盖 |
 
 ### 4.3 AI 输出与数字可信度
 
@@ -102,6 +102,7 @@
 | `scripts/verify_architecture.py`、`scripts/verify_no_empty_catch.py` | T17、T18 |
 | `scripts/gen_frontend_regions.py --check`、`scripts/sync-monolith-html.ps1 -Check`、`scripts/build-single.py` | T15 |
 | `scripts/verify_release_version.py` | T16 |
+| `scripts/verify_cloud_consent.py` | T10 |
 | `scripts/verify_threat_model.py` | 本文件自身的结构与证据路径 |
 
 ## 6. 变更记录
@@ -110,3 +111,4 @@
 |---|---|---|
 | 2026-11-11 | 建立威胁模型活文档，按当前代码逐项核对防线与证据路径；同步新增 `scripts/verify_threat_model.py` 门禁 | 全文 |
 | 2026-11-11 | 版本口径收敛到 `Directory.Build.props` 单一事实源，新增发布前版本门禁（借鉴 VeriRandom channel gate） | T16 |
+| 2026-11-11 | T10 从「部分」升「已覆盖」：危机词/禁用词拦截从 replyAgent 单入口下沉到 p0 唯一网络出口 `complete()`，守卫由 app-glue 装配；新增 `scripts/verify_cloud_consent.py` 门禁锁死出网点唯一与装配齐备 | T10 |

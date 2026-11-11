@@ -113,6 +113,17 @@
 
   function complete(messages, opts) {
     if (!_cfg) return Promise.reject(new Error("MiMo 未配置"));
+    // ── 出口守卫（威胁模型 T10）────────────────────────────────────
+    // 危机词/禁用词一律不出设备。守卫由上层装配（app-glue 挂 __AP_EGRESS_GUARD__），
+    // p0 不持有词表以保持分层；守卫缺失时放行（装配由 verify_cloud_consent.py 门禁保证）。
+    // 在出口拦而非各调用入口拦：入口有 4 处（p0 生成 / p1 图谱与出题 / p2 对话），
+    // 只拦一处就会漏。
+    if (typeof window !== "undefined" && typeof window.__AP_EGRESS_GUARD__ === "function") {
+      var _probe = (messages || []).map(function (m) { return String((m && m.content) || ""); }).join("\n");
+      if (!window.__AP_EGRESS_GUARD__(_probe)) {
+        return Promise.reject(new Error("内容触发出口拦截，已降级本地"));
+      }
+    }
     opts = opts || {};
     var onDelta = opts.onDelta; // T15 修复：SSE 分支引用未定义 onDelta（原意图 opts.onDelta），流式必抛 ReferenceError
     return _acquire().then(function () {

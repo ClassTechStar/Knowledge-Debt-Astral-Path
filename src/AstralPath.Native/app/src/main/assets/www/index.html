@@ -9349,7 +9349,24 @@ window.__TINY_INTENTS__={"vocab": ["知识债", "债边", "诊断", "红边", "�
 
   /* ── 存储版本与自愈（store.js T1）：版本标记 + 损坏分片修复 ── */
   try {
-    var sc = APStore.ensureSchema(window.localStorage);
+    // 出口守卫装配（威胁模型 T10）：把危机词/禁用词拦截下沉到唯一网络出口，
+  // 任何调用入口（生成/出题/对话）都不得把这类内容送出设备。
+  // 词表来自 core.js 生成区（INTENTS/CRISIS/BANNED 由 tools/agent-intents.json 生成）。
+  window.__AP_EGRESS_GUARD__ = function (text) {
+    var core = window.APCore || null;
+    if (!core) return true; // 词表未就绪：放行，装配本身由 verify_cloud_consent.py 门禁保证
+    var t = String(text == null ? "" : text).toLowerCase();
+    function hit(list) {
+      if (!list || !list.length) return false;
+      for (var i = 0; i < list.length; i++) {
+        if (t.indexOf(String(list[i]).toLowerCase()) >= 0) return true;
+      }
+      return false;
+    }
+    return !hit(core.CRISIS) && !hit(core.BANNED);
+  };
+
+  var sc = APStore.ensureSchema(window.localStorage);
     if (sc && sc.downgrade) {
       APNotify.push({
         level: "warn", tag: "schema-downgrade", force: true,

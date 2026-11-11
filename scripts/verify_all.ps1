@@ -183,6 +183,11 @@ if (Test-Path scripts/verify_threat_model.py) {
     Step "threat-model" { python scripts/verify_threat_model.py }
 }
 
+# 6l) 云调用出口守卫（威胁模型 T10：危机词/禁用词在唯一网络出口设卡，逐入口不漏）
+if (Test-Path scripts/verify_cloud_consent.py) {
+    Step "cloud-consent" { python scripts/verify_cloud_consent.py }
+}
+
 # 6e) 空 catch 检查：每个 catch 必须有记录或降级动作
 if (Test-Path scripts/verify_no_empty_catch.py) {
     Step "no-empty-catch" { python scripts/verify_no_empty_catch.py }
