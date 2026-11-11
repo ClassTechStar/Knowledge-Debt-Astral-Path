@@ -193,6 +193,11 @@ if (Test-Path scripts/verify_output_guard.py) {
     Step "output-guard" { python scripts/verify_output_guard.py }
 }
 
+# 6n) 发布清单（威胁模型 T19：产物哈希一致、无遗漏、版本对齐）
+if (Test-Path scripts/verify_release_manifest.py) {
+    Step "release-manifest" { python scripts/verify_release_manifest.py }
+}
+
 # 6e) 空 catch 检查：每个 catch 必须有记录或降级动作
 if (Test-Path scripts/verify_no_empty_catch.py) {
     Step "no-empty-catch" { python scripts/verify_no_empty_catch.py }

@@ -97,3 +97,11 @@ New-Item -ItemType Directory -Force "$repo\release" | Out-Null
 Copy-Item "$repo\deploy\win-install\dist\AstralPath-Monolith-Setup-2.6.0.exe" "$repo\release\" -Force
 Copy-Item "$repo\src\AstralPath.Native\dist\AstralPath-Android-2.6.0-Store.apk" "$repo\release\" -Force
 Write-Host '双端安装包构建完成，见 release\ 目录'
+
+# 4. 发布清单（威胁模型 T19）：哈希清单防单文件替换；设 ASTRALPATH_MANIFEST_KEY 可启用清单签名
+$mf = Join-Path $repo "scripts\gen_release_manifest.py"
+if (Test-Path $mf) {
+    Write-Host '>>> 生成发布清单' -ForegroundColor Cyan
+    python $mf --out "$repo\release"
+    if ($LASTEXITCODE -ne 0) { throw "发布清单生成失败" }
+}

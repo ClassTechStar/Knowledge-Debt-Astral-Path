@@ -89,7 +89,7 @@
 | T16 | 版本号被 rebase 带回旧值，产物与文档口径不一 | `scripts/verify_release_version.py`：以 `Directory.Build.props` 为唯一事实源，校验 iss / gradle / 打包脚本 / README，并禁止 csproj 重新写死版本；`release/build-release.ps1:28` 打包前先跑该门禁 | 已覆盖 |
 | T17 | 壳层偷偷实现业务公式导致多端口径不一致 | `scripts/verify_architecture.py` 三契约（Core 纯净 / API 不下探宿主 / 壳不做业务） | 已覆盖 |
 | T18 | 空 catch 吞掉异常，故障无声 | `scripts/verify_no_empty_catch.py` 全量扫描 C#；`src/AstralPath.Core/Diagnostics/Diag.cs` 环形缓冲 | 已覆盖 |
-| T19 | 发布包被替换后无校验 | GitHub Release 资产无 Ed25519/哈希清单签名，本仓库只保证构建期一致性 | 未覆盖 |
+| T19 | 发布包被替换后无校验 | **哈希清单**：`release/manifest.json` + `checksums.sha256` 记录每个产物的 sha256，`scripts/verify_release_manifest.py` 校验哈希一致 + 防遗漏 + 版本对齐；`release/build-release.ps1` 打包后自动生成。**清单签名**：HMAC-SHA256（`ASTRALPATH_MANIFEST_KEY`），防清单本身被改；密钥缺失时如实标注未签名。局限：HMAC 是对称的，属「检测替换」而非「不可否认签名」；要不可否认需 Ed25519 + 密钥托管 | 部分（哈希已覆盖替换检测；清单签名需密钥，默认未启用） |
 | T20 | 宿主运行时、浏览器扩展或操作系统被替换 | 无 | 不可证 |
 
 ## 5. 门禁与证据对应
@@ -104,6 +104,7 @@
 | `scripts/verify_release_version.py` | T16 |
 | `scripts/verify_cloud_consent.py` | T10 |
 | `scripts/verify_output_guard.py` | T13 |
+| `scripts/verify_release_manifest.py`、`scripts/gen_release_manifest.py` | T19 |
 | `scripts/verify_threat_model.py` | 本文件自身的结构与证据路径 |
 
 ## 6. 变更记录
@@ -116,3 +117,4 @@
 | 2026-11-11 | T10 补授权粒度：新增 `__AP_CLOUD_OPTIN__` 显式同意开关（默认关，fail-closed），账户页可开关；「配了密钥」不再等于「同意出网」 | T10 |
 | 2026-11-11 | T8 吊销清单改为可离线更新：`APRevoked` 合并内置清单与本地导入，账户页粘贴 JSON 即生效；演示密钥可还原仍属不可证 | T8 |
 | 2026-11-11 | T13 从「部分」升「已覆盖」：输出侧加注入形态拦截（伪造指令/覆写规则/角色伪装/模板标记），并用门禁锁死「模型返回不回喂执行路径」的架构不变量 | T13 |
+| 2026-11-11 | T19 从「未覆盖」升「部分」：发布哈希清单 + 校验门禁生效，HMAC 清单签名可选启用；Ed25519 不可否认签名未纳入（需密钥托管） | T19 |
