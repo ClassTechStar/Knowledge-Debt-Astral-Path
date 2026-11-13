@@ -76,6 +76,7 @@ python scripts/build-single.py                    # 重建 17MB 单文件产物�
 | 公开数字 | `verify_metrics.py`（先回写 README 再提交） |
 | 发布版本号 | `verify_release_version.py`（单一事实源是 `Directory.Build.props`；打包脚本开头也会拦） |
 | 威胁模型 / 安全链路 | `verify_threat_model.py` + 同提交更新 `THREAT_MODEL.md` |
+| 默认配置 / DPI | `verify_defaults.py`、`verify_dpi.py`（新增状态字段 / 新增 Windows 壳时必跑） |
 
 ## 代码风格
 
@@ -91,6 +92,7 @@ python scripts/build-single.py                    # 重建 17MB 单文件产物�
 | `Version`（唯一事实源） | `Directory.Build.props` | 全仓版本号；csproj 不许再写死 |
 | `esc()` / `safeRich()` / `sanitizeUrl()` | `shared/safe-dom.js` | DOM 注入防线；XSS 黄金用例的对拍对象 |
 | `APStore` 分片存储 | `shared/store.js` | 五分片 + schema 版本 + 旧键迁移留底 |
+| `DEFAULTS` / `withDefaults()` | `shared/store.js` | 状态默认值**单一来源**；新增状态字段只改此处，不写逐字段迁移脚本 |
 | `CRISIS` 词表 / 意图路由 | `shared/core.js`、`shared/agent-router.js` | 危机最高优先级、授权前置、负例拦截 |
 | 云调用与输出脱敏 | `shared/integrations/p2-ai-integration.js` | 离线/危机词/禁用词不走云；数字只引用系统上下文 |
 | 内置演示密钥 | `deploy/monolith-web/index.html` 的 `__AP_EMBED__` / `__AP_REVOKED__` | AES-GCM 密文分片 + 吊销清单；明文不落文件 |

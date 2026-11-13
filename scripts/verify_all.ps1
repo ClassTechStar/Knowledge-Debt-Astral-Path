@@ -198,6 +198,16 @@ if (Test-Path scripts/verify_release_manifest.py) {
     Step "release-manifest" { python scripts/verify_release_manifest.py }
 }
 
+# 6o) 默认配置单一来源（借鉴 SidebarDiagnostics：新增状态字段零迁移脚本）
+if (Test-Path scripts/verify_defaults.py) {
+    Step "defaults-single-source" { python scripts/verify_defaults.py }
+}
+
+# 6p) Windows 壳 DPI 一致性（借鉴 SidebarDiagnostics 的显式 DPI 声明）
+if (Test-Path scripts/verify_dpi.py) {
+    Step "dpi-consistency" { python scripts/verify_dpi.py }
+}
+
 # 6e) 空 catch 检查：每个 catch 必须有记录或降级动作
 if (Test-Path scripts/verify_no_empty_catch.py) {
     Step "no-empty-catch" { python scripts/verify_no_empty_catch.py }

@@ -40,6 +40,35 @@
   };
   var BACKUP_PREFIX = "ap:backup:";
   var SCHEMA_KEY = "ap:schema";
+  /**
+   * 状态默认值单一表（借鉴 SidebarDiagnostics 的「配置默认值并集合并」迁移）。
+   * 为什么：页面里的 migrate() 曾手列十几个 if(!raw.xxx) 补默认值，每加一个
+   * 配置字段都要改那一行；漏改就会在老用户本机状态里读到 undefined。
+   * 约定：新增状态字段先在此登记默认值，页面 defaultState() 与 migrate() 都从
+   * 这里取，不再写逐字段的迁移脚本。books / activeBookId / mastery 由页面用示例
+   * 教材覆盖（这里是空壳兜底，不代表真实初始态）。
+   */
+  var DEFAULTS = {
+    user: null, consent: false, optOut: false,
+    books: [], activeBookId: "", mastery: {},
+    plan: null, sale: {}, day: 1, logs: [], chat: null, planMeta: null,
+    debtExplain: {}, papers: [], userName: null, userTag: true,
+    chatLog: [], kgMode: "slim", onboard: false, planOverrides: [],
+    dnd: false, autoLast: {}
+  };
+
+  /** 按 DEFAULTS 做并集合并：已有值优先，undefined 不污染默认值。 */
+  function withDefaults(raw) {
+    var out = {}, k;
+    for (k in DEFAULTS) if (Object.prototype.hasOwnProperty.call(DEFAULTS, k)) out[k] = DEFAULTS[k];
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+      for (k in raw) {
+        if (Object.prototype.hasOwnProperty.call(raw, k) && raw[k] !== undefined) out[k] = raw[k];
+      }
+    }
+    return out;
+  }
+
   var SCHEMA_VERSION = 2; // 分片布局 v2；未来布局变更在此登记迁移器
 
   // 每个分片「拥有」的状态键；未登记的键一律归 meta（保证新增字段不丢）
@@ -235,6 +264,8 @@
 
   return {
     VERSION: VERSION,
+    DEFAULTS: DEFAULTS,
+    withDefaults: withDefaults,
     PARTS: PARTS,
     SHARD_KEYS: SHARD_KEYS,
     BACKUP_PREFIX: BACKUP_PREFIX,

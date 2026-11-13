@@ -27,6 +27,9 @@ internal static class Program
     private static void Main()
     {
         ApplicationConfiguration.Initialize();
+        // 与 Desktop 壳保持同一 DPI 口径：主交付的单体版也必须逐显示器感知，
+        // 否则外接不同缩放的屏幕时 WebView2 内容会模糊（借鉴 SidebarDiagnostics 的显式 DPI 声明）
+        Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
         Application.ThreadException += (_, e) => BumpFailCount(e.Exception, "ThreadException");
         Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>

@@ -233,5 +233,35 @@ check("ST-14", "repairIfCorrupt：损坏分片先备份再移除，其余分片�
   return "fixed=" + fixed.join(",");
 });
 
+check("ST-15", "DEFAULTS 并集合并：新增字段自动补默认，已有字段不被覆盖", () => {
+  const out = APStore.withDefaults({ day: 7, consent: true });
+  eq(out.day, 7, "已有值优先");
+  eq(out.consent, true, "已有布尔值 false 之外的 true 保留");
+  eq(out.kgMode, "slim", "未提供的字段补默认值");
+  eq(out.dnd, false, "默认布尔值");
+  assert(Array.isArray(out.chatLog) && out.chatLog.length === 0, "数组默认值应是新实例");
+  return "day=" + out.day + ", kgMode=" + out.kgMode;
+});
+
+check("ST-16", "DEFAULTS 并集合并：undefined 不污染默认值、原始对象不被改写", () => {
+  const raw = { day: undefined, plan: null, papers: undefined };
+  const out = APStore.withDefaults(raw);
+  eq(out.day, 1, "undefined 应回落到默认");
+  eq(out.plan, null, "显式 null 应保留");
+  assert(Array.isArray(out.papers), "undefined 的 papers 应补默认数组");
+  eq(raw.day, undefined, "不应就地改写原始配置");
+  return "undefined 回落正常，原始对象未变";
+});
+
+check("ST-17", "DEFAULTS 单一来源：页面 defaultState 与 migrate 都引用 withDefaults", () => {
+  const fs = require("fs");
+  const path = require("path");
+  const html = fs.readFileSync(path.resolve(__dirname, "..", "deploy", "monolith-web", "index.html"), "utf8");
+  assert(/function defaultState\(\)[\s\S]{0,400}APStore\.withDefaults\(/.test(html), "defaultState 应走 DEFAULTS");
+  assert(/function migrate\([\s\S]{0,700}APStore\.withDefaults\(raw\)/.test(html), "migrate 应走 DEFAULTS");
+  assert(!/if\(!raw\.mastery\)raw\.mastery=\{\}/.test(html), "不应残留手写逐字段默认值清单");
+  return "默认值来源单一，无手写迁移脚本";
+});
+
 const passed = results.filter((r) => r.ok).length;
 process.stdout.write(JSON.stringify({ passed: passed, failed: results.length - passed, results: results }, null, 2));

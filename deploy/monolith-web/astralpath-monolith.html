@@ -3728,6 +3728,35 @@ window.APDiag=(function(){
   };
   var BACKUP_PREFIX = "ap:backup:";
   var SCHEMA_KEY = "ap:schema";
+  /**
+   * 状态默认值单一表（借鉴 SidebarDiagnostics 的「配置默认值并集合并」迁移）。
+   * 为什么：页面里的 migrate() 曾手列十几个 if(!raw.xxx) 补默认值，每加一个
+   * 配置字段都要改那一行；漏改就会在老用户本机状态里读到 undefined。
+   * 约定：新增状态字段先在此登记默认值，页面 defaultState() 与 migrate() 都从
+   * 这里取，不再写逐字段的迁移脚本。books / activeBookId / mastery 由页面用示例
+   * 教材覆盖（这里是空壳兜底，不代表真实初始态）。
+   */
+  var DEFAULTS = {
+    user: null, consent: false, optOut: false,
+    books: [], activeBookId: "", mastery: {},
+    plan: null, sale: {}, day: 1, logs: [], chat: null, planMeta: null,
+    debtExplain: {}, papers: [], userName: null, userTag: true,
+    chatLog: [], kgMode: "slim", onboard: false, planOverrides: [],
+    dnd: false, autoLast: {}
+  };
+
+  /** 按 DEFAULTS 做并集合并：已有值优先，undefined 不污染默认值。 */
+  function withDefaults(raw) {
+    var out = {}, k;
+    for (k in DEFAULTS) if (Object.prototype.hasOwnProperty.call(DEFAULTS, k)) out[k] = DEFAULTS[k];
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+      for (k in raw) {
+        if (Object.prototype.hasOwnProperty.call(raw, k) && raw[k] !== undefined) out[k] = raw[k];
+      }
+    }
+    return out;
+  }
+
   var SCHEMA_VERSION = 2; // 分片布局 v2；未来布局变更在此登记迁移器
 
   // 每个分片「拥有」的状态键；未登记的键一律归 meta（保证新增字段不丢）
@@ -3923,6 +3952,8 @@ window.APDiag=(function(){
 
   return {
     VERSION: VERSION,
+    DEFAULTS: DEFAULTS,
+    withDefaults: withDefaults,
     PARTS: PARTS,
     SHARD_KEYS: SHARD_KEYS,
     BACKUP_PREFIX: BACKUP_PREFIX,
@@ -6506,15 +6537,17 @@ nodes.map(function(n,i){return {id:n.id,title:n.title,body:n.body||n.title,order
 const LS="astralpath_monolith_v2";   // 现在只是「迁移源」：分片写成功就删旧键，新装不会再产生
 let _apCache=null;                     // 分片写入缓存（part→json），跨 save 保留，没变的分片不重写
 function defaultState(){
+  // 默认值来自 shared/store.js 的 DEFAULTS 单一表；新增状态字段只需改那一处。
+  // 示例教材是动态构造的，这里覆盖 DEFAULTS 的空壳。
   const book=sampleBook();
-  return {user:null,consent:false,optOut:false,books:[book],activeBookId:book.id,mastery:book.masterySeed,plan:null,sale:{},day:1,logs:[],chat:null,planMeta:null,debtExplain:{},papers:[],userName:null,userTag:true,chatLog:[],kgMode:"slim",onboard:false,planOverrides:[],dnd:false,autoLast:{}};
+  return Object.assign(APStore.withDefaults(null),{books:[book],activeBookId:book.id,mastery:book.masterySeed});
 }
 function migrate(raw){
   if(!raw||typeof raw!=="object")return defaultState();
   if(Array.isArray(raw.books)&&raw.books.length){
     if(!raw.activeBookId)raw.activeBookId=raw.books[0].id;
-    if(!raw.mastery)raw.mastery={};if(!raw.sale)raw.sale={};if(!raw.logs)raw.logs=[];if(raw.day==null)raw.day=1;if(!raw.debtExplain)raw.debtExplain={};if(!raw.papers)raw.papers=[];if(raw.userName==null)raw.userName=null;if(raw.userTag==null)raw.userTag=true;if(!Array.isArray(raw.chatLog))raw.chatLog=[];if(!raw.kgMode)raw.kgMode="slim";if(!raw.onboard)raw.onboard=false;if(!Array.isArray(raw.planOverrides))raw.planOverrides=[];if(raw.dnd==null)raw.dnd=false;if(typeof raw.autoLast!=="object"||!raw.autoLast)raw.autoLast={};
-    return raw;
+    // 与旧分支统一走 DEFAULTS 并集合并：新增字段自动补齐，不再手列默认值清单
+    return APStore.withDefaults(raw);
   }
   const d=defaultState();
   if(Array.isArray(raw.nodes)&&raw.nodes.length){

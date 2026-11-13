@@ -207,6 +207,7 @@ NuGet 报 `path1=null` 时，补齐 `PROGRAMDATA`、`PROGRAMFILES(X86)`、`ALLUS
 
 | 版本 | 日期 | 要点 |
 |---|---|---|
+| 2.6.0 工程化阶段五 | 2026-11-13 | 借鉴 SidebarDiagnostics：状态默认值收敛到 `shared/store.js` 的 `DEFAULTS` 单一表（新增字段零迁移脚本，配黄金用例与门禁）；Windows 单体壳补 PerMonitorV2 DPI 声明并与 Desktop 壳对齐（配一致性门禁）。验收脚本扩至 47 步 |
 | 2.6.0 工程化阶段四 | 2026-11-11 | 发布版本单一事实源（`Directory.Build.props` + `verify_release_version.py`）、威胁模型活文档（`THREAT_MODEL.md` + 门禁）、云调用显式同意与出口守卫、模型输出注入拦截、发布哈希清单与校验；新增 issue/PR 模板与两份端上子树约定；图谱测试自给自足（5 项断言真跑通过） |
 | 2.6.0 工程化阶段三 | 2026-10-25 至 26 | 单文件产物零外部依赖（ORT 运行时内联）；公式常量改由 C# 源生成；覆盖率转为硬门禁；图谱性能预算、`dotnet format` 与 eslint 入 CI；教材文本、智能体路由与计划调度分别下沉 `shared/` 并建黄金用例；首页工程信息收进 `?debug=1` 调试面板 |
 | 2.6.0 | 2026-10-17 | 版本号全量统一（前端、C# 程序集、gradle、iss、微服务 tag、文档口径）；双端安装包经 GitHub Release v2.6.0 发布；构建链加签名环境自动加载与 tessdata 自动保障，双端打包可零人工干预自愈 |
