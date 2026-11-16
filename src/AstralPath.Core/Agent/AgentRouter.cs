@@ -252,7 +252,7 @@ public sealed class AgentRouter
     public bool IsBanned(string? text) => _banned.ContainsAny(text);
 
     public static AgentRouter CreateDefault() => new(
-        crisisWords: new[] { "自杀", "不想活", "轻生", "结束生命", "自残", "伤害自己", "跳楼", "上吊", "suicide", "kill myself", "活不下去" },
+        crisisWords: new[] { "自杀", "不想活", "轻生", "结束生命", "自残", "伤害自己", "跳楼", "上吊", "suicide", "kill myself", "活不下去", "想死", "去死", "死了算了", "活着没意思", "结束这一切", "割腕", "suicidal", "end my life" },
         bannedWords: Formula.FormulaWeights.BannedWords,
         negativeWords: new[] { "哈哈", "呵呵", "随便", "没事了", "thanks", "thank you", "ok", "好的" },
         intents: DefaultAgentIntents.Table);

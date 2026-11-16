@@ -71,6 +71,7 @@
 | T8 | 密钥信封被盗/误发后无法吊销；内置演示密钥被解出滥用 | 吊销清单**可离线更新**：`shared/app-glue.js` 的 `APRevoked` 把内置 `__AP_REVOKED__` 与用户导入清单（localStorage）合并，账户页「密钥吊销清单」粘贴 JSON 即生效，无需重新构建；`index.html` 的 `__apEnvRevoked` 按 `env.kid` 命中后删除信封并回退。须明确：内置演示密钥与解密材料都在客户端，**任何人都可还原**，它不是保密资产，仅用于免配置体验 | 部分（吊销已可离线更新；演示密钥可还原属不可证） |
 | T9 | 本机 localStorage 被直接改写以伪造掌握度 | `shared/store.js:43` 分片 schema 版本、`scripts/verify_store.py` 与 `scripts/store_runner.js` 校验迁移与残缺分片合并；但**无签名/无防篡改**，本机操作者可任意改写 | 不可证 |
 | T10 | 资料在用户未同意时被上传到云模型 / 危机词或禁用词被送出设备 | 危机词、禁用词拦截下沉到**唯一网络出口**：`shared/integrations/p0-ai-integration.js:121` 的 `complete()` 调用 `__AP_EGRESS_GUARD__` 拒绝出网；守卫在 `shared/app-glue.js` 装配，词表取自 `shared/core.js` 生成区（CRISIS/BANNED）。**授权粒度**：守卫先查 `__AP_CLOUD_OPTIN__`（默认 false，fail-closed），账户页「云端调用授权」显式开启才出网，「配了密钥」不等于「同意出网」；`scripts/verify_cloud_consent.py` 六条断言锁死 | 已覆盖 |
+| T21 | opt-out 后画像数据仍留存、可被恢复展示 | opt-out 只停展示（§46.3）；**彻底删除**走 `POST /v1/profile/{studentId}/purge`（`src/AstralPath.Infrastructure/AstralPathModules.cs` 的 `PurgeProfile` 连标签带 opt-out 标记整条删除，运行时快照随之不含该生数据），删除彻底性由 `tests/AstralPath.Api.Tests/AgentKbProfileTests.cs` 的 `Profile_Purge_*` 用例证明（无残留、旧标签不复活、二次 purge 幂等） | 已覆盖 |
 
 ### 4.3 AI 输出与数字可信度
 
@@ -89,7 +90,7 @@
 | T16 | 版本号被 rebase 带回旧值，产物与文档口径不一 | `scripts/verify_release_version.py`：以 `Directory.Build.props` 为唯一事实源，校验 iss / gradle / 打包脚本 / README，并禁止 csproj 重新写死版本；`release/build-release.ps1:28` 打包前先跑该门禁 | 已覆盖 |
 | T17 | 壳层偷偷实现业务公式导致多端口径不一致 | `scripts/verify_architecture.py` 三契约（Core 纯净 / API 不下探宿主 / 壳不做业务） | 已覆盖 |
 | T18 | 空 catch 吞掉异常，故障无声 | `scripts/verify_no_empty_catch.py` 全量扫描 C#；`src/AstralPath.Core/Diagnostics/Diag.cs` 环形缓冲 | 已覆盖 |
-| T19 | 发布包被替换后无校验 | **哈希清单**：`release/manifest.json` + `checksums.sha256` 记录每个产物的 sha256，`scripts/verify_release_manifest.py` 校验哈希一致 + 防遗漏 + 版本对齐；`release/build-release.ps1` 打包后自动生成。**清单签名**：HMAC-SHA256（`ASTRALPATH_MANIFEST_KEY`），防清单本身被改；密钥缺失时如实标注未签名。局限：HMAC 是对称的，属「检测替换」而非「不可否认签名」；要不可否认需 Ed25519 + 密钥托管 | 部分（哈希已覆盖替换检测；清单签名需密钥，默认未启用） |
+| T19 | 发布包被替换后无校验 | **哈希清单**：`release/manifest.json` + `checksums.sha256` 记录每个产物的 sha256，`scripts/verify_release_manifest.py` 校验哈希一致 + 防遗漏 + 版本对齐；`release/build-release.ps1` 打包后自动生成。产物自 2026-11-17 起只挂 GitHub Release Assets（仓库不再留二进制副本），本地无副本时跳过该产物哈希核验并如实报告，文件在则全量核验。**清单签名**：HMAC-SHA256（`ASTRALPATH_MANIFEST_KEY`），防清单本身被改；密钥缺失时如实标注未签名。局限：HMAC 是对称的，属「检测替换」而非「不可否认签名」；要不可否认需 Ed25519 + 密钥托管 | 部分（哈希已覆盖替换检测；清单签名需密钥，默认未启用） |
 | T20 | 宿主运行时、浏览器扩展或操作系统被替换 | 无 | 不可证 |
 
 ## 5. 门禁与证据对应
@@ -104,8 +105,10 @@
 | `scripts/verify_release_version.py` | T16 |
 | `scripts/verify_cloud_consent.py` | T10 |
 | `scripts/verify_output_guard.py` | T13 |
+| `scripts/redteam_runner.js`、`tools/gen_redteam_corpus.py` | T12、T13、T14（红队对抗回归集：危机边界召回/误报、改分造边注入泄密全量过路由、红线不变量） |
 | `scripts/verify_release_manifest.py`、`scripts/gen_release_manifest.py` | T19 |
 | `scripts/verify_threat_model.py` | 本文件自身的结构与证据路径 |
+| `tests/AstralPath.Api.Tests/AgentKbProfileTests.cs`（`Profile_Purge_*`） | T21 |
 
 ## 6. 变更记录
 
@@ -118,3 +121,6 @@
 | 2026-11-11 | T8 吊销清单改为可离线更新：`APRevoked` 合并内置清单与本地导入，账户页粘贴 JSON 即生效；演示密钥可还原仍属不可证 | T8 |
 | 2026-11-11 | T13 从「部分」升「已覆盖」：输出侧加注入形态拦截（伪造指令/覆写规则/角色伪装/模板标记），并用门禁锁死「模型返回不回喂执行路径」的架构不变量 | T13 |
 | 2026-11-11 | T19 从「未覆盖」升「部分」：发布哈希清单 + 校验门禁生效，HMAC 清单签名可选启用；Ed25519 不可否认签名未纳入（需密钥托管） | T19 |
+| 2026-11-17 | T21 新增并「已覆盖」：opt-out 仅停展示，画像彻底删除走 `/v1/profile/{id}/purge`，删除彻底性（无残留 / 旧标签不复活 / 幂等）由验证用例证明 | T21 |
+| 2026-11-17 | T19 口径同步仓库瘦身：发布二进制只挂 GitHub Release Assets，仓库不再留副本；`scripts/verify_release_manifest.py` 对无本地副本的产物跳过哈希核验并如实报告，文件在则全量核验（防替换语义不变） | T19 |
+| 2026-11-17 | T12/T14 危机词表 11→19（补「想死/死了算了/活着没意思/结束这一切/割腕/suicidal」等委婉与变体），六方对拍全量同步；红队集（536 条）入回归并抓出真 bug——多词英文危机短语（kill myself / end my life）因词侧未过口语归一从未命中，已修（`shared/agent-router.js` R0 词句同管线归一） | T12、T13、T14 |

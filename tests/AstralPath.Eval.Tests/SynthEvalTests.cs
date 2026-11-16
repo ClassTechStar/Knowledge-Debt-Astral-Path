@@ -9,7 +9,20 @@ public class SynthEvalTests
     private static string PackDir =>
         Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "graph-packs", "accounting-v1"))
             ? Path.Combine(Directory.GetCurrentDirectory(), "graph-packs", "accounting-v1")
-            : @"C:\Users\18948\XiaomiMiMoProjects\Knowledge Debt Astral Path\graph-packs\accounting-v1";
+            : FindPackUpwards();
+
+    /// <summary>从测试输出目录逐级上溯找 graph-packs/accounting-v1，避免写死某台机器的绝对路径。</summary>
+    private static string FindPackUpwards()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            var candidate = Path.Combine(dir.FullName, "graph-packs", "accounting-v1");
+            if (Directory.Exists(candidate)) return candidate;
+            dir = dir.Parent;
+        }
+        throw new DirectoryNotFoundException("找不到 graph-packs/accounting-v1（从测试目录向上遍历失败）");
+    }
 
     [Fact]
     public void Synth30_GeneratorProducesHealthyAndDebtProfiles()

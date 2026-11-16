@@ -464,6 +464,21 @@ public sealed class AstralPathModules
     public object OptOutProfile(string studentId) => SetProfileOptOut(studentId, true);
 
     /// <summary>
+    /// 彻底删除画像数据（opt-out 只停展示，本方法连数据一起删）。
+    /// 删除后运行时快照（RuntimeSnapshot.Profiles）不再包含该学生的任何画像痕迹，
+    /// 重新 opt-in 得到的是全空白画像——「删除彻底性」由 Api.Tests 的验证用例证明。
+    /// </summary>
+    public object PurgeProfile(string studentId)
+    {
+        lock (_gate)
+        {
+            if (!_profiles.Remove(studentId, out var removed))
+                return new { studentId, purged = false, removedTags = 0 };
+            return new { studentId, purged = true, removedTags = removed.Tags.Count };
+        }
+    }
+
+    /// <summary>
     /// 设置个性化开关（§46.3）。可关闭也可重新开启——「可随时关闭」若不支持重新开启，
     /// 学生就再也无法恢复个性化，与方案 §46 的授权语义不符。
     /// </summary>

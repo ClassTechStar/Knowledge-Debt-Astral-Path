@@ -2,7 +2,7 @@
  * 智能体页 —— 对应 Web 版 main#p-agent：口语化提问 → 意图路由 → 本地答复 / 模型流式答复。
  *
  * 与 Web 版一致的四条红线：
- * 1) 危机词命中不作答，直接转人工求助（词表与 tools/agent-intents.json 同源，11 个）；
+ * 1) 危机词命中不作答，直接转人工求助（词表与 tools/agent-intents.json 同源，19 个）；
  * 2) 意图路由按 26 个意图的锚点词匹配，未配密钥时用本地答复兜底；
  * 3) 未配置密钥时明确标注演示模式，不假装是模型在说话；
  * 4) 模型调用失败不报错弹窗，静默回退本地答复。
@@ -29,10 +29,11 @@ export struct AgentPage {
   @State liveText: string = '';
   private cfg: AiConfig = { baseUrl: AiService.DEFAULT_BASE, key: '', model: 'mimo-7b-rl' };
 
-  /** 危机词：与 tools/agent-intents.json 的 crisis 列表一致（11 个） */
+  /** 危机词：与 tools/agent-intents.json 的 crisis 列表一致（19 个） */
   private static readonly CRISIS: string[] = [
     '不想活', '自杀', '轻生', '结束生命', '自残',
-    '伤害自己', '跳楼', '上吊', 'suicide', 'kill myself', '活不下去'
+    '伤害自己', '跳楼', '上吊', 'suicide', 'kill myself', '活不下去',
+    '想死', '去死', '死了算了', '活着没意思', '结束这一切', '割腕', 'suicidal', 'end my life'
   ];
 
   /** 25 个意图的锚点与本地兜底答复（无密钥时按这个答）；危机词单独优先处理，

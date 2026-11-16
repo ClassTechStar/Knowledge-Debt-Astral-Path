@@ -99,6 +99,11 @@ if (Test-Path scripts/verify_pack_manifest.py) {
     Step "pack-manifest" { python scripts/verify_pack_manifest.py }
 }
 
+# 4e-2) 教材→图包金样：思维导图自动产包与已提交产物逐字一致（A4 管线回归）
+if (Test-Path tools/mindmap_to_graphpack.py) {
+    Step "mindmap-graphpack-golden" { python tools/mindmap_to_graphpack.py --check }
+}
+
 # 5) 三端 HTML 同源 + XSS 回归哨兵（统一由同步脚本提供）
 Step "monolith-html-sync" { powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-monolith-html.ps1 -Check }
 
@@ -110,6 +115,11 @@ if (Test-Path tools/check-js.js) {
 # 6c) XSS 用例 + 直插点哨兵
 if (Test-Path scripts/verify_xss.py) {
     Step "xss-cases" { python scripts/verify_xss.py }
+}
+
+# 6c-2) 红队对抗回归集（C1：536 条危机边界/改分/造边/注入/泄密语料，T12/T13/T14）
+if (Test-Path scripts/redteam_runner.js) {
+    Step "redteam-corpus" { node scripts/redteam_runner.js }
 }
 
 # 6d) 共享内核：常量块与 JSON 一致 + 和旧实现双跑比对行为等价
@@ -156,6 +166,16 @@ if (Test-Path scripts/notify_runner.js) {
 }
 if (Test-Path scripts/plan_runtime_runner.js) {
     Step "plan-runtime-golden" { node scripts/plan_runtime_runner.js }
+}
+
+# 6k-2) 题目曝光控制与降温用例（shared/question-exposure.js）
+if (Test-Path scripts/question_exposure_runner.js) {
+    Step "question-exposure-golden" { node scripts/question_exposure_runner.js }
+}
+
+# 6k-3) 冷启动认知诊断用例（shared/cat-diagnosis.js）
+if (Test-Path scripts/cat_diagnosis_runner.js) {
+    Step "cat-diagnosis-golden" { node scripts/cat_diagnosis_runner.js }
 }
 
 # 6g) 单文件内联 JS 规模上限（手写行数与页面副本数）
@@ -206,6 +226,11 @@ if (Test-Path scripts/verify_defaults.py) {
 # 6p) Windows 壳 DPI 一致性（借鉴 SidebarDiagnostics 的显式 DPI 声明）
 if (Test-Path scripts/verify_dpi.py) {
     Step "dpi-consistency" { python scripts/verify_dpi.py }
+}
+
+# 6p-2) 交付体积预算（B4：产物与仓库大文件棘轮，防体积回弹）
+if (Test-Path scripts/verify_size_budget.py) {
+    Step "size-budget" { python scripts/verify_size_budget.py }
 }
 
 # 6e) 空 catch 检查：每个 catch 必须有记录或降级动作

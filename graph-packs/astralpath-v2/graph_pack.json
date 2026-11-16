@@ -417,42 +417,42 @@
       "to_kp": "N05",
       "edge_type": "prerequisite",
       "weight": 0.8,
-      "why": ""
+      "why": "要素到账户"
     },
     {
       "from_kp": "N05",
       "to_kp": "N07",
       "edge_type": "prerequisite",
       "weight": 0.9,
-      "why": ""
+      "why": "账户到分录"
     },
     {
       "from_kp": "N03",
       "to_kp": "N05",
       "edge_type": "prerequisite",
       "weight": 0.8,
-      "why": ""
+      "why": "等式到账户"
     },
     {
       "from_kp": "N06",
       "to_kp": "N10",
       "edge_type": "prerequisite",
       "weight": 0.9,
-      "why": ""
+      "why": "记账到账簿"
     },
     {
       "from_kp": "N07",
       "to_kp": "N09",
       "edge_type": "prerequisite",
       "weight": 0.7,
-      "why": ""
+      "why": "分录到凭证"
     },
     {
       "from_kp": "N08",
       "to_kp": "N11",
       "edge_type": "prerequisite",
       "weight": 0.8,
-      "why": ""
+      "why": "试算到清查"
     },
     {
       "from_kp": "P01",
@@ -536,7 +536,7 @@
       "to_kp": "P06",
       "edge_type": "prerequisite",
       "weight": 0.9,
-      "why": ""
+      "why": "基础语法先后"
     },
     {
       "from_kp": "P03",

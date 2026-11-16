@@ -83,7 +83,7 @@
 
   /* ==== GENERATED FROM tools/agent-intents.json — DO NOT EDIT ==== */
   /* generator: scripts/gen-shared-core.js · source: tools/agent-intents.json */
-  var CRISIS = ["不想活","自杀","轻生","结束生命","自残","伤害自己","跳楼","上吊","suicide","kill myself","活不下去"];
+  var CRISIS = ["不想活","自杀","轻生","结束生命","自残","伤害自己","跳楼","上吊","suicide","kill myself","活不下去","想死","去死","死了算了","活着没意思","结束这一切","割腕","suicidal","end my life"];
   var BANNED = ["身份证","银行卡密码","详细住址"];
   var NEGATIVE = ["哈哈","呵呵","随便","没事了","thanks","thank you","ok","好的"];
   var INTENTS = [
