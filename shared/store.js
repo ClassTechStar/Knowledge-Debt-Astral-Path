@@ -54,7 +54,7 @@
     plan: null, sale: {}, day: 1, logs: [], chat: null, planMeta: null,
     debtExplain: {}, papers: [], userName: null, userTag: true,
     chatLog: [], kgMode: "slim", onboard: false, planOverrides: [],
-    dnd: false, autoLast: {}
+    dnd: false, autoLast: {}, exposure: {}
   };
 
   /** 按 DEFAULTS 做并集合并：已有值优先，undefined 不污染默认值。 */
@@ -74,7 +74,7 @@
   // 每个分片「拥有」的状态键；未登记的键一律归 meta（保证新增字段不丢）
   var OWNER = {
     books: ["books"],
-    answers: ["mastery", "logs", "debtExplain"],
+    answers: ["mastery", "logs", "debtExplain", "exposure"],
     plan: ["plan", "sale"],
     papers: ["papers"],
   };

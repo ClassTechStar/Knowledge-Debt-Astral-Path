@@ -54,6 +54,12 @@ deploy/win-install/AstralPath-Setup/
 materials/ocr-debug/
 **/ocr-debug/
 
+# 发布二进制只挂 GitHub Release Assets，不进仓库（2026-11-17 起；体积门禁见 verify_size_budget.py）
+release/*.exe
+release/*.apk
+release/*.zip
+release/*.msi
+
 # Android 构建缓存与中间产物
 src/AstralPath.Android/.gradle/
 src/AstralPath.Android/build-manual/
@@ -76,6 +82,7 @@ src/*/dist/*.idsig
 src/*/dist/*.apk
 src/*/dist/*.exe
 src/*/dist/*.zip
+src/*/dist/*.png
 deploy/win-install/dist/
 src/AstralPath.Android/dist/*.png
 src/AstralPath.Android/dist/*.xml

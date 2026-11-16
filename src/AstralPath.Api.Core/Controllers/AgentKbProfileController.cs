@@ -397,6 +397,16 @@ public sealed class AgentKbProfileController : ControllerBase
                 : HttpResults.Fail(404, ErrorCodes.ResourceNotFound, "学生不存在"));
     }
 
+    /// <summary>画像彻底删除（§46.7 的删除语义）：opt-out 停展示，purge 连数据一起删。</summary>
+    [HttpPost("/v1/profile/{studentId}/purge")]
+    public IResult Purge(string studentId)
+    {
+        return _store.Lock(() =>
+            _store.Students.ContainsKey(studentId)
+                ? HttpResults.Success(_modules.PurgeProfile(studentId))
+                : HttpResults.Fail(404, ErrorCodes.ResourceNotFound, "学生不存在"));
+    }
+
     // 模块自检与图索引
 
     [HttpGet("/v1/modules/status")]

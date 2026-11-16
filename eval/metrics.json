@@ -1,12 +1,12 @@
 {
   "agentIntents": 26,
-  "crisisWords": 11,
+  "crisisWords": 19,
   "tests": {
     "tests-Core": 114,
     "tests-Persistence": 8,
     "tests-Desktop": 50,
-    "tests-Api": 70,
-    "tests-Eval": 2
+    "tests-Api": 72,
+    "tests-Eval": 10
   },
-  "testsTotal": 244
+  "testsTotal": 254
 }

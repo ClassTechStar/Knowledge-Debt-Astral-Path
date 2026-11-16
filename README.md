@@ -41,16 +41,16 @@
 
 | 产物 | 路径 | 说明 |
 |---|---|---|
-| Web 单体版 | `deploy/monolith-web/index.html` | 620,566 字节，浏览器直接打开，全部功能可用 |
-| 自包含单文件 | `deploy/monolith-web/astralpath-monolith.html` | 32,991,982 字节，OCR 与 ONNX 运行时全栈内联，零外部资源 |
-| Windows 安装包 | `release/AstralPath-Monolith-Setup-2.6.0.exe` | WebView2 壳加载同一份 HTML，本机安装验收通过 |
+| Web 单体版 | `deploy/monolith-web/index.html` | 665,876 字节，浏览器直接打开，全部功能可用 |
+| 自包含单文件 | `deploy/monolith-web/astralpath-monolith.html` | 33,039,122 字节，OCR 与 ONNX 运行时全栈内联，零外部资源 |
+| Windows 安装包 | `release/AstralPath-Monolith-Setup-2.6.0.exe` | WebView2 壳加载同一份 HTML，本机安装验收通过；二进制只挂 GitHub Release Assets，不进仓库 |
 | Windows 便携版 | `release/AstralPath-Portable-2.6.0/`（及同名 zip） | 免安装解压即用，.NET 10 自包含 |
 | Android APK | `release/AstralPath-Android-2.6.0-Store.apk` | WebView 同构加离线核心，versionCode 36，商店签名 |
 | 题库 | `eval/question_bank.json` | 100 题，覆盖 34 个知识点，难度 1:21 / 2:51 / 3:28 |
 | 图包 | `graph-packs/astralpath-v2/graph_pack.json` | 34 节点 74 边，先修 50 条加迁移缺口 24 条，无环，涉及三门课 |
-| 教材思维导图 | `kg-deep-test/*.mindmap.{json,md}` | 13 本教材 6,720 页，2,519 节点 2,662 边 |
+| 教材思维导图 | `kg-deep-test/*.mindmap.{json,md}` | 13 份思维导图（花书英/中各计一份，去重为 12 本）合计 5,982 页；构图产物 762 节点 1,580 边（`kg_report.json` 口径） |
 | 工具链 | `tools/*.py` | OCR、章节、构图、思维导图全链路 |
-| 架构决策 | `docs/adr/` | ADR-0002 单文件零外部依赖与构建期常量注入 |
+| 威胁模型 | `THREAT_MODEL.md` | 活文档，覆盖状态表与证据路径，`verify_threat_model.py` 门禁校验 |
 
 ## 3. 快速开始
 
@@ -138,19 +138,19 @@ tests/                    Core 114 · Persistence 8 · Desktop 50 · Api 70 · E
 | Core.Tests | <!-- metrics:tests-Core -->114<!-- /metrics:tests-Core -->/114 | score、impact、sale、计划、图谱、走读金样（1e-6）与画像、智能体 v3 回归 |
 | Persistence.Tests | <!-- metrics:tests-Persistence -->8<!-- /metrics:tests-Persistence -->/8 | Postgres 与 InMemory 双模式 |
 | Desktop.Tests | <!-- metrics:tests-Desktop -->50<!-- /metrics:tests-Desktop -->/50 | Avalonia 原生 UI 绑定与导航 |
-| Api.Tests | <!-- metrics:tests-Api -->70<!-- /metrics:tests-Api -->/70 | 上传、解析、诊断、计划、agent 与 P0/P1 回归 |
-| Eval.Tests | <!-- metrics:tests-Eval -->2<!-- /metrics:tests-Eval -->/2 | 合成数据回归 |
-| 合计 | <!-- metrics:tests-Total -->244<!-- /metrics:tests-Total -->/244 | 零回归（原 MobileCore 84 例跑在陈旧 Core 分叉上，已随档移除） |
+| Api.Tests | <!-- metrics:tests-Api -->72<!-- /metrics:tests-Api -->/70 | 上传、解析、诊断、计划、agent 与 P0/P1 回归 |
+| Eval.Tests | <!-- metrics:tests-Eval -->10<!-- /metrics:tests-Eval -->/2 | 合成数据回归 |
+| 合计 | <!-- metrics:tests-Total -->254<!-- /metrics:tests-Total -->/244 | 零回归（原 MobileCore 84 例跑在陈旧 Core 分叉上，已随档移除） |
 
 表中数字由 `scripts/verify_metrics.py` 从代码与登记表自动对拍（`<!-- metrics:* -->` 标记），漂移即 CI 红。
 
 一键验收：
 
 ```powershell
-pwsh -NoProfile -File scripts\verify_all.ps1     # 31 步 ALL GREEN
+pwsh -NoProfile -File scripts\verify_all.ps1     # 50 步 ALL GREEN
 ```
 
-脚本覆盖常量对齐、公式常量生成区（`K` 由 `FormulaConstants.cs` 注入）、意图表六方对拍（<!-- metrics:agent-intents -->26<!-- /metrics:agent-intents --> 意图，危机词 <!-- metrics:crisis-words -->11<!-- /metrics:crisis-words --> 个）、公式跨语言对拍、前端脚本语法、XSS 黄金用例（14 例）、共享内核双跑等价、生成区一致性（9 区）、状态分片黄金用例（10 例）、试卷/教材文本/智能体路由/计划调度黄金用例（29 例）、零空 catch（151 个 .cs 文件）、命名规范扫描、三端 HTML 同源、图谱性能预算、覆盖率阈值与 `dotnet format` / eslint 风格门禁。
+脚本覆盖常量对齐、公式常量生成区（`K` 由 `FormulaConstants.cs` 注入）、意图表六方对拍（<!-- metrics:agent-intents -->26<!-- /metrics:agent-intents --> 意图，危机词 <!-- metrics:crisis-words -->19<!-- /metrics:crisis-words --> 个）、公式跨语言对拍、前端脚本语法、XSS 黄金用例（14 例）、共享内核双跑等价、生成区一致性（9 区）、状态分片黄金用例（10 例）、试卷/教材文本/智能体路由/计划调度黄金用例（29 例）、零空 catch（151 个 .cs 文件）、命名规范扫描、三端 HTML 同源、图谱性能预算、覆盖率阈值与 `dotnet format` / eslint 风格门禁。
 
 持续集成在 `.github/workflows/ci.yml`，每次 push 与 PR 自动跑构建、测试与上述门禁；覆盖率已是硬门禁（行 ≥50% / 分支 ≥40%，低于阈值即红），另有两个独立作业：Android 打包验证与 Playwright 浏览器冒烟。首次启用时 CI 红了三处，均已修复：OcrHost 的 tessdata 兜底路径缺存在性检查、Windows runner 控制台 cp1252 导致中文输出崩溃、生成块比对未归一换行。
 
@@ -201,12 +201,14 @@ NuGet 报 `path1=null` 时，补齐 `PROGRAMDATA`、`PROGRAMFILES(X86)`、`ALLUS
 
 有三条红线：数字只能算出来，AI 不许改分；不发明先修边；`cleared` 只由状态机写入。
 
-隐私上，教师侧做 k-匿名，样本少于 3 人一律抑制；危机域与敏感域不进画像；用户随时可以 opt-out。危机词命中时只做安抚与转人工，不评价学生。
+隐私上，教师侧做 k-匿名，样本少于 3 人一律抑制；危机域与敏感域不进画像；用户随时可以 opt-out（停展示），也可以 purge（画像数据彻底删除，删除彻底性有验证用例证明）。危机词命中时只做安抚与转人工，不评价学生。
 
 ## 11. 变更记录
 
 | 版本 | 日期 | 要点 |
 |---|---|---|
+| 2.6.0 工程化阶段七 | 2026-11-17 | 效果证据与内容安全补课：A2 参数标定管线（14 常数 ±20% 敏感性扫描 + 网格搜索，参数化复刻与生产公式 1e-9 对拍，结论锁入 Eval.Tests）；A5 冷启动 CAT 诊断（信息量选题 + 停测，金样实测 24 题 vs 顺序 32 题同等精度）；C1 红队对抗回归集（536 条六类语料入 verify_all，抓出并修复多词英文危机短语从未命中的真 bug，危机词表 11→19 六方同步）；B4 仓库瘦身（发布二进制出库只挂 GitHub Releases，跟踪大文件 152MB→77MB，LFS 缓存清理，体积预算棘轮下调）。验收脚本扩至 50 步 |
+| 2.6.0 工程化阶段六 | 2026-11-17 | 教育有效性与内容管线补课：模拟学习者评测管线（合成 ACT-R 学习者 + impact-v2/随机/SM-2/BKT 四策略对比，Eval.Tests 2→7）；题目曝光控制与降温（`shared/question-exposure.js`，冷却防重复 + 权重降温 + 金样 9 例）；教材→图包一键生成（`tools/mindmap_to_graphpack.py` + 回归金样）；补齐两个一直空转的门禁（`verify_graph.py` / `verify_bank.py`，并修掉图包 7 条无 why 边）；opt-out 补彻底删除（purge）与删除彻底性验证（威胁模型 T21）；体积预算棘轮门禁；README 数字口径修复。验收脚本扩至 48 步 |
 | 2.6.0 工程化阶段五 | 2026-11-13 | 借鉴 SidebarDiagnostics：状态默认值收敛到 `shared/store.js` 的 `DEFAULTS` 单一表（新增字段零迁移脚本，配黄金用例与门禁）；Windows 单体壳补 PerMonitorV2 DPI 声明并与 Desktop 壳对齐（配一致性门禁）。验收脚本扩至 47 步 |
 | 2.6.0 工程化阶段四 | 2026-11-11 | 发布版本单一事实源（`Directory.Build.props` + `verify_release_version.py`）、威胁模型活文档（`THREAT_MODEL.md` + 门禁）、云调用显式同意与出口守卫、模型输出注入拦截、发布哈希清单与校验；新增 issue/PR 模板与两份端上子树约定；图谱测试自给自足（5 项断言真跑通过） |
 | 2.6.0 工程化阶段三 | 2026-10-25 至 26 | 单文件产物零外部依赖（ORT 运行时内联）；公式常量改由 C# 源生成；覆盖率转为硬门禁；图谱性能预算、`dotnet format` 与 eslint 入 CI；教材文本、智能体路由与计划调度分别下沉 `shared/` 并建黄金用例；首页工程信息收进 `?debug=1` 调试面板 |

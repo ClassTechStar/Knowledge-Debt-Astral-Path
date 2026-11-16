@@ -32,6 +32,8 @@ REGIONS = [
     ("shared/core.js", "normalize", "core.js#normalize"),
     ("shared/core.js", "parseJsonLoose", "core.js#parseJsonLoose"),
     ("shared/store.js", None, "shared/store.js"),
+    ("shared/question-exposure.js", None, "shared/question-exposure.js"),
+    ("shared/cat-diagnosis.js", None, "shared/cat-diagnosis.js"),
     ("shared/exam.js", None, "shared/exam.js"),
     ("shared/kg-text.js", None, "shared/kg-text.js"),
     ("shared/agent-router.js", None, "shared/agent-router.js"),

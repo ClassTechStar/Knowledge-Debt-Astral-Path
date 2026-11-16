@@ -66,13 +66,16 @@ def main():
         return 1
 
     # ② 逐个产物验哈希
-    ok_count = 0
+    # 产物只挂 GitHub Release Assets 后（2026-11-17），仓库里不再有二进制副本：
+    # 本地缺文件 → 跳过该产物的哈希核验并如实报告（打包机上产物在，仍全量核验）；
+    # 文件存在但哈希不符 → 照旧判红（防「替换」的语义不变）。
+    ok_count, skip_count = 0, 0
     for it in arts:
         name = it.get("name", "")
         want = str(it.get("sha256", "")).lower()
         p = RELEASE / name
         if not p.exists():
-            fail(f"清单里的产物不存在：{name}")
+            skip_count += 1
             continue
         got = sha256_of(p)
         if got != want:
@@ -81,7 +84,11 @@ def main():
             ok_count += 1
         if p.stat().st_size != it.get("bytes"):
             fail(f"大小不符：{name} 清单 {it.get('bytes')} 实际 {p.stat().st_size}")
-    print(f"  OK  哈希校验             {ok_count}/{len(arts)} 个产物 sha256 匹配")
+    if skip_count:
+        print(f"  WARN 哈希校验             {ok_count}/{len(arts)} 个产物在本地可核验；"
+              f"{skip_count} 个无本地副本（走 GitHub Releases 分发，打包机全量核验）")
+    else:
+        print(f"  OK  哈希校验             {ok_count}/{len(arts)} 个产物 sha256 匹配")
 
     # ③ 防遗漏：release/ 下的发布产物都要在清单里
     listed = {it.get("name") for it in arts}

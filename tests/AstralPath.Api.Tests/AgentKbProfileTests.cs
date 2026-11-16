@@ -297,6 +297,47 @@ public class AgentKbProfileTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.True(tags.GetProperty("optOut").GetBoolean(), "opt-out 应被记录并随画像返回");
     }
 
+    [Fact]
+    public async Task Profile_Purge_Deletes_All_Data_With_Proof()
+    {
+        // opt-out 只停展示；purge 连数据一起删——删除彻底性必须有验证测试证明，不能只有功能
+        var client = Client();
+        Assert.True((await client.PostAsJsonAsync("/v1/profile/demo-student-a/tags",
+            new { tag = "节律型", domain = "pace", weight = 0.8 })).IsSuccessStatusCode);
+        Assert.True((await client.PostAsJsonAsync("/v1/profile/demo-student-a/tags",
+            new { tag = "视觉型", domain = "style", weight = 0.6 })).IsSuccessStatusCode);
+
+        var purge = await Data(await client.PostAsync("/v1/profile/demo-student-a/purge", null));
+        Assert.True(purge.GetProperty("purged").GetBoolean(), "purge 应报告删除成功");
+        Assert.True(purge.GetProperty("removedTags").GetInt32() >= 2, "应删掉全部标签（含本用例写入的 2 个）");
+
+        var after = await Data(await client.GetAsync("/v1/profile/demo-student-a/tags?teacherSide=false"));
+        Assert.True(after.GetProperty("tags").GetArrayLength() == 0, "删除后画像必须无残留标签");
+        Assert.False(after.GetProperty("optOut").GetBoolean(), "删除后连 opt-out 标记本身也不该留");
+
+        // 重新写入只应看到新数据：旧标签绝不能复活
+        Assert.True((await client.PostAsJsonAsync("/v1/profile/demo-student-a/tags",
+            new { tag = "新起点", domain = "pace", weight = 1.0 })).IsSuccessStatusCode);
+        var reborn = await Data(await client.GetAsync("/v1/profile/demo-student-a/tags?teacherSide=false"));
+        Assert.True(reborn.GetProperty("tags").GetArrayLength() == 1, "重新 opt-in 得到的是全空白画像");
+    }
+
+    [Fact]
+    public async Task Profile_Purge_Is_Idempotent_And_Clears_OptOut_Flag()
+    {
+        var client = Client();
+        Assert.True((await client.PostAsync("/v1/profile/demo-student-a/opt-out", null)).IsSuccessStatusCode);
+        var first = await Data(await client.PostAsync("/v1/profile/demo-student-a/purge", null));
+        Assert.True(first.GetProperty("purged").GetBoolean());
+
+        var second = await Data(await client.PostAsync("/v1/profile/demo-student-a/purge", null));
+        Assert.False(second.GetProperty("purged").GetBoolean(), "二次 purge 应幂等报告无数据可删");
+        Assert.Equal(0, second.GetProperty("removedTags").GetInt32());
+
+        var tags = await Data(await client.GetAsync("/v1/profile/demo-student-a/tags?teacherSide=false"));
+        Assert.False(tags.GetProperty("optOut").GetBoolean(), "purge 后 opt-out 标记一并清除");
+    }
+
     // 延后项与模块自检
 
     [Fact]

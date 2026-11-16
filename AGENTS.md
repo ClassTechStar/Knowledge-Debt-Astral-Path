@@ -11,7 +11,8 @@
   更新本文件与 `THREAT_MODEL.md` 对应条目。「改了代码、文档回头再说」= 未完成的改动。
 - **嵌套规则**：子树级约定写进该子树的 `AGENTS.md`（`src/AstralPath.Harmony/`、
   `src/AstralPath.NativeApp/` 各一份）。根规则全库适用，子树规则只加增量。
-- **新增文档前先问**：有没有旧文档可改。本仓库承重文档在根目录，`docs/` 当前为空。
+- **新增文档前先问**：有没有旧文档可改。本仓库承重文档在根目录，`docs/` 已删除
+  （ADR-0002 随措辞整改移除，其结论已收敛进本文件与 README §8）。
 
 ## 仓库形状（Repo Shape）
 
@@ -92,6 +93,8 @@ python scripts/build-single.py                    # 重建 17MB 单文件产物�
 | `Version`（唯一事实源） | `Directory.Build.props` | 全仓版本号；csproj 不许再写死 |
 | `esc()` / `safeRich()` / `sanitizeUrl()` | `shared/safe-dom.js` | DOM 注入防线；XSS 黄金用例的对拍对象 |
 | `APStore` 分片存储 | `shared/store.js` | 五分片 + schema 版本 + 旧键迁移留底 |
+| `APExposure` 曝光控制 | `shared/question-exposure.js` | 选题降温 + 冷却防重复；曝光计数挂状态 `exposure`（answers 分片） |
+| `APCat` 冷启动诊断 | `shared/cat-diagnosis.js` | CAT 式信息量选题 + 停测；知识态从作答日志推导，零新增状态 |
 | `DEFAULTS` / `withDefaults()` | `shared/store.js` | 状态默认值**单一来源**；新增状态字段只改此处，不写逐字段迁移脚本 |
 | `CRISIS` 词表 / 意图路由 | `shared/core.js`、`shared/agent-router.js` | 危机最高优先级、授权前置、负例拦截 |
 | 云调用与输出脱敏 | `shared/integrations/p2-ai-integration.js` | 离线/危机词/禁用词不走云；数字只引用系统上下文 |
