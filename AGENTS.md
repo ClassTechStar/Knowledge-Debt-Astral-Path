@@ -78,6 +78,7 @@ python scripts/build-single.py                    # 重建 17MB 单文件产物�
 | 发布版本号 | `verify_release_version.py`（单一事实源是 `Directory.Build.props`；打包脚本开头也会拦） |
 | 威胁模型 / 安全链路 | `verify_threat_model.py` + 同提交更新 `THREAT_MODEL.md` |
 | 默认配置 / DPI | `verify_defaults.py`、`verify_dpi.py`（新增状态字段 / 新增 Windows 壳时必跑） |
+| 实时拍照 / OCR 质量 | `verify_camera.py`、`camera_runner.js`、`scripts/ocr_quality.py`（改动相机或 OCR 金样时必跑） |
 
 ## 代码风格
 

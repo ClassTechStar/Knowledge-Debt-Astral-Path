@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "note": "OCR 质量金样框架。此文件是结构与工具自检用的占位，不是真实标注语料；按参考方案需扩充到 50~100 张，覆盖印刷试卷照片/含手写批注错题/扫描教材页/屏幕截图四类场景。填入真实 refText 与 OCR 输出的 hypText 后，cerLimit 才可从默认的 1.0（不设基线）下调为回归门禁。",
+  "sceneTypes": ["printed_exam_photo", "annotated_wrong_answer", "scanned_textbook", "screenshot"],
+  "cerLimit": 1.0,
+  "samples": [
+    {
+      "id": "SELF-01",
+      "scene": "framework_selfcheck",
+      "refText": "第一章 会计基础\n会计等式：资产等于负债加所有者权益。",
+      "hypText": "第一章 会计基础\n会计等式：资产等于负债加所有者权益。",
+      "refItems": [
+        { "no": "1", "stem": "会计等式的内容是什么" }
+      ],
+      "hypItems": [
+        { "no": "1", "stem": "会计等式的内容是什么" }
+      ],
+      "note": "工具自检：相同文本应得 CER=0、结构=1；不是真实 OCR 质量样本"
+    },
+    {
+      "id": "TODO-01",
+      "scene": "printed_exam_photo",
+      "refText": "一、单项选择题\n1. 下列属于资产的是（  ）\nA. 应付账款  B. 银行存款  C. 实收资本  D. 短期借款",
+      "refItems": [
+        { "no": "1", "stem": "下列属于资产的是" }
+      ],
+      "note": "待标注：填入真实拍摄图的 OCR 输出 hypText 与 hypItems"
+    }
+  ]
+}

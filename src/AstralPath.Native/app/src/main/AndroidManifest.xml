@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+  <!-- 实时拍照：WebView 内 getUserMedia 需要运行时 CAMERA 权限；
+       声明为 non-required，保证无摄像头设备仍可安装并走上传/粘贴降级 -->
+  <uses-permission android:name="android.permission.CAMERA" />
+  <uses-feature android:name="android.hardware.camera" android:required="false" />
   <application
       android:label="知债：星穹学途"
       android:icon="@mipmap/ic_launcher"

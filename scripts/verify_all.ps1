@@ -228,6 +228,17 @@ if (Test-Path scripts/verify_dpi.py) {
     Step "dpi-consistency" { python scripts/verify_dpi.py }
 }
 
+# 6q) 实时拍照链路（Web + Android WebView + HarmonyOS，保留上传与降级）
+if (Test-Path scripts/verify_camera.py) {
+    Step "camera-pipeline" { python scripts/verify_camera.py }
+    Step "camera-golden" { node scripts/camera_runner.js }
+}
+
+# 6r) OCR 质量金样框架（CER + 结构正确率；格式校验，不编造质量数字）
+if (Test-Path scripts/ocr_quality.py) {
+    Step "ocr-quality" { python scripts/ocr_quality.py --check }
+}
+
 # 6p-2) 交付体积预算（B4：产物与仓库大文件棘轮，防体积回弹）
 if (Test-Path scripts/verify_size_budget.py) {
     Step "size-budget" { python scripts/verify_size_budget.py }

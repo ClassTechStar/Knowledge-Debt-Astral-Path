@@ -5,9 +5,11 @@ import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
+import android.webkit.PermissionRequest
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
@@ -17,6 +19,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.webkit.WebViewAssetLoader
+import androidx.core.content.ContextCompat
 
 /**
  * 与 Windows（WebView2）/ Web 完全同构：
@@ -26,6 +29,21 @@ import androidx.webkit.WebViewAssetLoader
 class MainActivity : AppCompatActivity() {
     private lateinit var web: WebView
     private lateinit var assetLoader: WebViewAssetLoader
+
+    // ── 实时拍照：WebView 内 getUserMedia 的权限桥 ──
+    // 最小权限：只授予 VIDEO_CAPTURE；音频与其余资源一律拒绝。
+    // 用户拒绝时 deny() 会让前端 getUserMedia 抛异常，页面已有「改用图片导入/截图粘贴」降级提示。
+    private var pendingCameraPermissionRequest: PermissionRequest? = null
+    private val cameraPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            val req = pendingCameraPermissionRequest
+            pendingCameraPermissionRequest = null
+            if (granted) {
+                req?.grant(arrayOf(PermissionRequest.RESOURCE_VIDEO_CAPTURE))
+            } else {
+                req?.deny()
+            }
+        }
 
     // ── 文件选择支持：<input type="file"> 依赖 WebChromeClient.onShowFileChooser ──
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
@@ -113,6 +131,30 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
 
+            /**
+             * 实时拍照权限：页面调用 getUserMedia({video}) 时触发。
+             * 不实现此回调时 WebView 会直接拒绝，Web 端的「拍照识别」按钮永远打不开相机。
+             */
+            override fun onPermissionRequest(request: PermissionRequest?) {
+                val req = request ?: return
+                val wantsVideo = req.resources?.contains(PermissionRequest.RESOURCE_VIDEO_CAPTURE) == true
+                if (!wantsVideo) {
+                    req.deny()
+                    return
+                }
+                val granted = ContextCompat.checkSelfPermission(
+                    this@MainActivity, android.Manifest.permission.CAMERA
+                ) == PackageManager.PERMISSION_GRANTED
+                if (granted) {
+                    req.grant(arrayOf(PermissionRequest.RESOURCE_VIDEO_CAPTURE))
+                } else {
+                    // 防重复弹窗：上一次未处理的请求先拒绝
+                    pendingCameraPermissionRequest?.deny()
+                    pendingCameraPermissionRequest = req
+                    cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                }
+            }
+
             override fun onConsoleMessage(consoleMessage: android.webkit.ConsoleMessage?): Boolean {
                 android.util.Log.w(
                     "AstralPathJS",
@@ -139,7 +181,10 @@ class MainActivity : AppCompatActivity() {
                     // 前端 accept=.pdf,.txt,.md…（扩展名形式），映射为 MIME 以便 DocumentsUI 过滤
                     putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(
                         "application/pdf", "text/plain", "text/markdown",
-                        "application/x-pdf", "text/x-markdown"
+                        "application/x-pdf", "text/x-markdown",
+                        // 试卷作业页的「图片导入」入口 accept="image/*"；
+                        // 不加入 image/* 时相机降级路线在 Android WebView 里选不到任何图片
+                        "image/*"
                     ))
                     if (params?.mode == FileChooserParams.MODE_OPEN_MULTIPLE) {
                         putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)

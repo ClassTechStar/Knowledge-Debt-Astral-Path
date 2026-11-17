@@ -207,6 +207,7 @@ NuGet 报 `path1=null` 时，补齐 `PROGRAMDATA`、`PROGRAMFILES(X86)`、`ALLUS
 
 | 版本 | 日期 | 要点 |
 |---|---|---|
+| 2.6.0 实时拍照 | 2026-11-17 | Web 端拍照改为连拍三帧选最清晰（2560px 上限）；Android WebView 补相机权限桥与 `image/*` 文件选择，鸿蒙原生相机路径保留；新增 OCR 质量度量框架（CER + 结构正确率）与四项黄金用例；实施计划见 `docs/实时拍照与OCR加速实施计划.md` |
 | 2.6.0 工程化阶段七 | 2026-11-17 | 效果证据与内容安全补课：A2 参数标定管线（14 常数 ±20% 敏感性扫描 + 网格搜索，参数化复刻与生产公式 1e-9 对拍，结论锁入 Eval.Tests）；A5 冷启动 CAT 诊断（信息量选题 + 停测，金样实测 24 题 vs 顺序 32 题同等精度）；C1 红队对抗回归集（536 条六类语料入 verify_all，抓出并修复多词英文危机短语从未命中的真 bug，危机词表 11→19 六方同步）；B4 仓库瘦身（发布二进制出库只挂 GitHub Releases，跟踪大文件 152MB→77MB，LFS 缓存清理，体积预算棘轮下调）。验收脚本扩至 50 步 |
 | 2.6.0 工程化阶段六 | 2026-11-17 | 教育有效性与内容管线补课：模拟学习者评测管线（合成 ACT-R 学习者 + impact-v2/随机/SM-2/BKT 四策略对比，Eval.Tests 2→7）；题目曝光控制与降温（`shared/question-exposure.js`，冷却防重复 + 权重降温 + 金样 9 例）；教材→图包一键生成（`tools/mindmap_to_graphpack.py` + 回归金样）；补齐两个一直空转的门禁（`verify_graph.py` / `verify_bank.py`，并修掉图包 7 条无 why 边）；opt-out 补彻底删除（purge）与删除彻底性验证（威胁模型 T21）；体积预算棘轮门禁；README 数字口径修复。验收脚本扩至 48 步 |
 | 2.6.0 工程化阶段五 | 2026-11-13 | 借鉴 SidebarDiagnostics：状态默认值收敛到 `shared/store.js` 的 `DEFAULTS` 单一表（新增字段零迁移脚本，配黄金用例与门禁）；Windows 单体壳补 PerMonitorV2 DPI 声明并与 Desktop 壳对齐（配一致性门禁）。验收脚本扩至 47 步 |
