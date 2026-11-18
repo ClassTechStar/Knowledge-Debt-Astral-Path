@@ -138,3 +138,6 @@ src/AstralPath.Harmony/entry/build/
 src/AstralPath.Harmony/entry/.preview/
 src/AstralPath.Harmony/.idea/
 *.hap
+
+# 临时构建与依赖备份（不入库）
+_tess_build/
