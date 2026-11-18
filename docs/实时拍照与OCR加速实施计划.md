@@ -19,7 +19,7 @@
 | Android WebView | 有 `onShowFileChooser`，但**原先缺 `onPermissionRequest` 与 CAMERA 权限**，Web 端相机在壳内必然被拒；文件选择器 MIME 原先不含 `image/*`，图片导入入口也是哑的 | `MainActivity.kt`、`AndroidManifest.xml` |
 | HarmonyOS | **已有原生相机**（`cameraPicker` 后摄），识别走 `OcrService` | `PapersPage.ets:111-114` |
 | 原生安卓（NativeApp） | 无相机、无选图、无 OCR，**移动端最大空洞** | `src/AstralPath.NativeApp` |
-| OCR 引擎 | 浏览器：tesseract.js 5.1.1 WASM（SIMD + 非 SIMD 双核，全栈内联）；宿主/Windows：Python `rapidocr_onnxruntime` 1.4.4 | `ocr-engine/ocr-wasm.js`、`tools/ocr_pipeline.py`、`OcrHost.cs` |
+| OCR 引擎 | 浏览器：tesseract.js 6.0.1 WASM（SIMD + 非 SIMD 双核，全栈内联）；宿主/Windows：Python `rapidocr_onnxruntime` 1.4.4 | `ocr-engine/ocr-wasm.js`、`tools/ocr_pipeline.py`、`OcrHost.cs` |
 | GPU/NPU | 当前栈**无任何执行提供者配置**：tesseract.js 是 WASM；RapidOCR 是 ONNX Runtime CPU；没有 WebGPU/DirectML/NNAPI 代码 | 全仓 grep 无命中 |
 
 结论：这次不是「从零实现拍照」，而是**Web 增强 + Android 补权限 + 质量度量框架**；GPU/NPU 属于换栈级工程，不能冒充已完成。
@@ -79,3 +79,11 @@
 4. **CER 框架尚无真实语料**：当前只有工具自检与结构占位，`cerLimit=1.0` 是「不设基线」，不能对外宣称任何质量数字。
 5. **33MB 单文件预算**：模型升级会推高体积，必须先解决懒加载/宿主侧分流，否则破坏零依赖单文件定位。
 6. **隐私**：置信度协同产生的数据必须遵守现有 opt-in / k-匿名边界，不能默认上传。
+
+## 附：OCR 引擎升级记录（2026-11-19）
+
+- 版本：tesseract.js 5.1.1 → 6.0.1，tesseract.js-core 5.1.1 → 6.0.0，选择经过一年多验证的 6.x 稳定线（跳过刚发布 11 个月的 7.0.0）
+- 训练数据不变：chi_sim / eng 仍为 tessdata_fast 档位，md5 校验确认未改
+- 补丁适配：build-single.py 的 importScripts 注入改为跨版本通用正则（5.1.1 变量名为 h，6.0.1 为 c），避免下次升级重复硬编码适配
+- 单文件体积：33,048,242 → 33,069,426 字节（+21KB），远低于 35MB 预算
+- 验证：10/10 产物完整性断言通过；verify_all ALL GREEN；真实 OCR 识别对比因浏览器沙箱在测试环境崩溃未能执行（5.1.1 基线同样崩溃，判断为环境问题而非升级回归），需在正常浏览器环境复验识别质量

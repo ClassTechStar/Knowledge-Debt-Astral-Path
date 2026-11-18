@@ -32,8 +32,8 @@
  *     无预处理），作为基准对照与降级开关；默认关。
  *
  * 依赖（与本文件同目录，全部离线自包含）：
- *   tesseract.min.js / worker.min.js               (tesseract.js 5.1.1, Apache-2.0)
- *   tesseract-core-simd-lstm.wasm.js               (tesseract.js-core 5.1.1)
+ *   tesseract.min.js / worker.min.js               (tesseract.js 6.0.1, Apache-2.0)
+ *   tesseract-core-simd-lstm.wasm.js               (tesseract.js-core 6.0.0)
  *   tesseract-core-lstm.wasm.js                    (无 SIMD 设备回退)
  *   chi_sim.traineddata / eng.traineddata          (与 Windows 端同一份)
  *   pdf.min.js / pdf.worker.min.js                 (pdf.js 3.11.174 legacy, Apache-2.0)

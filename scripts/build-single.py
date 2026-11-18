@@ -115,11 +115,18 @@ def main():
     must_contain(worker_js, jb_from, "initialize-join(t.data)")
     worker_js = worker_js.replace(jb_from, jb_to)
     # c) importScripts：按文件名映射 __AP_CORE_MAP__（Blob URL 不能拼接路径）
-    ji_from = "r.g.importScripts(h)"
-    ji_to = ('r.g.importScripts((r.g.__AP_CORE_MAP__&&r.g.__AP_CORE_MAP__'
-             '[String(h).split("/").pop().replace(/\\.wasm\\.js$/,"")])||h)')
-    must_contain(worker_js, ji_from, "importScripts(core)")
-    worker_js = worker_js.replace(ji_from, ji_to)
+    # 跨版本通用：5.1.1 是 importScripts(h)，6.0.1 是 importScripts(c)，
+    # 用正则捕获变量名，避免每次升级都改硬编码锚点
+    ji_re = re.compile(r"(\.importScripts\()([a-zA-Z_$][\w$]*)(\))")
+    ji_hits = list(ji_re.finditer(worker_js))
+    if len(ji_hits) != 1:
+        print(f"[内联失败] importScripts 锚点命中 {len(ji_hits)} 处，预期 1 处")
+        sys.exit(1)
+    _v = ji_hits[0].group(2)
+    ji_to = (ji_hits[0].group(1)
+             + '(r.g.__AP_CORE_MAP__&&r.g.__AP_CORE_MAP__[String(' + _v + ').split("/").pop()'
+             + '.replace(/\\.wasm\\.js$/,"")])||' + _v + ji_hits[0].group(3))
+    worker_js = worker_js[:ji_hits[0].start()] + ji_to + worker_js[ji_hits[0].end():]
 
     # B-2：资源 base64 化
     worker_b64 = b64(worker_js.encode("utf-8"))
