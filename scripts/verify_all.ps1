@@ -239,6 +239,11 @@ if (Test-Path scripts/ocr_quality.py) {
     Step "ocr-quality" { python scripts/ocr_quality.py --check }
 }
 
+# 6s) traineddata 档位与版本（保持官方 fast 最新版；防误换 best 撑爆单文件预算）
+if (Test-Path scripts/verify_traineddata.py) {
+    Step "traineddata-tier" { python scripts/verify_traineddata.py }
+}
+
 # 6p-2) 交付体积预算（B4：产物与仓库大文件棘轮，防体积回弹）
 if (Test-Path scripts/verify_size_budget.py) {
     Step "size-budget" { python scripts/verify_size_budget.py }
