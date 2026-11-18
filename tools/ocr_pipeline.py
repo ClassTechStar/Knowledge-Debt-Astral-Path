@@ -1212,7 +1212,7 @@ def process_file(path: Path, ocr_mode: str = "standard", force_pages: list[int] 
                     cq.append({
                         "chapterId": ch.get("id"),
                         "chapterTitle": ch.get("title"),
-                         * *q,
+                         **q,
                     })
             result["chapterQuestions"] = cq
             result["notes"].append(

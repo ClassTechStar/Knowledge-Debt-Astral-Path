@@ -244,6 +244,11 @@ if (Test-Path scripts/verify_traineddata.py) {
     Step "traineddata-tier" { python scripts/verify_traineddata.py }
 }
 
+# 6t) 宿主 RapidOCR 版本与脚本语法（3.9.3.dev16，含 v3.10.0 修复）
+if (Test-Path scripts/verify_rapidocr.py) {
+    Step "rapidocr" { python scripts/verify_rapidocr.py }
+}
+
 # 6p-2) 交付体积预算（B4：产物与仓库大文件棘轮，防体积回弹）
 if (Test-Path scripts/verify_size_budget.py) {
     Step "size-budget" { python scripts/verify_size_budget.py }

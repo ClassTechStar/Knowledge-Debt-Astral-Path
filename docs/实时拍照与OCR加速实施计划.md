@@ -19,7 +19,7 @@
 | Android WebView | 有 `onShowFileChooser`，但**原先缺 `onPermissionRequest` 与 CAMERA 权限**，Web 端相机在壳内必然被拒；文件选择器 MIME 原先不含 `image/*`，图片导入入口也是哑的 | `MainActivity.kt`、`AndroidManifest.xml` |
 | HarmonyOS | **已有原生相机**（`cameraPicker` 后摄），识别走 `OcrService` | `PapersPage.ets:111-114` |
 | 原生安卓（NativeApp） | 无相机、无选图、无 OCR，**移动端最大空洞** | `src/AstralPath.NativeApp` |
-| OCR 引擎 | 浏览器：tesseract.js 6.0.1 WASM（SIMD + 非 SIMD 双核，全栈内联）；宿主/Windows：Python `rapidocr_onnxruntime` 1.4.4 | `ocr-engine/ocr-wasm.js`、`tools/ocr_pipeline.py`、`OcrHost.cs` |
+| OCR 引擎 | 浏览器：tesseract.js 6.0.1 WASM（SIMD + 非 SIMD 双核，全栈内联）；宿主/Windows：Python `rapidocr` 3.9.3.dev16（本地仓库，含 v3.10.0 修复） | `ocr-engine/ocr-wasm.js`、`tools/ocr_pipeline.py`、`OcrHost.cs` |
 | GPU/NPU | 当前栈**无任何执行提供者配置**：tesseract.js 是 WASM；RapidOCR 是 ONNX Runtime CPU；没有 WebGPU/DirectML/NNAPI 代码 | 全仓 grep 无命中 |
 
 结论：这次不是「从零实现拍照」，而是**Web 增强 + Android 补权限 + 质量度量框架**；GPU/NPU 属于换栈级工程，不能冒充已完成。
@@ -101,3 +101,25 @@
 
 该决策由 `scripts/verify_traineddata.py` 门禁固化：校验 7 处共 14 个模型文件仍是 fast 基线 md5，
 并断言 best 体积超出单文件余量，防止未来仅凭"版本号更高/档位更贵"就误换模型。
+
+## 附：宿主 RapidOCR 升级（2026-11-19）
+
+- 版本：`rapidocr` 3.9.2 → **3.9.3.dev16**（取自本地 `C://Users//18948//Documents//GitHub//RapidOCR` 仓库 HEAD，
+  已包含 v3.10.0 tag 及后续 16 个提交）
+- 关键修复：EXIF 方向修正（bytes/PIL 输入）、`limit_side_len` 上限生效、
+  词框按自身字符评分、长行中途方向分类、det 预处理 float32 保持
+- 安装方式：因沙箱拦截 pip 命令，采用直接替换 site-packages 包目录 + 对齐 dist-info 元数据，
+  依赖栈（onnxruntime 1.30.0 / opencv 5.0.0.93 / pyclipper 1.4.0）保持原样未动
+- 顺带修复两处既有语法笔误：`tools/ocr_pipeline.py:1215` `* *q` → `**q`、
+  `tools/deep_chapters.py:448` `* *sec` → `**sec`（原本导致两脚本无法导入）
+- 验证：新旧版对同一清晰印刷 PDF 的 OCR 结果逐字一致（CER 均 0.0000，零回归）；
+  `verify_all` ALL GREEN；新版价值在于上述修复覆盖的拍照痛点场景，
+  理想测试图无法体现，需在斜拍/EXIF 旋转样本上复验
+- 回退：旧包备份在工作区 `_tess_build/rapidocr_backup`（不入库）
+
+## 附：便携版脚本保持独立配置的说明
+
+`release/AstralPath-Portable-2.6.0/tools/` 下的 `ocr_pipeline.py` / `deep_chapters.py`
+是发布包内的独立副本，路径布局与主 `tools/` 不同（行数与路径基准均有差异），
+且原本不含上述两处语法笔误。本次**未覆盖便携版副本**，避免破坏其相对路径引用；
+其 RapidOCR 依赖随便携版 ocr-venv 独立存在，升级需另行重打包发布。

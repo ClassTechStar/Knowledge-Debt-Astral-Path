@@ -445,7 +445,7 @@ def build_deep_chapter_payload(
             body = f"小节「{sec['title']}」位于本教材中，建议结合所属章节复习。"
         q = generate_chapter_questions(sec["title"], body, material_title, n=1)
         sec_out.append({
-             * *sec,
+             **sec,
             "charCount": len(body),
             "content": body[:2500],
             "questions": q[:1],
