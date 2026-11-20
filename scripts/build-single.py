@@ -36,6 +36,9 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # 仓库根（scripts/ 的上一级）
+# MiSans 子集字体（项目实际字符集，见 _font_build/charset.txt；外链完整字体为生僻字兜底）
+FONT_SUBSET = os.path.join(ROOT, "assets", "MiSans-subset.ttf")
+
 SRC_HTML = os.path.join(ROOT, "deploy", "monolith-web", "index.html")
 OCR_DIR = os.path.join(ROOT, "deploy", "monolith-web", "ocr-engine")
 OCR_WASM = os.path.join(OCR_DIR, "ocr-wasm.js")
@@ -55,7 +58,7 @@ ORT_WASM = os.path.join(ORT_DIR, "ort-wasm-simd-threaded.wasm")
 # 基座 index.html 的 md5 指纹。基座一改 md5 就变，构建会直接拒绝，这时要重打基线，
 # 也就是把 EXPECTED_MD5 更新成新值（值后续统一重算）。之前几次重打都是基座本身
 # 有改动：UI 调整、密钥内嵌、AI 流式、XSS 修复、公式常量改由 C# 生成、逻辑搬进 shared/ 等。
-EXPECTED_MD5 = "4020647c61498f34aaecc27a59a2f448"
+EXPECTED_MD5 = "f1a014f9e828236d216b6073fb4a120f"
 
 # 唯一放行的外部 CDN 引用（页面内有 onerror 降级，缺失时自动降级）
 ALLOWED_EXTERNAL_PREFIX = "https://cdn.jsdelivr.net/npm/onnxruntime-web"
@@ -210,9 +213,25 @@ def main():
         "})();\n"
         "</script>\n"
     )
+    # A-2b：MiSans 字体子集内联（base64 → @font-face，离线可用）
+    # 子集仅含项目实际用到的字符（约 1.4k 码点，309KB），完整字体走外链兜底生僻字
+    font_block = ""
+    if os.path.exists(FONT_SUBSET):
+        font_b64 = b64(open(FONT_SUBSET, "rb").read())
+        font_block = (
+            "<style>\n"
+            "/* MiSans 子集内联：项目字符集，离线可读；外链完整字体兜底生僻字 */\n"
+            '@font-face{font-family:"MiSans";font-style:normal;font-weight:400;'
+            "src:url(data:font/ttf;base64," + font_b64 + ") format('truetype'),"
+            "url('assets/MiSans-Normal.ttf') format('truetype');}\n"
+            "/* Copyright © 2020-2025 Beijing Xiaomi Mobile Software Co., Ltd. / Hanyi Fonts. MiSans subset for offline use. */\n"
+            "</style>\n"
+        )
+        print(f"[OK] MiSans 子集内联: {os.path.getsize(FONT_SUBSET):,} 字节（base64 {len(font_b64):,} 字符）")
+
     r3 = re.sub(
         r'</head>',
-        worker_script + "</head>",
+        font_block + worker_script + "</head>",
         r2,
         count=1,
     )

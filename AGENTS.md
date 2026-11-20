@@ -93,6 +93,7 @@ python scripts/build-single.py                    # 重建 17MB 单文件产物�
 |---|---|---|
 | `Version`（唯一事实源） | `Directory.Build.props` | 全仓版本号；csproj 不许再写死 |
 | `esc()` / `safeRich()` / `sanitizeUrl()` | `shared/safe-dom.js` | DOM 注入防线；XSS 黄金用例的对拍对象 |
+| MiSans 字体子集 | `assets/MiSans-subset.ttf`、`scripts/gen_font_subset.py` | 从项目字符集生成；改页面文字后重跑生成脚本并重建单文件 |
 | `APStore` 分片存储 | `shared/store.js` | 五分片 + schema 版本 + 旧键迁移留底 |
 | `APExposure` 曝光控制 | `shared/question-exposure.js` | 选题降温 + 冷却防重复；曝光计数挂状态 `exposure`（answers 分片） |
 | `APCat` 冷启动诊断 | `shared/cat-diagnosis.js` | CAT 式信息量选题 + 停测；知识态从作答日志推导，零新增状态 |

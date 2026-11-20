@@ -35,10 +35,10 @@
   --ink-70:#67707a;--ink-50:#a4aab2;--ink-45:#8a9099;--ink-40:#8a9096;--bd-soft:#d8dde3;
   --well:#eef1f4;--well-2:#e6ebf1;--well-3:#e3e7ec;--wash-1:#f4f7fa;--wash-2:#f6f8fb;
   --ok-vivid:#1a9e6b;--err-vivid:#c2482b;--crisis:#c0392b;--r-s:10px;--r-m:12px;
-  --bg:#f3f4f5;--brand-hover:rgba(47,111,237,.06);--scrim:rgba(15,20,28,.45);--shadow-ink-14:rgba(0,0,0,.14);--shadow-ink-28:rgba(0,0,0,.28);--d-bg-2:#fdeeea;--body-stack:-apple-system,"PingFang SC","Segoe UI","Microsoft YaHei",sans-serif;
+  --bg:#f3f4f5;--brand-hover:rgba(47,111,237,.06);--scrim:rgba(15,20,28,.45);--shadow-ink-14:rgba(0,0,0,.14);--shadow-ink-28:rgba(0,0,0,.28);--d-bg-2:#fdeeea;--body-stack:"MiSans",-apple-system,"PingFang SC","Segoe UI","Microsoft YaHei",sans-serif;
 }
 *{box-sizing:border-box}
-html,body{margin:0;overflow-x:clip;background:var(--canvas);color:var(--ink);font:15px/1.55 -apple-system,"PingFang SC","Segoe UI","Microsoft YaHei",sans-serif}
+html,body{margin:0;overflow-x:clip;background:var(--canvas);color:var(--ink);font:15px/1.55 "MiSans",-apple-system,"PingFang SC","Segoe UI","Microsoft YaHei",sans-serif}
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 .wrap{max-width:1280px;margin:0 auto;padding:16px 16px 40px}
 header.rail{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 0 16px}
@@ -6774,8 +6774,8 @@ CanvasRenderer.prototype._render = function() {
   // 预计算两类字体（避免每节点拼接字符串）
   const fszC = Math.max(8, 12 / Math.sqrt(Math.max(this.scale, 0.5)));
   const fszT = Math.max(8, 9 / Math.sqrt(Math.max(this.scale, 0.5)));
-  const fontC = 'bold ' + fszC + 'px -apple-system,"PingFang SC",sans-serif';
-  const fontT = fszT + 'px -apple-system,"PingFang SC",sans-serif';
+  const fontC = 'bold ' + fszC + 'px "MiSans",-apple-system,"PingFang SC",sans-serif';
+  const fontT = fszT + 'px "MiSans",-apple-system,"PingFang SC",sans-serif';
 
   // 绘制节点
   for (let i = 0; i < this.nodes.length; i++) {
