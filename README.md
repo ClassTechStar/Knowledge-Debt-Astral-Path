@@ -135,12 +135,12 @@ tests/                    Core 114 · Persistence 8 · Desktop 50 · Api 70 · E
 
 | 套件 | 通过 | 说明 |
 |---|---|---|
-| Core.Tests | <!-- metrics:tests-Core -->114<!-- /metrics:tests-Core -->/114 | score、impact、sale、计划、图谱、走读金样（1e-6）与画像、智能体 v3 回归 |
+| Core.Tests | <!-- metrics:tests-Core -->125<!-- /metrics:tests-Core -->/114 | score、impact、sale、计划、图谱、走读金样（1e-6）与画像、智能体 v3 回归 |
 | Persistence.Tests | <!-- metrics:tests-Persistence -->8<!-- /metrics:tests-Persistence -->/8 | Postgres 与 InMemory 双模式 |
 | Desktop.Tests | <!-- metrics:tests-Desktop -->50<!-- /metrics:tests-Desktop -->/50 | Avalonia 原生 UI 绑定与导航 |
 | Api.Tests | <!-- metrics:tests-Api -->72<!-- /metrics:tests-Api -->/70 | 上传、解析、诊断、计划、agent 与 P0/P1 回归 |
 | Eval.Tests | <!-- metrics:tests-Eval -->10<!-- /metrics:tests-Eval -->/2 | 合成数据回归 |
-| 合计 | <!-- metrics:tests-Total -->254<!-- /metrics:tests-Total -->/244 | 零回归（原 MobileCore 84 例跑在陈旧 Core 分叉上，已随档移除） |
+| 合计 | <!-- metrics:tests-Total -->265<!-- /metrics:tests-Total -->/244 | 零回归（原 MobileCore 84 例跑在陈旧 Core 分叉上，已随档移除） |
 
 表中数字由 `scripts/verify_metrics.py` 从代码与登记表自动对拍（`<!-- metrics:* -->` 标记），漂移即 CI 红。
 

@@ -54,7 +54,7 @@
     plan: null, sale: {}, day: 1, logs: [], chat: null, planMeta: null,
     debtExplain: {}, papers: [], userName: null, userTag: true,
     chatLog: [], kgMode: "slim", onboard: false, planOverrides: [],
-    dnd: false, autoLast: {}, exposure: {}
+    dnd: false, autoCheck: true, autoLast: {}, exposure: {}
   };
 
   /** 按 DEFAULTS 做并集合并：已有值优先，undefined 不污染默认值。 */

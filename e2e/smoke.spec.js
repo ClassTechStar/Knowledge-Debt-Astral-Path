@@ -5,7 +5,7 @@
 // 全程阻断外部网络：AI 入口走本地规则兜底，冒烟只验证本机链路（不依赖模型可用性）
 const { test, expect } = require("@playwright/test");
 
-const EXTERNAL = /^https?:\/\/(api\.xiaomimimo\.com|cdn\.jsdelivr\.net|api\.duckduckgo\.com)/;
+const EXTERNAL = /^https?:\/\/(api\.xiaomimimo\.com|cdn\.jsdelivr\.net|api\.duckduckgo\.com|api\.github\.com)/;
 
 test.beforeEach(async ({ page }) => {
   const errors = [];

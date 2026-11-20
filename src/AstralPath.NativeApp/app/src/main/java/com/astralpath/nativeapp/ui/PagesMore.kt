@@ -1,6 +1,8 @@
 package com.astralpath.nativeapp.ui
 
 import android.app.AlertDialog
+import android.content.Intent
+import android.net.Uri
 import android.view.View
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -197,6 +199,40 @@ object PagesMore {
                 .setNegativeButton("取消", null).show()
         })
         root.addView(dataCard, Ui.fill(dataCard))
+
+        // 检查更新（更新源默认 GitHub Release）：安卓端只检查 + 跳转 Release 页，
+        // 不做应用内静默安装——sideload 自装需要 REQUEST_INSTALL_PACKAGES，决策权留给用户
+        val updateCard = Ui.panel(c, "更新")
+        val updateLine = Ui.label(c, "当前版本 " + a.packageManager
+            .getPackageInfo(a.packageName, 0).versionName, Ui.FS_HINT, Ui.MUTED)
+        updateCard.addView(updateLine, Ui.fill(updateLine))
+        updateCard.addView(Ui.btn(c, "检查更新") {
+            updateLine.text = "正在向 GitHub 查询最新版本…"
+            Thread {
+                val r = com.astralpath.nativeapp.service.UpdateService
+                    .checkLatest(a.packageManager.getPackageInfo(a.packageName, 0).versionName ?: "0.0.0")
+                a.runOnUiThread {
+                    when {
+                        r == null -> updateLine.text = "暂时连不上 GitHub（离线或网络受限），稍后再试。"
+                        com.astralpath.nativeapp.service.UpdateService
+                            .compareVersions(r.version, a.packageManager
+                                .getPackageInfo(a.packageName, 0).versionName ?: "0.0.0") > 0 -> {
+                            updateLine.text = "发现新版本 v${r.version}（当前见上）。点「打开发布页」下载安装包。"
+                            updateCard.addView(Ui.btn(c, "打开发布页", primary = true) {
+                                try {
+                                    a.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(r.url)))
+                                } catch (e: Exception) {
+                                    Toast.makeText(c, "无法打开浏览器：${e.message}", Toast.LENGTH_SHORT).show()
+                                }
+                            }, Ui.fill(updateLine))
+                        }
+                        else -> updateLine.text = "已是最新版本（v${r.version}）。"
+                    }
+                }
+            }.start()
+        }, Ui.fill(updateLine))
+        updateCard.addView(Ui.label(c, "更新源：GitHub Releases。安装包经系统安装器确认后安装，学习数据不受影响。", Ui.FS_HINT, Ui.MUTED))
+        root.addView(updateCard, Ui.fill(updateCard))
         return scroll(root)
     }
 

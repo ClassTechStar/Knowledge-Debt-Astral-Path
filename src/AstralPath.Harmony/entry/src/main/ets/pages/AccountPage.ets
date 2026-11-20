@@ -3,6 +3,7 @@
  * 红线继承：未授权时默认「不可见」；密钥只保存在本机首选项，不上传、不写日志。
  */
 import { promptAction } from '@kit.ArkUI';
+import { http } from '@kit.NetworkKit';
 import { StoreService, AiCfg } from '../service/StoreService';
 import { AiService, AiConfig } from '../service/AiService';
 import { Theme } from '../common/Theme';
@@ -168,6 +169,45 @@ export struct AccountPage {
           text: '版本 2.6.0，HarmonyOS 原生版。解析、构图、识网、今日任务与修复计划，全部在本机完成',
           kind: 'plain'
         })
+
+        Blank().height(12)
+
+        Column({ space: 8 }) {
+          Text('更新').fontSize(Theme.FS_TITLE).fontWeight(FontWeight.Bold)
+          Text('更新源：GitHub Releases。本端只检查并提示，安装包请到发布页下载。')
+            .fontSize(Theme.FS_HINT)
+            .fontColor(Theme.MUTED)
+          BtnView({
+            label: '检查更新',
+            kind: 'plain',
+            click: () => {
+              const req = http.createHttp();
+              req.request('https://api.github.com/repos/ClassTechStar/Knowledge-Debt-Astral-Path/releases/latest',
+                { method: http.RequestMethod.GET, header: { Accept: 'application/vnd.github+json' },
+                  expectDataType: http.HttpDataType.STRING, connectTimeout: 10000, readTimeout: 10000 },
+                (err, data) => {
+                  if (err || data.responseCode !== 200) {
+                    promptAction.showToast({ message: '暂时连不上 GitHub（离线或网络受限）', duration: 2000 });
+                    return;
+                  }
+                  try {
+                    const j: Record<string, Object> = JSON.parse(data.result as string) as Record<string, Object>;
+                    const tag: string = (j.tag_name as string ?? '').replace(/^v/i, '');
+                    const url: string = (j.html_url as string ?? '') || 'https://github.com/ClassTechStar/Knowledge-Debt-Astral-Path/releases/latest';
+                    promptAction.showDialog({
+                      title: tag.length > 0 ? ('发现新版本 v' + tag) : '暂无法解析版本',
+                      message: tag.length > 0
+                        ? ('请到 GitHub Releases 页下载 HarmonyOS 包（当前 2.6.0）。\\n' + url)
+                        : '请稍后再试。',
+                      buttons: [{ text: '知道了', color: Theme.MUTED }]
+                    }).catch(() => {});
+                  } catch (e) {
+                    promptAction.showToast({ message: '版本解析失败', duration: 2000 });
+                  }
+                });
+            }
+          })
+        }
       }
       .width('100%')
       .padding(Theme.PAD_PANEL)

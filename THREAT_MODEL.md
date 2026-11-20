@@ -91,6 +91,7 @@
 | T17 | 壳层偷偷实现业务公式导致多端口径不一致 | `scripts/verify_architecture.py` 三契约（Core 纯净 / API 不下探宿主 / 壳不做业务） | 已覆盖 |
 | T18 | 空 catch 吞掉异常，故障无声 | `scripts/verify_no_empty_catch.py` 全量扫描 C#；`src/AstralPath.Core/Diagnostics/Diag.cs` 环形缓冲 | 已覆盖 |
 | T19 | 发布包被替换后无校验 | **哈希清单**：`release/manifest.json` + `checksums.sha256` 记录每个产物的 sha256，`scripts/verify_release_manifest.py` 校验哈希一致 + 防遗漏 + 版本对齐；`release/build-release.ps1` 打包后自动生成。产物自 2026-11-17 起只挂 GitHub Release Assets（仓库不再留二进制副本），本地无副本时跳过该产物哈希核验并如实报告，文件在则全量核验。**清单签名**：HMAC-SHA256（`ASTRALPATH_MANIFEST_KEY`），防清单本身被改；密钥缺失时如实标注未签名。局限：HMAC 是对称的，属「检测替换」而非「不可否认签名」；要不可否认需 Ed25519 + 密钥托管 | 部分（哈希已覆盖替换检测；清单签名需密钥，默认未启用） |
+| T22 | 更新链路被投毒/降级：假 Release、被替换的安装包、恶意 checksums | 更新源唯一（GitHub Releases over HTTPS）；Web/鸿蒙/安卓只「检查 + 跳转发布页」，不自动安装；Windows 壳应用内下载后**必须**用同一 Release 的 `checksums.sha256` 核验（复用 T19 清单），不一致即删包报错，清单缺失时如实标注「未校验哈希」由用户决定；安装前二次确认对话框；启动静默检查失败不重试不阻塞（离线优先不惩罚）；匿名 api.github.com 查询（限流 60/小时），无遥测。局限：SHA256 是完整性校验而非来源签名；Release 账号被盗仍可发假包（与 T19 同根，需 Ed25519 签名升级） | 部分（Windows 应用内自动更新已核验哈希；移动端为跳转式，无自装链路） |
 | T20 | 宿主运行时、浏览器扩展或操作系统被替换 | 无 | 不可证 |
 
 ## 5. 门禁与证据对应
@@ -107,6 +108,8 @@
 | `scripts/verify_output_guard.py` | T13 |
 | `scripts/redteam_runner.js`、`tools/gen_redteam_corpus.py` | T12、T13、T14（红队对抗回归集：危机边界召回/误报、改分造边注入泄密全量过路由、红线不变量） |
 | `scripts/verify_release_manifest.py`、`scripts/gen_release_manifest.py` | T19 |
+| `scripts/updater_runner.js`（`shared/updater.js` 版本比较/解析金样）、`src/AstralPath.Core/Updates/UpdateComparer.cs`（C# 同构） | T22（版本比较与资产挑选的正确性） |
+| `scripts/verify_release_manifest.py`、`scripts/gen_release_manifest.py`、`src/AstralPath.Monolith/UpdateService.cs`（下载后 SHA256 对 checksums.sha256 核验） | T22（更新包完整性，复用 T19 清单） |
 | `scripts/verify_threat_model.py` | 本文件自身的结构与证据路径 |
 | `tests/AstralPath.Api.Tests/AgentKbProfileTests.cs`（`Profile_Purge_*`） | T21 |
 
@@ -122,5 +125,6 @@
 | 2026-11-11 | T13 从「部分」升「已覆盖」：输出侧加注入形态拦截（伪造指令/覆写规则/角色伪装/模板标记），并用门禁锁死「模型返回不回喂执行路径」的架构不变量 | T13 |
 | 2026-11-11 | T19 从「未覆盖」升「部分」：发布哈希清单 + 校验门禁生效，HMAC 清单签名可选启用；Ed25519 不可否认签名未纳入（需密钥托管） | T19 |
 | 2026-11-17 | T21 新增并「已覆盖」：opt-out 仅停展示，画像彻底删除走 `/v1/profile/{id}/purge`，删除彻底性（无残留 / 旧标签不复活 / 幂等）由验证用例证明 | T21 |
+| 2026-11-20 | T22 新增并「部分」：更新源默认 GitHub Release；Web（shared/updater.js + APUpdater.check）与鸿蒙/安卓为「检查 + 跳转发布页」，Windows 壳应用内下载 Setup 并以 T19 checksums.sha256 核验后经用户确认运行安装器；版本比较纯函数下沉 Core（UpdateComparer）+ shared/updater.js 双端金样；Web 页面挂 AP_VERSION 常量并入 verify_release_version.py 对拍 | T22、T19 |
 | 2026-11-17 | T19 口径同步仓库瘦身：发布二进制只挂 GitHub Release Assets，仓库不再留副本；`scripts/verify_release_manifest.py` 对无本地副本的产物跳过哈希核验并如实报告，文件在则全量核验（防替换语义不变） | T19 |
 | 2026-11-17 | T12/T14 危机词表 11→19（补「想死/死了算了/活着没意思/结束这一切/割腕/suicidal」等委婉与变体），六方对拍全量同步；红队集（536 条）入回归并抓出真 bug——多词英文危机短语（kill myself / end my life）因词侧未过口语归一从未命中，已修（`shared/agent-router.js` R0 词句同管线归一） | T12、T13、T14 |

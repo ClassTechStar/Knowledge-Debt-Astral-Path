@@ -98,6 +98,10 @@ def main():
         else:
             fail("[发布脚本] release/build-release.ps1 未找到任何带版本号的产物名")
 
+    # ③½ Web 单文件：页面内 AP_VERSION 常量（更新检查用）与基线对拍
+    expect("deploy/monolith-web/index.html",
+           r'window\.AP_VERSION\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+)"', "Web(AP_VERSION)", version)
+
     # ④ 防回潮：src/ 下任何 csproj 都不许重新写死 <Version>
     for proj in sorted((ROOT / "src").rglob("*.csproj")):
         rel = proj.relative_to(ROOT).as_posix()

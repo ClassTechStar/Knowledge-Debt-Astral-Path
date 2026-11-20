@@ -139,7 +139,8 @@ module.exports = [
       globals: {
         S: "readonly", save: "readonly", renderToday: "readonly",
         renderGraph: "readonly", renderDebts: "readonly", renderProfile: "readonly",
-        APStore: "readonly", APNotify: "readonly", APRuntime: "readonly",
+        APStore: "readonly", APNotify: "readonly", APRuntime: "readonly", NotifyBus: "readonly",
+        APUpdater: "readonly",
         activeBook: "readonly", activeNodes: "readonly", activeQs: "readonly",
         esc: "readonly", toast: "readonly", scoreOf: "readonly", K: "readonly",
       },

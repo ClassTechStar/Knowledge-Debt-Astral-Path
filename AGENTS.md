@@ -76,6 +76,7 @@ python scripts/build-single.py                    # 重建 17MB 单文件产物�
 | 样式/HTML | `sync-monolith-html` md5 一致 + 单文件重建基线 |
 | 公开数字 | `verify_metrics.py`（先回写 README 再提交） |
 | 发布版本号 | `verify_release_version.py`（单一事实源是 `Directory.Build.props`；打包脚本开头也会拦） |
+| 更新链路 | `updater_runner.js` + `verify_release_manifest.py`（T22/T19）+ 同提交更新 `THREAT_MODEL.md` |
 | 威胁模型 / 安全链路 | `verify_threat_model.py` + 同提交更新 `THREAT_MODEL.md` |
 | 默认配置 / DPI | `verify_defaults.py`、`verify_dpi.py`（新增状态字段 / 新增 Windows 壳时必跑） |
 | 实时拍照 / OCR 质量 | `verify_camera.py`、`camera_runner.js`、`scripts/ocr_quality.py`（改动相机或 OCR 金样时必跑） |
@@ -107,4 +108,6 @@ python scripts/build-single.py                    # 重建 17MB 单文件产物�
 | 公式真源（C#） | `src/AstralPath.Core/` | 与 `shared/core.js` 双端对拍 |
 | 分层契约 | `scripts/verify_architecture.py` | Core 纯净 / API 不下探宿主 / 壳不做业务 |
 | 威胁模型 | `THREAT_MODEL.md` | 覆盖状态 + 证据路径 + 日期化变更记录 |
+| 检查更新（Web/金样） | `shared/updater.js`、`scripts/updater_runner.js` | 更新源默认 GitHub Release；Web 只检查+跳转，纯函数金样 UP-01…UP-10 |
+| 更新器（Windows 壳） | `src/AstralPath.Monolith/UpdateService.cs`、`src/AstralPath.Core/Updates/UpdateComparer.cs` | 应用内下载 Setup 并核验 checksums.sha256 后经确认安装；版本比较纯函数在 Core |
 | 一键门禁 | `scripts/verify_all.ps1` | 本地与 CI 同款；新门禁必须在此登记 |

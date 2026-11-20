@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using AstralPath.Core.Diagnostics;
+using AstralPath.Core.Updates;
 using System.Text.Json;
 using System.Threading;
 using AstralPath.Infrastructure;
@@ -188,7 +189,13 @@ internal sealed class MainForm : Form
             // 页面加载完成即视为启动成功：清零失败计数
             _web.CoreWebView2.NavigationCompleted += (_, _) =>
             {
-                try { File.WriteAllText(Path.Combine(Program.GetDataDir(), "startup-count"), "0"); }
+                try
+                {
+                    File.WriteAllText(Path.Combine(Program.GetDataDir(), "startup-count"), "0");
+                    // 更新静默检查：页面就绪 45 秒后查一次 GitHub Release；离线/限流静默
+                    _ = Task.Delay(45_000).ContinueWith(async _t => await RunUpdateFlowAsync(silent: true),
+                        TaskScheduler.FromCurrentSynchronizationContext());
+                }
                 catch (Exception ex) { Diag.Recover(ex, "Program"); }
             };
             // 本地单体：禁止页面再依赖远程 API；脚本即全部能力
@@ -207,6 +214,58 @@ internal sealed class MainForm : Form
             Program.BumpFailCount(ex, "BootAsync");
             MessageBox.Show(this, "启动失败：" + ex.Message, "知债：星穹学途",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    /* ── 更新检查与自动更新：源默认 GitHub Release；下载后核验 SHA256（T19），确认后才运行安装器 ── */
+
+    private async Task RunUpdateFlowAsync(bool silent)
+    {
+        try
+        {
+            var check = await UpdateService.CheckSilentlyAsync() ?? (silent
+                ? null
+                : throw new InvalidOperationException("暂时连不上 GitHub（离线或网络受限）"));
+            if (check is null) return;
+            var current = UpdateService.CurrentVersion();
+            if (!UpdateComparer.IsNewer("v" + check.Version, current))
+            {
+                if (!silent) MessageBox.Show(this, $"已是最新版本（v{check.Version}）。", "检查更新",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var choice = MessageBox.Show(this,
+                $"发现新版本 v{check.Version}（当前 v{current}）。\n\n是：下载并核验 SHA256 后运行安装器；\n否：打开发布页手动下载；\n取消：暂不更新。",
+                "知债：星穹学途 · 有新版本", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Information);
+            if (choice == DialogResult.No)
+            {
+                try { Process.Start(new ProcessStartInfo(check.HtmlUrl) { UseShellExecute = true }); }
+                catch (Exception ex) { Diag.Recover(ex, "UpdateOpenPage"); }
+                return;
+            }
+            if (choice == DialogResult.Cancel) return;
+
+            var prog = new Progress<int>(pct => Text = $"正在下载更新… {pct}%");
+            var path = await UpdateService.DownloadVerifiedAsync(check, prog);
+            Text = "知债：星穹学途";
+            var unverified = path.EndsWith("|unverified", StringComparison.Ordinal);
+            path = path.Replace("|unverified", "");
+            var warn = unverified
+                ? "\n\n注意：该 Release 未提供 checksums.sha256，无法核验哈希（仅 HTTPS 保护）。"
+                : "\n\nSHA256 已核验，与 Release 清单一致。";
+            var go = MessageBox.Show(this, $"下载完成：{Path.GetFileName(path)}{warn}\n\n现在运行安装器吗？安装过程中本应用会退出。",
+                "更新就绪", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (go != DialogResult.Yes) return;
+            _reallyExit = true;
+            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            Application.Exit();
+        }
+        catch (Exception ex)
+        {
+            Diag.Recover(ex, "UpdateFlow");
+            if (!silent) MessageBox.Show(this, "检查/下载更新失败：" + ex.Message, "检查更新",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 
@@ -255,6 +314,7 @@ internal sealed class MainForm : Form
                 catch (Exception ex) { Diag.Recover(ex, "TrayDnd"); }
             };
             menu.Items.Add(_menuDnd);
+            menu.Items.Add("检查更新", null, (_, _) => _ = RunUpdateFlowAsync(silent: false));
             menu.Items.Add("全屏 / 退出全屏（F11）", null, (_, _) => OnKeyDown(this, new KeyEventArgs(Keys.F11)));
             menu.Items.Add("打开数据目录", null, (_, _) =>
             {

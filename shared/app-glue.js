@@ -353,6 +353,47 @@
     }
   } catch (e) { /* 忽略 */ }
 
+  /* ── 检查更新（更新源默认 GitHub Release）：按钮手动查 + 启动静默查 ── */
+  try {
+    var chkUp = $("chkAutoUpdate");
+    var upLine = $("updateLine");
+    function paintUp() {
+      if (chkUp) chkUp.checked = S.autoCheck !== false;
+      if (upLine && upLine.dataset.base) upLine.textContent = upLine.dataset.base + (S.autoCheck === false ? "（自动检查已关闭）" : "");
+    }
+    upLine.dataset.base = upLine.textContent;
+    paintUp();
+    if (chkUp) chkUp.onchange = function () {
+      S.autoCheck = chkUp.checked;
+      save(S);
+      paintUp();
+    };
+    function runUpdateCheck(manual) {
+      if (!window.APUpdater) { if (manual) upLine.textContent = "更新模块未就绪"; return; }
+      if (manual) upLine.textContent = "正在向 GitHub 查询最新版本…";
+      APUpdater.check(manual, window.AP_VERSION, null).then(function (r) {
+        var base = upLine.dataset.base || upLine.textContent;
+        if (r.status === "newer") {
+          upLine.textContent = base + "；发现新版本 v" + r.version + "，点「打开发布页」下载。";
+          NotifyBus.push({
+            level: "warn", tag: "update", title: "有新版本 v" + r.version,
+            msg: "当前 " + window.AP_VERSION + "，可到发布页下载新安装包（本页数据不受影响）。",
+          });
+        } else if (r.status === "latest") {
+          if (manual) { upLine.textContent = base + "；已是最新版本（v" + r.version + "）。"; }
+        } else if (manual) {
+          upLine.textContent = base + "；暂时连不上 GitHub（离线或网络受限），稍后再试。";
+        }
+      });
+    }
+    var btnUp = $("btnCheckUpdate");
+    if (btnUp) btnUp.onclick = function () { runUpdateCheck(true); };
+    // 启动静默检查：延迟 20 秒避开启动高峰；离线/限流静默，不打扰
+    if (S.autoCheck !== false && typeof window.AP_VERSION === "string") {
+      setTimeout(function () { runUpdateCheck(false); }, 20000);
+    }
+  } catch (e) { /* 更新检查失败不影响主流程 */ }
+
   /* ── Windows 壳桥（托盘 / 演示模式），页面功能在无壳环境全部可用 ── */
   window.__APShell = {
     toggleDnd: function () {
