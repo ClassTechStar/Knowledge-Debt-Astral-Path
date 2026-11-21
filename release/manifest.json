@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "product": "AstralPath",
   "version": "2.7.0",
-  "generatedAt": "2026-11-21T11:08:56+0800",
+  "generatedAt": "2026-11-21T11:19:21+0800",
   "hashAlgorithm": "sha256",
   "signatureAlgorithm": "hmac-sha256",
   "signed": false,
@@ -19,8 +19,8 @@
     },
     {
       "name": "AstralPath-NativeApp-2.7.0.apk",
-      "bytes": 2782585,
-      "sha256": "3b4f80b2a3923fa5290b514f4d56bcebae2c20b25497619af85cc06dab4476f8"
+      "bytes": 3671135,
+      "sha256": "8ce567f1c0c5c1ea7a6134781152985e412e7fa3ea0f317380365c4250b095ab"
     },
     {
       "name": "AstralPath-Portable-2.7.0.zip",

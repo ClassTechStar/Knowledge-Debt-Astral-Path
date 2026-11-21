@@ -18,7 +18,7 @@ import com.astralpath.nativeapp.service.StoreService
  */
 object PagesAgent {
     /** 危机词：与 tools/agent-intents.json 的 crisis 列表一致（11 个，verify_agent_intents 对拍） */
-    val CRISIS = listOf("不想活", "自杀", "轻生", "结束生命", "自残", "伤害自己", "跳楼", "上吊", "suicide", "kill myself", "活不下去")
+    val CRISIS = listOf("不想活", "自杀", "轻生", "结束生命", "自残", "伤害自己", "跳楼", "上吊", "suicide", "kill myself", "活不下去", "想死", "去死", "死了算了", "活着没意思", "结束这一切", "割腕", "suicidal", "end my life")
 
     data class IntentDef(val id: String, val anchors: List<String>, val reply: String)
 

@@ -35,6 +35,9 @@ CORE_JS = ROOT / "shared" / "core.js"
 # 鸿蒙方（ArkTS）：危机词与意图锚点是手抄进 AgentPage.ets 的，同样纳入对拍防漂移；
 # 缺文件时跳过（旧检出没有鸿蒙目录）
 HARMONY_AGENT = ROOT / "src" / "AstralPath.Harmony" / "entry" / "src" / "main" / "ets" / "pages" / "AgentPage.ets"
+# 安卓原生方（Kotlin）：危机词与意图锚点同样是手抄副本，纳入对拍防漂移；
+# 缺文件时跳过（旧检出没有 NativeApp 目录）
+ANDROID_AGENT = ROOT / "src" / "AstralPath.NativeApp" / "app" / "src" / "main" / "java" / "com" / "astralpath" / "nativeapp" / "ui" / "PagesAgent.kt"
 
 
 def fail(msg):
@@ -225,6 +228,33 @@ def main():
                 if et_map[k] != canon_map[k]:
                     fail(f"鸿蒙意图 {k} 锚点不一致\n  json={canon_map[k]}\n  ets={et_map[k]}")
 
+    # 8) 安卓原生方（Kotlin PagesAgent.kt）：危机词逐词一致（无序）；
+    #    意图集合 = 登记表去掉 crisis.handoff（同鸿蒙口径），锚点逐条一致。
+    #    Kotlin 格式：IntentDef("id", listOf("锚", ...), "回复")
+    kt_count = 0
+    if ANDROID_AGENT.exists():
+        kt = ANDROID_AGENT.read_text(encoding="utf-8")
+        m_kt_crisis = re.search(r"CRISIS = listOf\((.*?)\)", kt, re.S)
+        if not m_kt_crisis:
+            fail("PagesAgent.kt 找不到 CRISIS 数组")
+        else:
+            kt_crisis = re.findall(r'"([^"]*)"', m_kt_crisis.group(1))
+            if sorted(kt_crisis) != sorted(canon["crisis"]):
+                fail(f"安卓 CRISIS 与 JSON 不一致\n  json={canon['crisis']}\n  kt={kt_crisis}")
+        m_kt_intents = re.findall(r'IntentDef\("([a-z.]+)", listOf\(([^)]*)\)', kt)
+        if not m_kt_intents:
+            fail("PagesAgent.kt 找不到 IntentDef 条目")
+        else:
+            kt_map = {eid: re.findall(r'"([^"]*)"', anchors) for eid, anchors in m_kt_intents}
+            kt_count = len(kt_map)
+            expect_kt = [k for k in canon_map if k != "crisis.handoff"]
+            if list(kt_map) != expect_kt:
+                fail(f"安卓意图清单与 JSON 不一致\n  仅 json 有: {sorted(set(expect_kt) - set(kt_map))}\n"
+                     f"  仅 kt 有: {sorted(set(kt_map) - set(expect_kt))}")
+            for k2 in kt_map:
+                if kt_map[k2] != canon_map[k2]:
+                    fail(f"安卓意图 {k2} 锚点不一致\n  json={canon_map[k2]}\n  kt={kt_map[k2]}")
+
     n_ethics = len(canon.get("bannedEthics", []))
     extra = []
     if p2_checked:
@@ -233,6 +263,8 @@ def main():
         extra.append(f"core={len(core_map)}")
     if et_count:
         extra.append(f"ets={et_count}")
+    if kt_count:
+        extra.append(f"kt={kt_count}")
     tail = (" " + " ".join(extra)) if extra else ""
     print(f"ALL GREEN · agent-intents 多方一致（json={len(canon_map)} js={len(js_map)} cs={len(cs_map)}{tail} 意图；"
           f"crisis={len(js_crisis)} banned={len(js_banned)} negative={len(js_negative)} "

@@ -218,13 +218,16 @@ object PagesMore {
                             .compareVersions(r.version, a.packageManager
                                 .getPackageInfo(a.packageName, 0).versionName ?: "0.0.0") > 0 -> {
                             updateLine.text = "发现新版本 v${r.version}（当前见上）。点「打开发布页」下载安装包。"
-                            updateCard.addView(Ui.btn(c, "打开发布页", primary = true) {
+                            updateCard.findViewWithTag<android.view.View>("releaseBtn")?.let { updateCard.removeView(it) }
+                            val releaseBtn = Ui.btn(c, "打开发布页", primary = true) {
                                 try {
                                     a.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(r.url)))
                                 } catch (e: Exception) {
                                     Toast.makeText(c, "无法打开浏览器：${e.message}", Toast.LENGTH_SHORT).show()
                                 }
-                            }, Ui.fill(updateLine))
+                            }
+                            releaseBtn.tag = "releaseBtn"
+                            updateCard.addView(releaseBtn, Ui.fill(releaseBtn))
                         }
                         else -> updateLine.text = "已是最新版本（v${r.version}）。"
                     }
