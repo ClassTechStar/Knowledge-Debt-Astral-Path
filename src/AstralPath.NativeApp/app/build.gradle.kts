@@ -9,8 +9,8 @@ android {
         applicationId = "com.astralpath.nativeapp"
         minSdk = 26
         targetSdk = 35
-        versionCode = 101
-        versionName = "2.6.0"
+        versionCode = 102
+        versionName = "2.7.0"
         // 仪器化测试（GraphGestureTest）用 AndroidJUnitRunner
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

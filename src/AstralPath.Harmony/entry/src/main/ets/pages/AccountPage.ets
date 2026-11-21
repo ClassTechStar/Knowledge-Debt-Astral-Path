@@ -166,7 +166,7 @@ export struct AccountPage {
         }
 
         StatusView({
-          text: '版本 2.6.0，HarmonyOS 原生版。解析、构图、识网、今日任务与修复计划，全部在本机完成',
+          text: '版本 2.7.0，HarmonyOS 原生版。解析、构图、识网、今日任务与修复计划，全部在本机完成',
           kind: 'plain'
         })
 
@@ -197,7 +197,7 @@ export struct AccountPage {
                     promptAction.showDialog({
                       title: tag.length > 0 ? ('发现新版本 v' + tag) : '暂无法解析版本',
                       message: tag.length > 0
-                        ? ('请到 GitHub Releases 页下载 HarmonyOS 包（当前 2.6.0）。\\n' + url)
+                        ? ('请到 GitHub Releases 页下载 HarmonyOS 包（当前 2.7.0）。\\n' + url)
                         : '请稍后再试。',
                       buttons: [{ text: '知道了', color: Theme.MUTED }]
                     }).catch(() => {});

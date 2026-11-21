@@ -65,6 +65,7 @@ src/AstralPath.Android/.gradle/
 src/AstralPath.Android/build-manual/
 src/AstralPath.Android/local.properties
 src/AstralPath.NativeApp/local.properties
+src/AstralPath.Native/local.properties
 src/AstralPath.NativeApp/.gradle/
 src/AstralPath.NativeApp/build/
 src/AstralPath.NativeApp/app/build/

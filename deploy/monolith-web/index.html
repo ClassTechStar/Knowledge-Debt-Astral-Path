@@ -4,8 +4,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<script>window.AP_VERSION = "2.6.0"; /* 单一事实源是 Directory.Build.props，由 scripts/verify_release_version.py 对拍 */</script>
-<title>知债：星穹学途 · 单体版 2.6.0（无微服务）</title>
+<script>window.AP_VERSION = "2.7.0"; /* 单一事实源是 Directory.Build.props，由 scripts/verify_release_version.py 对拍 */</script>
+<title>知债：星穹学途 · 单体版 2.7.0</title>
 <meta name="description" content="知债：星穹学途——跨课程知识债诊断与修复的自学辅导应用，纯前端离线可用：教材解析、知识图谱、影响分诊断、K1 至 K5 合约修复计划与受约束智能体。">
 <!-- ONNX Runtime Web（纯前端ML，失败时静默回退到 TinyMLP） -->
 <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort.min.js" crossorigin="anonymous" onerror="window.__ORT_FAILED=true"></script>
@@ -753,7 +753,7 @@ window.APDiag=(function(){
 <div class="wrap">
 <header class="rail">
   <div class="mark">债</div>
-  <div class="brand"><strong>知债：星穹学途</strong><small>Knowledge Debt: Astral Path<br>离线完整版 2.6.0，数据只存本机</small></div>
+  <div class="brand"><strong>知债：星穹学途</strong><small>Knowledge Debt: Astral Path<br>离线完整版 2.7.0，数据只存本机</small></div>
   <nav class="pills" id="nav">
     <button class="on" data-p="home">起点</button><button data-p="materials">藏书阁</button>
     <button data-p="graph">识网</button><button data-p="papers">试卷作业</button><button data-p="debt">知债</button>
@@ -1002,7 +1002,7 @@ window.APDiag=(function(){
     <h2>更新</h2>
     <div class="field"><label><input type="checkbox" id="chkAutoUpdate" style="width:auto" /> 启动时自动检查更新（只向 GitHub 查版本号，查不到就静默）</label></div>
     <div class="row"><button class="btn" id="btnCheckUpdate">检查更新</button><a class="lnk" id="lnkRelease" href="https://github.com/ClassTechStar/Knowledge-Debt-Astral-Path/releases/latest" target="_blank" rel="noopener">打开发布页</a></div>
-    <div class="status" id="updateLine">当前版本 <!-- metrics:web-version -->2.6.0<!-- /metrics:web-version -->；更新源：GitHub Releases。</div>
+    <div class="status" id="updateLine">当前版本 <!-- metrics:web-version -->2.7.0<!-- /metrics:web-version -->；更新源：GitHub Releases。</div>
   </div>
   <div class="panel">
     <h2 style="margin-top:16px">云端大脑</h2><p class="hint" style="margin:0 0 8px">小米 MiMo</p>

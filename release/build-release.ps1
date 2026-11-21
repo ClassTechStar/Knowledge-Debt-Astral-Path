@@ -90,12 +90,12 @@ dotnet restore "$repo\src\AstralPath.Monolith\AstralPath.Monolith.csproj" -r win
 # 2. Android：gradle assembleRelease（工程自带 release 签名配置）+ 归档到 dist
 Push-Location "$repo\src\AstralPath.Native"
 try { & C:\Gradle\bin\gradle.bat assembleRelease --console=plain } finally { Pop-Location }
-Copy-Item "$repo\src\AstralPath.Native\app\build\outputs\apk\release\app-release.apk" "$repo\src\AstralPath.Native\dist\AstralPath-Android-2.6.0-Store.apk" -Force
+Copy-Item "$repo\src\AstralPath.Native\app\build\outputs\apk\release\app-release.apk" "$repo\src\AstralPath.Native\dist\AstralPath-Android-2.7.0-Store.apk" -Force
 
 # 3. 汇总到 release/
 New-Item -ItemType Directory -Force "$repo\release" | Out-Null
-Copy-Item "$repo\deploy\win-install\dist\AstralPath-Monolith-Setup-2.6.0.exe" "$repo\release\" -Force
-Copy-Item "$repo\src\AstralPath.Native\dist\AstralPath-Android-2.6.0-Store.apk" "$repo\release\" -Force
+Copy-Item "$repo\deploy\win-install\dist\AstralPath-Monolith-Setup-2.7.0.exe" "$repo\release\" -Force
+Copy-Item "$repo\src\AstralPath.Native\dist\AstralPath-Android-2.7.0-Store.apk" "$repo\release\" -Force
 Write-Host '双端安装包构建完成，见 release\ 目录'
 
 # 4. 发布清单（威胁模型 T19）：哈希清单防单文件替换；设 ASTRALPATH_MANIFEST_KEY 可启用清单签名
