@@ -249,6 +249,16 @@ if (Test-Path scripts/verify_rapidocr.py) {
     Step "rapidocr" { python scripts/verify_rapidocr.py }
 }
 
+# 6u) 文档—代码一致性（迁移自 ReciteHelper 的文档漂移反面教材）
+if (Test-Path scripts/verify_docs_consistency.py) {
+    Step "docs-consistency" { python scripts/verify_docs_consistency.py }
+}
+
+# 6v) 测试项目布局纪律（迁移自 ReciteHelper 测试项目命名错位的反面教材）
+if (Test-Path scripts/verify_test_layout.py) {
+    Step "test-layout" { python scripts/verify_test_layout.py }
+}
+
 # 6p-2) 交付体积预算（B4：产物与仓库大文件棘轮，防体积回弹）
 if (Test-Path scripts/verify_size_budget.py) {
     Step "size-budget" { python scripts/verify_size_budget.py }
