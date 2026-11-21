@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "product": "AstralPath",
   "version": "2.7.0",
-  "generatedAt": "2026-11-21T11:19:21+0800",
+  "generatedAt": "2026-11-21T11:58:56+0800",
   "hashAlgorithm": "sha256",
   "signatureAlgorithm": "hmac-sha256",
   "signed": false,
@@ -14,8 +14,8 @@
     },
     {
       "name": "AstralPath-Monolith-Setup-2.7.0.exe",
-      "bytes": 50861812,
-      "sha256": "021d4deb8c1c41af59beffa30e77ed7fb5a3789ab834b5148d57b271d4c5f0fa"
+      "bytes": 50844027,
+      "sha256": "f37e52f1daa521caacc982aec43b23f9e22b92114f636d07b5b308a5d48a71cb"
     },
     {
       "name": "AstralPath-NativeApp-2.7.0.apk",
