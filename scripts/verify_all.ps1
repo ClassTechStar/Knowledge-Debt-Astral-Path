@@ -259,6 +259,15 @@ if (Test-Path scripts/verify_test_layout.py) {
     Step "test-layout" { python scripts/verify_test_layout.py }
 }
 
+# 6w) 图谱结构三级校验（迁移自 knowledge-spaces validate_graph 分层法）
+if (Test-Path scripts/verify_graph_structure.py) {
+    Step "graph-structure" { python scripts/verify_graph_structure.py --check }
+}
+# 6x) 知识边置信度标尺（迁移自 knowledge-spaces evidence/confidence 语义）
+if (Test-Path scripts/verify_confidence_scale.py) {
+    Step "confidence-scale" { python scripts/verify_confidence_scale.py }
+}
+
 # 6p-2) 交付体积预算（B4：产物与仓库大文件棘轮，防体积回弹）
 if (Test-Path scripts/verify_size_budget.py) {
     Step "size-budget" { python scripts/verify_size_budget.py }
