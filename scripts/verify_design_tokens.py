@@ -137,6 +137,38 @@ def check_avalonia():
         print("  OK  Avalonia 无档间圆角")
 
 
+def check_legacy_aliases():
+    """兼容旧名必须指向新档位，避免同值双定义漂移。"""
+    web = WEB.read_text(encoding="utf-8", errors="replace")
+    alias_rules = {"--r-c": "--r-l", "--r-g": "--r-2xl", "--r-shell": "--r-3xl"}
+    bad = []
+    for legacy, target in alias_rules.items():
+        m = re.search(rf"{re.escape(legacy)}:\s*([^;}}]+)", web)
+        if not m:
+            bad.append(f"Web 缺旧名 {legacy}")
+        elif f"var({target})" not in m.group(1):
+            bad.append(f"Web {legacy} 应为 var({target})，实际 {m.group(1).strip()}")
+    if bad:
+        problems.append("Web 旧名别名不一致：" + "; ".join(bad))
+    else:
+        print("  OK  Web 旧名别名        3 个旧名指向九档（单一事实源）")
+
+    h = HARMONY.read_text(encoding="utf-8", errors="replace")
+    h_rules = {"R_C": "R_L", "R_G": "R_2XL", "R_SHELL": "R_3XL"}
+    h_bad = []
+    for legacy, target in h_rules.items():
+        m = re.search(rf"{legacy}:\s*number\s*=\s*(\d+)", h)
+        t = re.search(rf"{target}:\s*number\s*=\s*(\d+)", h)
+        if not m or not t:
+            h_bad.append(f"缺 {legacy} 或 {target}")
+        elif m.group(1) != t.group(1):
+            h_bad.append(f"{legacy}={m.group(1)} 应等于 {target}={t.group(1)}")
+    if h_bad:
+        problems.append("Harmony 旧名不一致：" + "; ".join(h_bad))
+    else:
+        print("  OK  Harmony 旧名        与九档等值")
+
+
 def main():
     for p in (WEB, HARMONY, AVALONIA):
         if not p.exists():
@@ -145,6 +177,7 @@ def main():
     check_web()
     check_harmony()
     check_avalonia()
+    check_legacy_aliases()
 
     print()
     if problems:

@@ -24,10 +24,32 @@ def main() -> int:
     defined = set(re.findall(r"(--[\w-]+)\s*:", body))
 
     problems = []
-    # ① 自引用
+    # ① 自引用：--d 的值直接引用 --d 自身（合法别名 A:var(B) 不算）
     for d in defined:
-        if re.search(r"--[\w-]+\s*:\s*var\(\s*" + re.escape(d) + r"\s*\)", body):
+        if re.search(re.escape(d) + r"\s*:\s*var\(\s*" + re.escape(d) + r"\s*\)", body):
             problems.append(f":root 自引用：{d}")
+    # ①b 循环引用：A→B→A 这类间接环也会让整套 token 失效，逐链检测
+    deps = {}
+    for name in defined:
+        m2 = re.search(re.escape(name) + r"\s*:\s*([^;]+)", body)
+        deps[name] = set(re.findall(r"var\((--[\w-]+)", m2.group(1))) if m2 else set()
+    color = {}  # 0/未访问, 1/在栈上, 2/已完成
+
+    def walk(node, stack):
+        color[node] = 1
+        for nxt in deps.get(node, ()):
+            if nxt not in deps:
+                continue
+            if color.get(nxt) == 1:
+                cycle = stack[stack.index(nxt):] + [nxt]
+                problems.append(":root 循环引用：" + " → ".join(cycle))
+            elif color.get(nxt, 0) == 0:
+                walk(nxt, stack + [nxt])
+        color[node] = 2
+
+    for node in deps:
+        if color.get(node, 0) == 0:
+            walk(node, [node])
     # ② 拼接损坏：值里出现 var(...) 与其他字符直接相连（如 var(--surface)4d6）
     for v in re.findall(r":\s*([^;\n]+)", body):
         if "var(" in v and re.search(r"var\([^)]*\)[^;\s]", v):

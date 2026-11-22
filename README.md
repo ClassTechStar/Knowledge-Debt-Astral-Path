@@ -42,7 +42,7 @@
 | 产物 | 路径 | 说明 |
 |---|---|---|
 | Web 单体版 | `deploy/monolith-web/index.html` | 665,876 字节，浏览器直接打开，全部功能可用 |
-| 自包含单文件 | `deploy/monolith-web/astralpath-monolith.html` | 33,492,199 字节，OCR 与 ONNX 运行时全栈内联，零外部资源 |
+| 自包含单文件 | `deploy/monolith-web/astralpath-monolith.html` | 33,492,221 字节，OCR 与 ONNX 运行时全栈内联，零外部资源 |
 | Windows 安装包 | `release/AstralPath-Monolith-Setup-2.6.0.exe` | WebView2 壳加载同一份 HTML，本机安装验收通过；二进制只挂 GitHub Release Assets，不进仓库 |
 | Windows 便携版 | `release/AstralPath-Portable-2.6.0/`（及同名 zip） | 免安装解压即用，.NET 10 自包含 |
 | Android APK | `release/AstralPath-Android-2.6.0-Store.apk` | WebView 同构加离线核心，versionCode 36，商店签名 |
