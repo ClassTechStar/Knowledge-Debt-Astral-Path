@@ -135,8 +135,8 @@
                     <TextBlock Grid.Column="0" Classes="muted" Text="{Binding Date}" />
                     <TextBlock Grid.Column="2" Classes="muted" Text="{Binding AttemptsText}" />
                   </Grid>
-                  <Border Height="10" CornerRadius="5" Background="{StaticResource SurfaceAltBrush}">
-                    <Border Height="10" CornerRadius="5" HorizontalAlignment="Left"
+                  <Border Height="10" CornerRadius="999" Background="{StaticResource SurfaceAltBrush}">
+                    <Border Height="10" CornerRadius="999" HorizontalAlignment="Left"
                             Background="{StaticResource PrimaryBrush}">
                       <Border.Width>
                         <MultiBinding>
@@ -217,7 +217,7 @@
                     <ItemsControl ItemsSource="{Binding Cells}">
                       <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:HeatCell">
-                          <Border Width="44" Height="22" CornerRadius="3" Margin="0,0,0,2"
+                          <Border Width="44" Height="22" CornerRadius="4" Margin="0,0,0,2"
                                   Background="{Binding HexColor, Converter={x:Static conv:AppConverters.HexToBrush}}"
                                   AutomationProperties.Name="{Binding AccessibleName}">
                             <TextBlock FontSize="9" Foreground="#1E293B"

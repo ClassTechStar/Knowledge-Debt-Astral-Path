@@ -268,6 +268,11 @@ if (Test-Path scripts/verify_confidence_scale.py) {
     Step "confidence-scale" { python scripts/verify_confidence_scale.py }
 }
 
+# 6y) 设计 token 一致性（MD3 × Mochi 对齐：四端形状/动效刻度）
+if (Test-Path scripts/verify_design_tokens.py) {
+    Step "design-tokens" { python scripts/verify_design_tokens.py }
+}
+
 # 6p-2) 交付体积预算（B4：产物与仓库大文件棘轮，防体积回弹）
 if (Test-Path scripts/verify_size_budget.py) {
     Step "size-budget" { python scripts/verify_size_budget.py }

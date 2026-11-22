@@ -42,7 +42,7 @@
 | 产物 | 路径 | 说明 |
 |---|---|---|
 | Web 单体版 | `deploy/monolith-web/index.html` | 665,876 字节，浏览器直接打开，全部功能可用 |
-| 自包含单文件 | `deploy/monolith-web/astralpath-monolith.html` | 33,487,111 字节，OCR 与 ONNX 运行时全栈内联，零外部资源 |
+| 自包含单文件 | `deploy/monolith-web/astralpath-monolith.html` | 33,492,199 字节，OCR 与 ONNX 运行时全栈内联，零外部资源 |
 | Windows 安装包 | `release/AstralPath-Monolith-Setup-2.6.0.exe` | WebView2 壳加载同一份 HTML，本机安装验收通过；二进制只挂 GitHub Release Assets，不进仓库 |
 | Windows 便携版 | `release/AstralPath-Portable-2.6.0/`（及同名 zip） | 免安装解压即用，.NET 10 自包含 |
 | Android APK | `release/AstralPath-Android-2.6.0-Store.apk` | WebView 同构加离线核心，versionCode 36，商店签名 |
@@ -147,7 +147,7 @@ tests/                    Core 114 · Persistence 8 · Desktop 50 · Api 70 · E
 一键验收：
 
 ```powershell
-pwsh -NoProfile -File scripts\verify_all.ps1     # 61 步 ALL GREEN（59 Step + 2 SkipStep）
+pwsh -NoProfile -File scripts\verify_all.ps1     # 62 步 ALL GREEN（60 Step + 2 SkipStep）
 ```
 
 脚本覆盖常量对齐、公式常量生成区（`K` 由 `FormulaConstants.cs` 注入）、意图表六方对拍（<!-- metrics:agent-intents -->26<!-- /metrics:agent-intents --> 意图，危机词 <!-- metrics:crisis-words -->19<!-- /metrics:crisis-words --> 个）、公式跨语言对拍、前端脚本语法、XSS 黄金用例（14 例）、共享内核双跑等价、生成区一致性（9 区）、状态分片黄金用例（10 例）、试卷/教材文本/智能体路由/计划调度黄金用例（29 例）、零空 catch（151 个 .cs 文件）、命名规范扫描、三端 HTML 同源、图谱性能预算、覆盖率阈值与 `dotnet format` / eslint 风格门禁。

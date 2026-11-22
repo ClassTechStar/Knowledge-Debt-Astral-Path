@@ -66,15 +66,31 @@ export class Theme {
   /** 图谱连线色（Web canvas strokeStyle） */
   static readonly EDGE: string = '#55A77B';
 
-  // ── 圆角（Web --r-c / --r-g / --r-shell）──
-  /** 控件圆角 18px */
-  static readonly R_C: number = 18;
-  /** 卡片/面板圆角 28px */
-  static readonly R_G: number = 28;
-  /** 外壳圆角 36px */
-  static readonly R_SHELL: number = 36;
-  /** 胶囊（999px 在 vp 侧用大值代替） */
+  // ── 圆角（MD3 八档刻度；与 Web --r-* 一一对应，见 docs/设计规范-MD3-Mochi对齐.md）──
+  /** extraSmall 4 —— 徽标、极小标签 */
+  static readonly R_XS: number = 4;
+  /** small 8 —— 小元件 */
+  static readonly R_S: number = 8;
+  /** medium 12 —— 常规按钮 */
+  static readonly R_M: number = 12;
+  /** large 16 —— 控件默认（原 R_C=18 归此档） */
+  static readonly R_L: number = 16;
+  /** largeIncreased 20 —— 强调容器 */
+  static readonly R_XL: number = 20;
+  /** extraLarge 28 —— 卡片/面板（原 R_G） */
+  static readonly R_2XL: number = 28;
+  /** extraLargeIncreased 32 —— 外壳（原 R_SHELL=36 归此档） */
+  static readonly R_3XL: number = 32;
+  /** extraExtraLarge 48 —— 全屏面板 */
+  static readonly R_4XL: number = 48;
+  /** 胶囊（999 在 vp 侧用大值代替） */
   static readonly R_PILL: number = 999;
+  /** 兼容旧引用：控件圆角（= R_L） */
+  static readonly R_C: number = 16;
+  /** 兼容旧引用：卡片/面板圆角（= R_2XL） */
+  static readonly R_G: number = 28;
+  /** 兼容旧引用：外壳圆角（= R_3XL） */
+  static readonly R_SHELL: number = 32;
 
   // ── 字号（Web：正文 15px/1.55、面板标题 20px、hint 13px、徽标 12px、节点标签 12.5px）──
   static readonly FS_BODY: number = 15;

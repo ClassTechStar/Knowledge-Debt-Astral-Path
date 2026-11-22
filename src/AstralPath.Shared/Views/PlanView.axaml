@@ -95,7 +95,7 @@
                       <DataTemplate x:DataType="vm:PlanTaskItem">
                         <Border Width="{Binding EstMin, Converter={x:Static conv:AppConverters.MinToWidth}}"
                                 MinHeight="56"
-                                CornerRadius="6" Padding="6,4" ClipToBounds="True"
+                                CornerRadius="8" Padding="6,4" ClipToBounds="True"
                                 Opacity="{Binding BarOpacity}"
                                 Background="{Binding BarColor, Converter={x:Static conv:AppConverters.HexToBrush}}"
                                 ToolTip.Tip="{Binding AccessibleName}"

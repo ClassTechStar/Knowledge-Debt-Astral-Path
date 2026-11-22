@@ -21,9 +21,17 @@
   --danger:#b64a58;--primary:#0D72D9;--ok:#55a77b;--ok-bg:#dcf4e7;--ok-ink:#1e5d43;
   --warn:#b8860b;--warn-bg:#fff4d6;
   /* 半径阶梯：控件 18 / 卡组 28 / 外壳 36 */
-  --r-c:18px;--r-g:28px;--r-shell:36px;
+  --r-c:16px;--r-g:28px;--r-shell:32px;
   /* 统一缓动 */
-  --ease:cubic-bezier(.22,1,.36,1);
+  /* MD3 形状九档（与 Mochi/MD3 Expressive 刻度一致；四端唯一事实源，见 docs/设计规范-MD3-Mochi对齐.md） */
+--r-xs:4px;--r-l:16px;--r-xl:20px;--r-2xl:28px;--r-3xl:32px;--r-4xl:48px;--r-pill:999px;
+/* 动效八档（参数照 mochi-compose MochiMotionTokens；组件不写数字） */
+--mo-page:420ms var(--ease);--mo-present:420ms cubic-bezier(.34,1.2,.64,1);
+--mo-pop:360ms cubic-bezier(.34,1.28,.64,1);--mo-control:340ms cubic-bezier(.34,1.2,.64,1);
+--mo-settle:280ms cubic-bezier(.22,1,.36,1);--mo-bounce:340ms cubic-bezier(.34,1.56,.64,1);
+--mo-press-down:220ms cubic-bezier(.34,1.3,.64,1);--mo-press-up:380ms cubic-bezier(.34,1.3,.64,1);
+--mo-fade-in:150ms cubic-bezier(.4,0,.2,1);--mo-fade-out:120ms cubic-bezier(.4,0,1,1);
+--ease:cubic-bezier(.22,1,.36,1);
   /* Hallmark：游离颜色入 token（状态/徽章/图谱节点/玻璃/深色块）+ 圆角三档 */
   --ok-deep:#2f6b50;--err-ink:#8d2828;--warn-ink:#6a5010;--err-bg:#ffe1e5;--badge-err-ink:#792e38;
   --node-bd:#b7bbc0;--node-bg:#fbfbfc;--node-shadow:rgba(45,47,50,.08);
@@ -35,7 +43,7 @@
   --code-bg:#0f1524;--code-ink:#d7e2ff;--cam-bg:#0b0e12;--ink-90:#222;--ink-deep:#1c2530;--ink-85:#3a4048;
   --ink-70:#67707a;--ink-50:#a4aab2;--ink-45:#8a9099;--ink-40:#8a9096;--bd-soft:#d8dde3;
   --well:#eef1f4;--well-2:#e6ebf1;--well-3:#e3e7ec;--wash-1:#f4f7fa;--wash-2:#f6f8fb;
-  --ok-vivid:#1a9e6b;--err-vivid:#c2482b;--crisis:#c0392b;--r-s:10px;--r-m:12px;
+  --ok-vivid:#1a9e6b;--err-vivid:#c2482b;--crisis:#c0392b;--r-s:8px;--r-m:12px;
   --bg:#f3f4f5;--brand-hover:rgba(47,111,237,.06);--scrim:rgba(15,20,28,.45);--shadow-ink-14:rgba(0,0,0,.14);--shadow-ink-28:rgba(0,0,0,.28);--d-bg-2:#fdeeea;--body-stack:"MiSans",-apple-system,"PingFang SC","Segoe UI","Microsoft YaHei",sans-serif;
 }
 *{box-sizing:border-box}
@@ -113,7 +121,7 @@ body.glass .card{background:var(--glass-card-bg);border-color:var(--glass-bd-55)
 .bub.user{background:var(--primary);color:var(--surface);margin-left:auto}
 .bub.bot{background:var(--soft);color:var(--ink)}
 .bub.sys{background:var(--warn-bg);color:var(--warn-ink);font-size:12px}
-input.chatin{flex:1;min-width:200px;min-height:42px;padding:8px 12px;border:1px solid var(--rule);border-radius:18px;background:var(--field)}
+input.chatin{flex:1;min-width:200px;min-height:42px;padding:8px 12px;border:1px solid var(--rule);border-radius:16px;background:var(--field)}
 .slider{width:100%}
 .tag{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--muted);margin-left:8px}
 ul.clean{margin:0;padding-left:1.2em}
@@ -5923,7 +5931,7 @@ function showDetail(id){
   if(m.ocrPageConf&&m.ocrPageConf.length){
     const bars=m.ocrPageConf.map(function(c,i){
       const col=(c<0)?"var(--rule)":(c<50?"var(--danger)":(c<65?"var(--warn)":"var(--ok)"));
-      return '<i title="第'+(i+1)+'页 conf='+(c<0?"—":c)+'" style="flex:1;height:14px;background:'+col+';opacity:.85;border-radius:2px"></i>';
+      return '<i title="第'+(i+1)+'页 conf='+(c<0?"—":c)+'" style="flex:1;height:14px;background:'+col+';opacity:.85;border-radius:4px"></i>';
     }).join("");
     const lowCnt=m.ocrPageConf.filter(function(c){return c>=0&&c<65;}).length;
     ocrHeat='<div style="margin:10px 0;padding:10px 12px;border:1px solid var(--rule);border-radius:var(--r-c)"><div class="hint">OCR 页级置信度（红<50 · 黄<65 · 绿达标）· 低置信页 '+lowCnt+' 个</div><div style="display:flex;gap:2px;margin:6px 0">'+bars+'</div>'+(lowCnt?'<button class="btn" id="btnReocr">🔁 定向重识别低置信页</button>':"")+'</div>';
@@ -7302,7 +7310,7 @@ function renderGraph() {
     const searchBox = document.createElement('input');
     searchBox.id = 'gSearch';
     searchBox.placeholder = '搜索节点…';
-    searchBox.style.cssText = 'font-size:12px;padding:4px 8px;min-height:28px;width:128px;border:1px solid var(--rule,var(--rule));border-radius:6px;';
+    searchBox.style.cssText = 'font-size:12px;padding:4px 8px;min-height:28px;width:128px;border:1px solid var(--rule,var(--rule));border-radius:8px;';
     searchBox.addEventListener('input', function() { if (__graphRenderer) __graphRenderer.setSearch(searchBox.value); });
     searchBox.addEventListener('keydown', function(e) { if (e.key === 'Escape') { searchBox.value = ''; if (__graphRenderer) __graphRenderer.setSearch(''); searchBox.blur(); } });
     controls.appendChild(searchBox);
@@ -9645,7 +9653,7 @@ window.__TINY_INTENTS__={"vocab": ["知识债", "债边", "诊断", "红边", "�
         + 'h1{font-size:22px;margin:0 0 4px}h2{font-size:15px;margin:22px 0 8px;border-bottom:1px solid var(--ch-bd);padding-bottom:4px}'
         + 'table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid var(--well-3);padding:6px 8px;text-align:left}th{background:var(--wash-1)}'
         + '.meta{color:var(--ink-70);font-size:12px}.kpi{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}'
-        + '.kpi div{background:var(--wash-2);border:1px solid var(--well-2);border-radius:10px;padding:8px 12px;font-size:13px}'
+        + '.kpi div{background:var(--wash-2);border:1px solid var(--well-2);border-radius:8px;padding:8px 12px;font-size:13px}'
         + '.foot{margin-top:26px;color:var(--ink-70);font-size:12px;border-top:1px dashed var(--bd-soft);padding-top:10px}@media print{body{margin:0}}</style></head><body>'
         + '<h1>知债：星穹学途 · 学情报告</h1>'
         + '<div class="meta">学生：' + esc(name) + " · 生成时间：" + new Date().toLocaleString("zh-CN") + " · 数据来源：本机（经学生授权提供给教师阅看）</div>"
@@ -9821,7 +9829,7 @@ window.__TINY_INTENTS__={"vocab": ["知识债", "债边", "诊断", "红边", "�
   try {
     if (!/[?&]debug=1\b/.test(location.search)) return;
     var box = document.createElement('div');
-    box.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:99999;max-width:420px;max-height:60vh;overflow:auto;background:#101418;color:#cde3f4;font:11px/1.7 Consolas,monospace;padding:10px 14px;border:1px solid #2c3a4a;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.45);text-align:left';
+    box.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:99999;max-width:420px;max-height:60vh;overflow:auto;background:#101418;color:#cde3f4;font:11px/1.7 Consolas,monospace;padding:10px 14px;border:1px solid #2c3a4a;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.45);text-align:left';
     function line(k, v) { var d = document.createElement('div'); var b = document.createElement('b'); b.textContent = k + '：'; d.appendChild(b); d.appendChild(document.createTextNode(v)); box.appendChild(d); }
     var h = document.createElement('div'); h.textContent = 'AstralPath 调试面板'; h.style.cssText = 'font-weight:700;color:#8fd3ff;margin-bottom:4px'; box.appendChild(h);
     line('版本', '单体 2.6.0 · 公式 score-v2 / impact-v2 / sale-v2');

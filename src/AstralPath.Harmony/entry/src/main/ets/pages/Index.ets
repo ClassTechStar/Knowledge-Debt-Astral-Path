@@ -117,7 +117,7 @@ struct Index {
             .fontColor(Theme.INK)
             .width(28)
             .height(28)
-            .borderRadius(14)
+            .borderRadius(Theme.R_PILL)
             .onClick(() => {
               this.showHelp = true;
             })
@@ -127,7 +127,7 @@ struct Index {
             .fontColor(Color.White)
             .width(34)
             .height(34)
-            .borderRadius(17)
+            .borderRadius(Theme.R_PILL)
             .backgroundColor(Theme.STRONG)
             .textAlign(TextAlign.Center)
         }
