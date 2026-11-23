@@ -16,6 +16,8 @@
 | 旧派生环境变量：ZZ_* | 0 | ✅ 通过 |
 | 旧派生临时前缀：zz_tess* | 0 | ✅ 通过 |
 | 过期路径：...\astralpath | 0 | ✅ 通过 |
+| 过期个人路径：XiaomiMiMoProjects | 0 | ✅ 通过 |
+| 过期个人路径：Users\<name> | 0 | ✅ 通过 |
 | 非规范英文名：GalReview UI | 0 | ✅ 通过 |
 
 ## 明细

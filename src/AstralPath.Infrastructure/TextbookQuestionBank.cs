@@ -29,12 +29,13 @@ public static class TextbookQuestionBank
     {
         var candidates = new[]
         {
+            Environment.GetEnvironmentVariable("ASTRALPATH_TEXTBOOK_BANK") ?? "",
             Path.Combine(AppContext.BaseDirectory, "eval", "textbook-questions.json"),
-            Path.Combine(Directory.GetCurrentDirectory(), "eval", "textbook-questions.json"),
-            @"C:\Users\18948\XiaomiMiMoProjects\Knowledge Debt Astral Path\eval\textbook-questions.json"
+            Path.Combine(Directory.GetCurrentDirectory(), "eval", "textbook-questions.json")
         };
         foreach (var c in candidates)
         {
+            if (string.IsNullOrWhiteSpace(c)) continue;
             var full = Path.GetFullPath(c);
             if (File.Exists(full)) return full;
         }

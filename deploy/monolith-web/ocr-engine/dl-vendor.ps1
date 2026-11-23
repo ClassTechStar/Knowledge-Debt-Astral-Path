@@ -1,7 +1,10 @@
 ﻿# 下载/复制 OCR WASM 引擎离线资源到 deploy\monolith-web\ocr-engine\（后台运行）
+# 资源落点就是脚本所在目录，tessdata 默认取仓库 tools\tessdata（可用 ASTRALPATH_TESSDATA 覆盖）
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-$dir = 'C:\Users\18948\Documents\GitHub\-Knowledge-Debt-Astral-Path\deploy\monolith-web\ocr-engine'
+$dir = $PSScriptRoot
+$repoRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+$tessdata = if ($env:ASTRALPATH_TESSDATA) { $env:ASTRALPATH_TESSDATA } else { Join-Path $repoRoot 'tools\tessdata' }
 New-Item -ItemType Directory -Force $dir | Out-Null
 $log = Join-Path $dir 'download.log'
 "start $(Get-Date -Format o)" | Set-Content -Path $log -Encoding UTF8
@@ -18,7 +21,7 @@ foreach ($f in $files) {
     Invoke-WebRequest -Uri $f[1] -OutFile $out -UseBasicParsing
     "OK $($f[0]) $((New-Object IO.FileInfo($out)).Length) bytes" | Add-Content -Path $log -Encoding UTF8
 }
-Copy-Item 'C:\Users\18948\XiaomiMiMoProjects\Knowledge Debt Astral Path\tools\tessdata\chi_sim.traineddata' (Join-Path $dir 'chi_sim.traineddata') -Force
-Copy-Item 'C:\Users\18948\XiaomiMiMoProjects\Knowledge Debt Astral Path\tools\tessdata\eng.traineddata' (Join-Path $dir 'eng.traineddata') -Force
+Copy-Item (Join-Path $tessdata 'chi_sim.traineddata') (Join-Path $dir 'chi_sim.traineddata') -Force
+Copy-Item (Join-Path $tessdata 'eng.traineddata') (Join-Path $dir 'eng.traineddata') -Force
 "traineddata: chi_sim $((New-Object IO.FileInfo((Join-Path $dir 'chi_sim.traineddata'))).Length) / eng $((New-Object IO.FileInfo((Join-Path $dir 'eng.traineddata'))).Length) bytes" | Add-Content -Path $log -Encoding UTF8
 "done $(Get-Date -Format o)" | Add-Content -Path $log -Encoding UTF8

@@ -2,7 +2,7 @@
 from pathlib import Path
 
 # OcrHost
-p = Path(r"C:\Users\18948\Documents\GitHub\-Knowledge-Debt-Astral-Path\src\AstralPath.Infrastructure\OcrHost.cs")
+p = Path(__file__).resolve().parent.parent / "src" / "AstralPath.Infrastructure" / "OcrHost.cs"
 c = p.read_text(encoding="utf-8")
 if "ClearOcrCache" not in c:
     method = """    /// <summary>P3-4：清理本地 OCR 页缓存（~/.astralpath/ocr-cache）。</summary>
@@ -26,7 +26,7 @@ else:
     print("ClearOcrCache exists")
 
 # Program.cs
-p = Path(r"C:\Users\18948\Documents\GitHub\-Knowledge-Debt-Astral-Path\src\AstralPath.Monolith\Program.cs")
+p = Path(__file__).resolve().parent.parent / "src" / "AstralPath.Monolith" / "Program.cs"
 c = p.read_text(encoding="utf-8")
 old = '        if (req is not { Type: "astralpath.ocr" } || string.IsNullOrEmpty(req.Id) || string.IsNullOrEmpty(req.Data)) return;'
 new = '''        if (req is { Type: "astralpath.cache.clear" } && !string.IsNullOrEmpty(req.Id))
@@ -48,7 +48,7 @@ else:
     print("Program handler miss")
 
 # HTML detail quality
-p = Path(r"C:\Users\18948\Documents\GitHub\-Knowledge-Debt-Astral-Path\deploy\monolith-web\index.html")
+p = Path(__file__).resolve().parent.parent / "deploy" / "monolith-web" / "index.html"
 c = p.read_text(encoding="utf-8")
 old = '+(m.qs||[]).length+" 题</span><span class=\\"badge\\">"+(m.chapters||[]).length+" 章</span></div>"+(m.err'
 new = '+(m.qs||[]).length+" 题</span><span class=\\"badge\\">"+(m.chapters||[]).length+" 章</span>"+(m.quality?"<span class=\\"badge\\">质量"+(m.quality==="good"?"优":m.quality==="fair"?"中":"弱")+"</span>":"")+"</div>"+(m.err'

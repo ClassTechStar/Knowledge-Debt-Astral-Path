@@ -4,6 +4,7 @@ P2 ground truth 脚手架：每书导出 20 页抽样文本，供人工校对成
 输出：ocr-ground-truth/<书>/<page>.txt  +  manifest.json
 """
 from __future__ import annotations
+import os
 
 import json
 import re
@@ -13,8 +14,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from ocr_pipeline_umi import extract_document  # noqa: E402
 
-PDF_DIR = Path(r"C:\Users\18948\Downloads\PDF TEST")
-OUT = Path(r"C:\Users\18948\Documents\GitHub\-Knowledge-Debt-Astral-Path\ocr-ground-truth")
+PDF_DIR = Path(os.environ.get("ASTRALPATH_PDF_DIR", str(Path(__file__).resolve().parent.parent / "materials" / "pdf")))
+OUT = Path(__file__).resolve().parent.parent / "ocr-ground-truth"
 
 
 def sample_pages(n, k=20):

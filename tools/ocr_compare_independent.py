@@ -17,8 +17,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-PDF_DIR = Path(r"C:\Users\18948\Downloads\PDF TEST")
-OUT = Path(r"C:\Users\18948\Documents\GitHub\-Knowledge-Debt-Astral-Path\ocr-compare")
+PDF_DIR = Path(os.environ.get("ASTRALPATH_PDF_DIR", str(Path(__file__).resolve().parent.parent / "materials" / "pdf")))
+OUT = Path(__file__).resolve().parent.parent / "ocr-compare"
 OUT.mkdir(parents=True, exist_ok=True)
 
 WORD = re.compile(r"[A-Za-z0-9一-鿿]")

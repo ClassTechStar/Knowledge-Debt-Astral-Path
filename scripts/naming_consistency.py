@@ -40,6 +40,9 @@ ENGLISH_ID = "AstralPath"
 SKIP_DIRS = {
     ".git", "bin", "obj", "node_modules", ".vs", ".idea", "__pycache__",
     "ocr-venv", "tessdata", ".mimo-sessions", "TestResults", "packages",
+    # 构建/发布/派生数据与档案馆：不参与现行命名门禁（体积大且属产物）
+    "release", "build", "dist", "intermediates", "artifacts", "test-results",
+    "attic", "ocr-ground-truth", "ocr-full-compare", "ocr-compare", "kg-deep-test",
 }
 SELF_EXEMPT_NAMES = {"naming_consistency.py", "naming-residual-scan.md"}
 
@@ -68,9 +71,7 @@ RULES: list[tuple[str, str]] = [
     # 4) 界面/文档中的临时英文名（不在规范内）→ 规范表述
     ("AstralPath · GalReview UI", f"{ENGLISH_ID} · 演示台"),
     (f"{SHORT_NAME} · 藏书阁与识网", f"{FULL_NAME} · 演示台"),
-    # 5) 过期项目路径引用 → 当前真实路径（正则处理，兼容正反斜杠）
-    (r"C:\Users\18948\XiaomiMiMoProjects\astralpath", str(ROOT)),
-    (r"C:\Users\18948\XiaomiMiMoProjects\AstralPath", str(ROOT)),
+    # 5) 过期项目路径引用改由 RESIDUAL_PATTERNS 统一检测（不再写死某台机器的用户名）
 ]
 
 # 残留检测模式（--check 判定用；这些旧名字面量要原样留着当检测依据）
@@ -82,6 +83,8 @@ RESIDUAL_PATTERNS: list[tuple[str, str]] = [
     ("旧派生环境变量：ZZ_*", r"\bZZ_[A-Z_]+"),
     ("旧派生临时前缀：zz_tess*", r"\bzz_tess\w*"),
     ("过期路径：...\\astralpath", r"XiaomiMiMoProjects[\\/]astralpath\b"),
+    ("过期个人路径：XiaomiMiMoProjects", r"XiaomiMiMoProjects"),
+    ("过期个人路径：Users\\<name>", r"[A-Za-z]:\\Users\\[^\\\s\"']+\\"),
     ("非规范英文名：GalReview UI", r"GalReview UI"),
 ]
 

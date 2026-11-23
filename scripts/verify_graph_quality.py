@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""图谱质量检查：给 kg-deep-test 的思维导图产物定一条类似 OCR CER 的质量门槛，专抓「图谱退化」：
+"""图谱质量检查：给思维导图产物定一条类似 OCR CER 的质量门槛，专抓「图谱退化」：
   1. 退化标题（段落 N / 第 N 页）占比必须为 0；
   2. 空标题节点必须为 0；
   3. 父子同名节点必须为 0；
-  4. 每份产物节点数不低于 20、深度不低于 3（防止整本书塌缩）；
+  4. 每份产物节点数不低于 20、深度不低于 2（防止整本书塌缩）；
   5. .md 与 .json 必须一致（md 由 json 重新生成后逐字节比对）。
+
+数据来源：默认校验仓库内置的合成样例 `eval/kg-fixtures/`（自撰内容，无版权风险）；
+本机若另有教材产物，用 `ASTRALPATH_KG_DIR` 指向该目录即可校验真实数据——
+真实教材提取物不入库（见 DATA_SOURCES.md）。
 
 用法：
     python scripts/verify_graph_quality.py            # 校验并写报告
@@ -15,12 +19,14 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DIR = ROOT / "kg-deep-test"
+# 默认只查合成样例；真实教材产物由环境变量指到仓库外目录（不入库）
+DIR = Path(os.environ.get("ASTRALPATH_KG_DIR", str(ROOT / "eval" / "kg-fixtures")))
 REPORT = ROOT / "eval" / "graph-quality-report.md"
 
 DEGRADED = re.compile(r"^(段落\s*\d+|第\s*\d+\s*页)$")

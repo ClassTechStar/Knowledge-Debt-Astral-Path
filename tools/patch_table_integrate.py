@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from pathlib import Path
 
-p = Path(r"C:\Users\18948\Documents\GitHub\-Knowledge-Debt-Astral-Path\tools\ocr_pipeline.py")
+p = Path(__file__).resolve().parent.parent / "tools" / "ocr_pipeline.py"
 c = p.read_text(encoding="utf-8")
 
 if "table_extract" not in c:

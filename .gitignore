@@ -60,6 +60,13 @@ release/*.apk
 release/*.zip
 release/*.msi
 
+# 教材提取物（版权数据）不入库：整书目录/OCR 全文/思维导图属版权方专有权利。
+# 本地保留、门禁改用合成样例 eval/kg-fixtures/；来源与再生成方式见 DATA_SOURCES.md。
+ocr-ground-truth/
+ocr-full-compare/
+ocr-compare/
+kg-deep-test/
+
 # Android 构建缓存与中间产物
 src/AstralPath.Android/.gradle/
 src/AstralPath.Android/build-manual/

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-path = Path(r"C:\Users\18948\XiaomiMiMoProjects\Knowledge Debt Astral Path\src\AstralPath.Api\wwwroot\index.html")
+path = Path(__file__).resolve().parents[2] / "src" / "AstralPath.Api" / "wwwroot" / "index.html"
 c = path.read_text(encoding="utf-8")
 
 old_debt = '''  <main id="page-debt" class="page hidden">

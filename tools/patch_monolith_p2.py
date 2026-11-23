@@ -2,7 +2,7 @@
 """P2/P3 monolith HTML patches: quality badge, status, cache clear, onboarding."""
 from pathlib import Path
 
-p = Path(r"C:\Users\18948\Documents\GitHub\-Knowledge-Debt-Astral-Path\deploy\monolith-web\index.html")
+p = Path(__file__).resolve().parent.parent / "deploy" / "monolith-web" / "index.html"
 c = p.read_text(encoding="utf-8")
 n0 = len(c)
 

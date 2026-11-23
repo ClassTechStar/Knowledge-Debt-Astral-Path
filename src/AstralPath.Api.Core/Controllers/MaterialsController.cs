@@ -520,22 +520,16 @@ public sealed class MaterialsController : ControllerBase
     [HttpPost("/v1/materials/seed-samples")]
     public IResult SeedSamples([FromQuery] bool parse = false)
     {
-        var samples = new[]
-        {
-            @"C:\Users\18948\Downloads\Kotlin编程实践：Kotlin从入门到实战.pdf",
-            @"C:\Users\18948\Downloads\Python编程：从入门到实践（第3版）.pdf",
-            @"C:\Users\18948\Downloads\C#从入门到精通（第7版）+(明日科技)+.pdf",
-            @"C:\Users\18948\Downloads\Java从入门到精通（第6版） (明日科技) .pdf",
-            @"C:\Users\18948\Downloads\Go语言从入门到精通.pdf",
-            @"C:\Users\18948\Downloads\大模型应用开发：动手做 AI Agent (黄佳) .pdf",
-            @"C:\Users\18948\Downloads\深度学习入门：基于Python的理论与实现+(斋藤康毅)+.pdf",
-            @"C:\Users\18948\Downloads\深度学习进阶：自然语言处理 (斋藤康毅) .pdf",
-            @"C:\Users\18948\Downloads\深度学习入门2：自制框架 (斋藤康毅)-扫描版 (1).PDF",
-            @"C:\Users\18948\Downloads\图灵程序设计丛书--深度学习入门4：强化学习 ([日] 斋藤康毅) (1).pdf",
-            @"C:\Users\18948\Downloads\DeepLearning-Goodfellow-花书.pdf",
-            @"C:\Users\18948\Downloads\深度学习 Deep Learning [花书] (Ian Goodfellow,Yoshua Bengio,Aaron Courville) .pdf",
-            @"C:\Users\18948\Downloads\黄仁勋：英伟达之芯_【美】斯蒂芬·威特.pdf",
-        };
+        // 样例 PDF 目录：默认 <工作目录>/materials/pdf，可用 ASTRALPATH_SAMPLE_DIR 覆盖。
+        // 不再写死某台机器的下载目录与具体书名（那样既是可移植性问题，也泄露了版权书目）。
+        var sampleDir = Environment.GetEnvironmentVariable("ASTRALPATH_SAMPLE_DIR");
+        if (string.IsNullOrWhiteSpace(sampleDir))
+            sampleDir = Path.Combine(Directory.GetCurrentDirectory(), "materials", "pdf");
+        var samples = Directory.Exists(sampleDir)
+            ? Directory.EnumerateFiles(sampleDir, "*.pdf", SearchOption.TopDirectoryOnly)
+                .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
+                .ToArray()
+            : Array.Empty<string>();
 
         var created = new List<string>();
         var skipped = new List<string>();

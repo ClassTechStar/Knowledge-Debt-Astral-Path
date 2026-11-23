@@ -6,11 +6,12 @@
 ## 构建与安装
 
 ```powershell
-# 构建（一次性）
-$env:OHOS_SDK_HOME = 'C:\Users\18948\AppData\Local\OpenHarmony\Sdk\26.0.0'
-$env:HOS_SDK_HOME  = 'C:\Program Files\Huawei\DevEco Studio\sdk'
+# 构建（一次性）；先按本机实际位置设好三个环境变量
+$env:OHOS_CLI_TOOLS = '<你的 command-line-tools 目录>'
+$env:OHOS_SDK_HOME  = "$env:LOCALAPPDATA\OpenHarmony\Sdk\26.0.0"
+$env:HOS_SDK_HOME   = 'C:\Program Files\Huawei\DevEco Studio\sdk'
 $env:PATH += ';C:\Program Files\Huawei\DevEco Studio\tools\node'
-C:\Users\18948\Downloads\command-line-tools\bin\hvigorw.bat assembleHap --mode module -p product=default --no-daemon
+& "$env:OHOS_CLI_TOOLS\bin\hvigorw.bat" assembleHap --mode module -p product=default --no-daemon
 ```
 
 产物：`entry/build/default/outputs/default/entry-default-unsigned.hap`。

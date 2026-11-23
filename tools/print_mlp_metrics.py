@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 from pathlib import Path
-p = Path(r"C:\Users\18948\Documents\GitHub\-Knowledge-Debt-Astral-Path\docs\mlp-acceptance-2026-09-28.json")
+p = Path(__file__).resolve().parent.parent / "docs" / "mlp-acceptance-2026-09-28.json"
 r = json.loads(p.read_text(encoding="utf-8"))
 print("OCR rows:")
 for row in r["ocr"]["rows"]:

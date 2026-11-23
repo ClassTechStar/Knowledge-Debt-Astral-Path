@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from pathlib import Path
-p = Path(r"C:\Users\18948\Documents\GitHub\-Knowledge-Debt-Astral-Path\docs\深度优化任务清单-2026-09-28.md")
+p = Path(__file__).resolve().parent.parent / "docs" / "深度优化任务清单-2026-09-28.md"
 c = p.read_text(encoding="utf-8")
 c = c.replace(
     "| P1-3 表格 | **部分** | 未做网格线→Markdown；可作下轮 |",

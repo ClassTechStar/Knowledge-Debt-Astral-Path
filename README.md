@@ -41,15 +41,16 @@
 
 | 产物 | 路径 | 说明 |
 |---|---|---|
-| Web 单体版 | `deploy/monolith-web/index.html` | 665,876 字节，浏览器直接打开，全部功能可用 |
-| 自包含单文件 | `deploy/monolith-web/astralpath-monolith.html` | 33,492,221 字节，OCR 与 ONNX 运行时全栈内联，零外部资源 |
+| Web 单体版 | `deploy/monolith-web/index.html` | 687,101 字节，浏览器直接打开，全部功能可用 |
+| 自包含单文件 | `deploy/monolith-web/astralpath-monolith.html` | 33,495,639 字节，OCR 与 ONNX 运行时全栈内联，零外部资源 |
 | Windows 安装包 | `release/AstralPath-Monolith-Setup-2.6.0.exe` | WebView2 壳加载同一份 HTML，本机安装验收通过；二进制只挂 GitHub Release Assets，不进仓库 |
 | Windows 便携版 | `release/AstralPath-Portable-2.6.0/`（及同名 zip） | 免安装解压即用，.NET 10 自包含 |
 | Android APK | `release/AstralPath-Android-2.6.0-Store.apk` | WebView 同构加离线核心，versionCode 36，商店签名 |
 | 题库 | `eval/question_bank.json` | 100 题，覆盖 34 个知识点，难度 1:21 / 2:51 / 3:28 |
 | 图包 | `graph-packs/astralpath-v2/graph_pack.json` | 34 节点 74 边，先修 50 条加迁移缺口 24 条，无环，涉及三门课 |
-| 教材思维导图 | `kg-deep-test/*.mindmap.{json,md}` | 13 份思维导图（花书英/中各计一份，去重为 12 本）合计 5,982 页；构图产物 762 节点 1,580 边（`kg_report.json` 口径） |
-| 工具链 | `tools/*.py` | OCR、章节、构图、思维导图全链路 |
+| 教材思维导图 | 不入库（本地保留） | 教材提取物属版权方专有权利，见 `DATA_SOURCES.md`；仓库内置自撰合成样例 `eval/kg-fixtures/` 供门禁与产图包演示 |
+| 工具链 | `tools/*.py` | OCR、章节、构图、思维导图全链路；输入目录用 `ASTRALPATH_PDF_DIR` 指定 |
+| 数据来源 | `DATA_SOURCES.md` | 哪些数据不入库、如何本地再生成、提交前自检 |
 | 威胁模型 | `THREAT_MODEL.md` | 活文档，覆盖状态表与证据路径，`verify_threat_model.py` 门禁校验 |
 
 ## 3. 快速开始
@@ -135,19 +136,19 @@ tests/                    Core 114 · Persistence 8 · Desktop 50 · Api 70 · E
 
 | 套件 | 通过 | 说明 |
 |---|---|---|
-| Core.Tests | <!-- metrics:tests-Core -->136<!-- /metrics:tests-Core -->/114 | score、impact、sale、计划、图谱、走读金样（1e-6）与画像、智能体 v3 回归 |
+| Core.Tests | <!-- metrics:tests-Core -->136<!-- /metrics:tests-Core -->/136 | score、impact、sale、计划、图谱、走读金样（1e-6）与画像、智能体 v3 回归 |
 | Persistence.Tests | <!-- metrics:tests-Persistence -->8<!-- /metrics:tests-Persistence -->/8 | Postgres 与 InMemory 双模式 |
 | Desktop.Tests | <!-- metrics:tests-Desktop -->50<!-- /metrics:tests-Desktop -->/50 | Avalonia 原生 UI 绑定与导航 |
-| Api.Tests | <!-- metrics:tests-Api -->72<!-- /metrics:tests-Api -->/70 | 上传、解析、诊断、计划、agent 与 P0/P1 回归 |
-| Eval.Tests | <!-- metrics:tests-Eval -->10<!-- /metrics:tests-Eval -->/2 | 合成数据回归 |
-| 合计 | <!-- metrics:tests-Total -->276<!-- /metrics:tests-Total -->/244 | 零回归（原 MobileCore 84 例跑在陈旧 Core 分叉上，已随档移除） |
+| Api.Tests | <!-- metrics:tests-Api -->72<!-- /metrics:tests-Api -->/72 | 上传、解析、诊断、计划、agent 与 P0/P1 回归 |
+| Eval.Tests | <!-- metrics:tests-Eval -->10<!-- /metrics:tests-Eval -->/10 | 合成数据回归 + 模拟学习者评测 + 参数标定 |
+| 合计 | <!-- metrics:tests-Total -->276<!-- /metrics:tests-Total -->/276 | 零回归（原 MobileCore 84 例跑在陈旧 Core 分叉上，已随档移除） |
 
 表中数字由 `scripts/verify_metrics.py` 从代码与登记表自动对拍（`<!-- metrics:* -->` 标记），漂移即 CI 红。
 
 一键验收：
 
 ```powershell
-pwsh -NoProfile -File scripts\verify_all.ps1     # 62 步 ALL GREEN（60 Step + 2 SkipStep）
+pwsh -NoProfile -File scripts\verify_all.ps1     # <!-- metrics:gate-steps -->61<!-- /metrics:gate-steps --> 步 + 2 设备条件步 ALL GREEN
 ```
 
 脚本覆盖常量对齐、公式常量生成区（`K` 由 `FormulaConstants.cs` 注入）、意图表六方对拍（<!-- metrics:agent-intents -->26<!-- /metrics:agent-intents --> 意图，危机词 <!-- metrics:crisis-words -->19<!-- /metrics:crisis-words --> 个）、公式跨语言对拍、前端脚本语法、XSS 黄金用例（14 例）、共享内核双跑等价、生成区一致性（9 区）、状态分片黄金用例（10 例）、试卷/教材文本/智能体路由/计划调度黄金用例（29 例）、零空 catch（151 个 .cs 文件）、命名规范扫描、三端 HTML 同源、图谱性能预算、覆盖率阈值与 `dotnet format` / eslint 风格门禁。
@@ -213,7 +214,7 @@ NuGet 报 `path1=null` 时，补齐 `PROGRAMDATA`、`PROGRAMFILES(X86)`、`ALLUS
 | 2.6.0 OCR 模型 | 2026-11-19 | 核查确认中文 traineddata 已是官方 fast 最新版；A/B 实测 fast CER 0.0000 优于 best 0.1395，且 best 体积超单文件余量，故保持 fast 并新增档位门禁防误换 |
 | 2.6.0 OCR 引擎 | 2026-11-19 | 浏览器 OCR 引擎 tesseract.js 5.1.1 → 6.0.1、core 5.1.1 → 6.0.0（选 6.x 稳定线），训练数据保持 tessdata_fast 不变；内联补丁改跨版本通用正则；单文件产物 33,069,426 字节，全量门禁 ALL GREEN |
 | 2.6.0 实时拍照 | 2026-11-17 | Web 端拍照改为连拍三帧选最清晰（2560px 上限）；Android WebView 补相机权限桥与 `image/*` 文件选择，鸿蒙原生相机路径保留；新增 OCR 质量度量框架（CER + 结构正确率）与四项黄金用例；实施计划见 `docs/实时拍照与OCR加速实施计划.md` |
-| 2.6.0 工程化阶段七 | 2026-11-17 | 效果证据与内容安全补课：A2 参数标定管线（14 常数 ±20% 敏感性扫描 + 网格搜索，参数化复刻与生产公式 1e-9 对拍，结论锁入 Eval.Tests）；A5 冷启动 CAT 诊断（信息量选题 + 停测，金样实测 24 题 vs 顺序 32 题同等精度）；C1 红队对抗回归集（536 条六类语料入 verify_all，抓出并修复多词英文危机短语从未命中的真 bug，危机词表 11→19 六方同步）；B4 仓库瘦身（发布二进制出库只挂 GitHub Releases，跟踪大文件 152MB→77MB，LFS 缓存清理，体积预算棘轮下调）。验收脚本扩至 50 步 |
+| 2.6.0 工程化阶段八 | 2026-11-24 | 合规与可用性补课（对照外部审计方案逐条核验后实施）：① 版权数据出库——`kg-deep-test` / `ocr-ground-truth` / `ocr-full-compare` / `ocr-compare` 不再入库，新增合成 fixture `eval/kg-fixtures/` 与 `DATA_SOURCES.md`，两个图谱门禁支持 `ASTRALPATH_KG_DIR` 指向本地真实数据；② 个人绝对路径全仓清零（RUNBOOK、tools、tests、wiki、C# 运行时、归档脚本，含 `-Knowledge-Debt` 错拼输出目录）；③ 清理 `contracts/golden/` 5 份无消费方的 v1 重复金样（公式金样统一在 `eval/golden/`）；④ 新增计划导出 `.ics`（`shared/plan-ics.js`，RFC 5545，金样 9 例）；⑤ `verify_metrics` 增加门禁步数自动对拍 |
 | 2.6.0 工程化阶段六 | 2026-11-17 | 教育有效性与内容管线补课：模拟学习者评测管线（合成 ACT-R 学习者 + impact-v2/随机/SM-2/BKT 四策略对比，Eval.Tests 2→7）；题目曝光控制与降温（`shared/question-exposure.js`，冷却防重复 + 权重降温 + 金样 9 例）；教材→图包一键生成（`tools/mindmap_to_graphpack.py` + 回归金样）；补齐两个一直空转的门禁（`verify_graph.py` / `verify_bank.py`，并修掉图包 7 条无 why 边）；opt-out 补彻底删除（purge）与删除彻底性验证（威胁模型 T21）；体积预算棘轮门禁；README 数字口径修复。验收脚本扩至 48 步 |
 | 2.6.0 工程化阶段五 | 2026-11-13 | 借鉴 SidebarDiagnostics：状态默认值收敛到 `shared/store.js` 的 `DEFAULTS` 单一表（新增字段零迁移脚本，配黄金用例与门禁）；Windows 单体壳补 PerMonitorV2 DPI 声明并与 Desktop 壳对齐（配一致性门禁）。验收脚本扩至 47 步 |
 | 2.6.0 工程化阶段四 | 2026-11-11 | 发布版本单一事实源（`Directory.Build.props` + `verify_release_version.py`）、威胁模型活文档（`THREAT_MODEL.md` + 门禁）、云调用显式同意与出口守卫、模型输出注入拦截、发布哈希清单与校验；新增 issue/PR 模板与两份端上子树约定；图谱测试自给自足（5 项断言真跑通过） |

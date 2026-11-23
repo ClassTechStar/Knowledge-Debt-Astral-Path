@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """用新 CER 口径（以 B 为底 + 分区）重算 3 本样本页。"""
 from __future__ import annotations
+import os
 
 import json
 import sys
@@ -10,8 +11,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from ocr_eval import summarize_page, section_cer  # noqa: E402
 from ocr_pipeline_umi import extract_document  # noqa: E402
 
-PDF_DIR = Path(r"C:\Users\18948\Downloads\PDF TEST")
-OUT = Path(r"C:\Users\18948\Documents\GitHub\-Knowledge-Debt-Astral-Path\ocr-full-compare")
+PDF_DIR = Path(os.environ.get("ASTRALPATH_PDF_DIR", str(Path(__file__).resolve().parent.parent / "materials" / "pdf")))
+OUT = Path(__file__).resolve().parent.parent / "ocr-full-compare"
 
 BOOKS = [
     ("Kotlin编程实践：Kotlin从入门到实战.pdf", [20, 80, 150]),
@@ -55,7 +56,7 @@ def main():
         report.append(s)
         print(f"{name[:24]:24s} recall={s['recall_b']:.3f} prec={s['precision_b']:.3f} f1={s['f1']:.3f} miss={s['miss']} extra={s['extra']}")
         print(f"   sections body/cap/math miss={s['sections']['body']['miss']}/{s['sections']['caption']['miss']}/{s['sections']['math']['miss']}")
-    out = Path(r"C:\Users\18948\Documents\GitHub\-Knowledge-Debt-Astral-Path\ocr-full-compare\eval_b_based.json")
+    out = Path(__file__).resolve().parent.parent / "ocr-full-compare" / "eval_b_based.json"
     out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print("saved", out)
     return 0

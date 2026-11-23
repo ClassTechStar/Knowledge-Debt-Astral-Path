@@ -1,0 +1,355 @@
+{
+  "packId": "mindmap-sample",
+  "courses": [
+    "示例课程·数据结构基础"
+  ],
+  "nodes": [
+    {
+      "kp_id": "M001",
+      "title": "线性结构",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 2,
+      "kind": "chapter",
+      "why": "《示例课程·数据结构基础》思维导图章节",
+      "ord": 1
+    },
+    {
+      "kp_id": "M002",
+      "title": "数组",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《线性结构》关键词",
+      "ord": 2
+    },
+    {
+      "kp_id": "M003",
+      "title": "链表",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《线性结构》关键词",
+      "ord": 3
+    },
+    {
+      "kp_id": "M005",
+      "title": "队列",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《线性结构》关键词",
+      "ord": 4
+    },
+    {
+      "kp_id": "M006",
+      "title": "双端队列",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《线性结构》关键词",
+      "ord": 5
+    },
+    {
+      "kp_id": "M007",
+      "title": "树结构",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 2,
+      "kind": "chapter",
+      "why": "《示例课程·数据结构基础》思维导图章节",
+      "ord": 6
+    },
+    {
+      "kp_id": "M008",
+      "title": "二叉树",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《树结构》关键词",
+      "ord": 7
+    },
+    {
+      "kp_id": "M009",
+      "title": "二叉搜索树",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《树结构》关键词",
+      "ord": 8
+    },
+    {
+      "kp_id": "M010",
+      "title": "平衡树",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《树结构》关键词",
+      "ord": 9
+    },
+    {
+      "kp_id": "M012",
+      "title": "并查集",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《树结构》关键词",
+      "ord": 10
+    },
+    {
+      "kp_id": "M013",
+      "title": "图结构",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 2,
+      "kind": "chapter",
+      "why": "《示例课程·数据结构基础》思维导图章节",
+      "ord": 11
+    },
+    {
+      "kp_id": "M014",
+      "title": "邻接表",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《图结构》关键词",
+      "ord": 12
+    },
+    {
+      "kp_id": "M015",
+      "title": "邻接矩阵",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《图结构》关键词",
+      "ord": 13
+    },
+    {
+      "kp_id": "M016",
+      "title": "拓扑排序",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《图结构》关键词",
+      "ord": 14
+    },
+    {
+      "kp_id": "M017",
+      "title": "最短路径",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《图结构》关键词",
+      "ord": 15
+    },
+    {
+      "kp_id": "M018",
+      "title": "最小生成树",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《图结构》关键词",
+      "ord": 16
+    },
+    {
+      "kp_id": "M019",
+      "title": "算法分析",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 2,
+      "kind": "chapter",
+      "why": "《示例课程·数据结构基础》思维导图章节",
+      "ord": 17
+    },
+    {
+      "kp_id": "M020",
+      "title": "时间复杂度",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《算法分析》关键词",
+      "ord": 18
+    },
+    {
+      "kp_id": "M021",
+      "title": "空间复杂度",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《算法分析》关键词",
+      "ord": 19
+    },
+    {
+      "kp_id": "M022",
+      "title": "递归",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《算法分析》关键词",
+      "ord": 20
+    },
+    {
+      "kp_id": "M023",
+      "title": "分治",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《算法分析》关键词",
+      "ord": 21
+    },
+    {
+      "kp_id": "M024",
+      "title": "动态规划",
+      "course": "示例课程·数据结构基础",
+      "difficulty": 1,
+      "kind": "keyword",
+      "why": "《算法分析》关键词",
+      "ord": 22
+    }
+  ],
+  "edges": [
+    {
+      "from_kp": "M001",
+      "to_kp": "M002",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M001",
+      "to_kp": "M003",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M001",
+      "to_kp": "M005",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M001",
+      "to_kp": "M006",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M007",
+      "to_kp": "M008",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M007",
+      "to_kp": "M009",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M007",
+      "to_kp": "M010",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M007",
+      "to_kp": "M012",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M013",
+      "to_kp": "M014",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M013",
+      "to_kp": "M015",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M013",
+      "to_kp": "M016",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M013",
+      "to_kp": "M017",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M013",
+      "to_kp": "M018",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M019",
+      "to_kp": "M020",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M019",
+      "to_kp": "M021",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M019",
+      "to_kp": "M022",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M019",
+      "to_kp": "M023",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M019",
+      "to_kp": "M024",
+      "edge_type": "prerequisite",
+      "weight": 0.7,
+      "why": "章节包含关键词"
+    },
+    {
+      "from_kp": "M001",
+      "to_kp": "M007",
+      "edge_type": "prerequisite",
+      "weight": 0.6,
+      "why": "后继章节"
+    },
+    {
+      "from_kp": "M007",
+      "to_kp": "M013",
+      "edge_type": "prerequisite",
+      "weight": 0.6,
+      "why": "后继章节"
+    },
+    {
+      "from_kp": "M013",
+      "to_kp": "M019",
+      "edge_type": "prerequisite",
+      "weight": 0.6,
+      "why": "后继章节"
+    }
+  ]
+}

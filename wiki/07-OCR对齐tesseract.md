@@ -2,7 +2,7 @@
 
 ## 依据
 
-- 本地仓库：`C:\Users\18948\Documents\GitHub\tesseract`
+- 本地参考实现：任意一份 tesseract 源码树（如 `%USERPROFILE%\Documents\GitHub\tesseract`，按你的实际位置替换）
 - 官方 CLI（README）：
 
 ```text

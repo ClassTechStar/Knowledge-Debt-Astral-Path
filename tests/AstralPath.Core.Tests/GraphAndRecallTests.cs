@@ -14,13 +14,20 @@ public class GraphAndRecallTests
             var candidates = new[]
             {
                 Path.Combine(AppContext.BaseDirectory, "graph-packs", "accounting-v1"),
-                Path.Combine(Directory.GetCurrentDirectory(), "graph-packs", "accounting-v1"),
-                @"C:\Users\18948\XiaomiMiMoProjects\Knowledge Debt Astral Path\graph-packs\accounting-v1"
+                Path.Combine(Directory.GetCurrentDirectory(), "graph-packs", "accounting-v1")
             };
             foreach (var c in candidates)
             {
                 var full = Path.GetFullPath(c);
                 if (File.Exists(Path.Combine(full, "nodes.json"))) return full;
+            }
+            // 兜底：从测试输出目录逐级上溯找仓库根（不写死机器路径）
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            while (dir is not null)
+            {
+                var candidate = Path.Combine(dir.FullName, "graph-packs", "accounting-v1");
+                if (File.Exists(Path.Combine(candidate, "nodes.json"))) return candidate;
+                dir = dir.Parent;
             }
             throw new DirectoryNotFoundException("graph-packs/accounting-v1 not found");
         }

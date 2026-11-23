@@ -34,6 +34,7 @@ REGIONS = [
     ("shared/store.js", None, "shared/store.js"),
     ("shared/question-exposure.js", None, "shared/question-exposure.js"),
     ("shared/cat-diagnosis.js", None, "shared/cat-diagnosis.js"),
+    ("shared/plan-ics.js", None, "shared/plan-ics.js"),
     ("shared/exam.js", None, "shared/exam.js"),
     ("shared/camera-quality.js", None, "shared/camera-quality.js"),
     ("shared/kg-text.js", None, "shared/kg-text.js"),

@@ -36,7 +36,7 @@
 | `src/AstralPath.Shared` | Avalonia 视图层（Desktop.Tests 覆盖） | — |
 | `shared/` | 前端共享逻辑源（唯一编辑点） | 见下「前端改动铁律」 |
 | `deploy/monolith-web` | `index.html`（页面源）+ 单文件构建产物 | — |
-| `contracts/`、`eval/` | OpenAPI 与金样 / 评测资产 | 金样文件不要手改，跑生成器 |
+| `contracts/`、`eval/` | OpenAPI 与金样 / 评测资产 | 公式金样只在 `eval/golden/`；`contracts/golden/` 只放 xss / redteam / ocr 三份契约，见其 README |
 | `graph-packs/` | 内容包（`pack.json` 清单规范见包内 README） | — |
 | `scripts/`、`tools/` | 门禁与构建脚本 / Python 工具链 | — |
 | `attic/` | 停用代码档案馆 | 不参与构建；复活用 `git mv` 回原位 |
@@ -109,6 +109,7 @@ python scripts/build-single.py                    # 重建 17MB 单文件产物�
 | `APStore` 分片存储 | `shared/store.js` | 五分片 + schema 版本 + 旧键迁移留底 |
 | `APExposure` 曝光控制 | `shared/question-exposure.js` | 选题降温 + 冷却防重复；曝光计数挂状态 `exposure`（answers 分片） |
 | `APCat` 冷启动诊断 | `shared/cat-diagnosis.js` | CAT 式信息量选题 + 停测；知识态从作答日志推导，零新增状态 |
+| `APPlanIcs` 日历导出 | `shared/plan-ics.js` | 14 天计划 → .ics（RFC 5545，浮动本地时间 + 75 字节折行） |
 | `DEFAULTS` / `withDefaults()` | `shared/store.js` | 状态默认值**单一来源**；新增状态字段只改此处，不写逐字段迁移脚本 |
 | `CRISIS` 词表 / 意图路由 | `shared/core.js`、`shared/agent-router.js` | 危机最高优先级、授权前置、负例拦截 |
 | 云调用与输出脱敏 | `shared/integrations/p2-ai-integration.js` | 离线/危机词/禁用词不走云；数字只引用系统上下文 |

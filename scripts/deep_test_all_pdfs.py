@@ -1,26 +1,22 @@
 #!/usr/bin/env python3
-"""藏书阁 / 识网 / 知债 全量 PDF 深度测试"""
+"""藏书阁 / 识网 / 知债 全量 PDF 深度测试
+
+用法：把 PDF 放进一个目录（默认 materials/pdf），或设 ASTRALPATH_PDF_DIR 指向别处。
+"""
 from __future__ import annotations
-import json, time, traceback
+import json, os, time, traceback
 from pathlib import Path
 import urllib.request
 import urllib.error
 import uuid
 
 BASE = "http://127.0.0.1:5190"
-PDFS = [
-    r"C:\Users\18948\Downloads\C#从入门到精通（第7版）+(明日科技)+.pdf",
-    r"C:\Users\18948\Downloads\Java从入门到精通（第6版） (明日科技) .pdf",
-    r"C:\Users\18948\Downloads\Go语言从入门到精通.pdf",
-    r"C:\Users\18948\Downloads\深度学习进阶：自然语言处理 (斋藤康毅) .pdf",
-    r"C:\Users\18948\Downloads\深度学习入门：基于Python的理论与实现+(斋藤康毅)+.pdf",
-    r"C:\Users\18948\Downloads\深度学习入门2：自制框架 (斋藤康毅)-扫描版 (1).PDF",
-    r"C:\Users\18948\Downloads\图灵程序设计丛书--深度学习入门4：强化学习 ([日] 斋藤康毅) (1).pdf",
-    r"C:\Users\18948\Downloads\深度学习 Deep Learning [花书] (Ian Goodfellow,Yoshua Bengio,Aaron Courville) .pdf",
-    r"C:\Users\18948\Downloads\大模型应用开发：动手做 AI Agent (黄佳) .pdf",
-    r"C:\Users\18948\Downloads\Python编程：从入门到实践（第3版）.pdf",
-    r"C:\Users\18948\Downloads\Kotlin编程实践：Kotlin从入门到实战.pdf",
-]
+_ROOT = Path(__file__).resolve().parent.parent
+PDF_DIR = Path(os.environ.get("ASTRALPATH_PDF_DIR", str(_ROOT / "materials" / "pdf")))
+PDFS = sorted(
+    str(p) for p in PDF_DIR.glob("*")
+    if p.suffix.lower() == ".pdf"
+) if PDF_DIR.is_dir() else []
 
 issues = []
 

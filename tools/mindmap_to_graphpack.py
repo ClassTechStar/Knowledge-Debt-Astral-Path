@@ -30,8 +30,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 # 回归金样：源思维导图 → 产出目录（改这里就换金样）
+# 用仓库自带的合成样例做金样：真实教材提取物有版权，不入库（见 DATA_SOURCES.md）
 GOLDEN = {
-    "kg-deep-test/Kotlin编程实践.mindmap.json": "graph-packs/mindmap-kotlin",
+    "eval/kg-fixtures/示例课程·数据结构基础.mindmap.json": "graph-packs/mindmap-sample",
 }
 
 # OCR 噪声词与停用词：只作用于关键词层，章节标题不过滤

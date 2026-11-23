@@ -21,6 +21,7 @@
   全体                  页级 shingle 探针覆盖 ≥ 90%（优化前 75%）
 """
 from __future__ import annotations
+import os
 
 import argparse
 import json
@@ -31,7 +32,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 
-PDF_DIR = Path(r"C:\Users\18948\Downloads\PDF TEST")
+PDF_DIR = Path(os.environ.get("ASTRALPATH_PDF_DIR", str(Path(__file__).resolve().parent.parent / "materials" / "pdf")))
 PROJ_DIR = ROOT / "ocr-bench" / "project"
 BASE_DIR = ROOT / "ocr-bench" / "maxextract"
 

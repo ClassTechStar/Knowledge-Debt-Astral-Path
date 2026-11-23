@@ -28,7 +28,7 @@ import statistics
 from collections import Counter
 from pathlib import Path
 
-BENCH = Path(r"C:\Users\18948\Documents\GitHub\-Knowledge-Debt-Astral-Path\ocr-bench")
+BENCH = Path(__file__).resolve().parent.parent / "ocr-bench"
 WORD = re.compile(r"[A-Za-z0-9一-鿿]")
 
 

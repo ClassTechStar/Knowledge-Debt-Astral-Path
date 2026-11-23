@@ -36,7 +36,6 @@ TESSERACT_EXE_CANDIDATES = [
     r"C:\Program Files\Tesseract-OCR\tesseract.exe",
     r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
     shutil.which("tesseract") or "",
-    r"C:\Users\18948\Documents\GitHub\tesseract\tesseract",
 ]
 
 TESSDATA_CANDIDATES = [

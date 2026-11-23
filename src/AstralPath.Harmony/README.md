@@ -111,17 +111,16 @@ File → Project Structure → Signing Configs 生成证书，写回 `build-prof
   页面用 `@StorageLink` 响应式跟随；折叠/展开、分屏、自由窗口都会触发。
 - 多窗口：已声明 `continuable: true`，配合 `2in1` 设备类型；分屏时宽度变小会自动回落到 SM/MD 单栏。
 
-## 5. 环境（已按实际存在性核对）
+## 5. 环境
 
-| 项 | 路径 | 核对结果 |
-|---|---|---|
-| DevEco Studio | `C:\Program Files\Huawei\DevEco Studio\bin\devecostudio64.exe` | ✅ 存在（版本 26.0） |
-| OpenHarmony SDK | `C:\Users\18948\AppData\Local\OpenHarmony\Sdk` | ✅ 存在（`26.0.0`，含 ets/native/toolchains） |
-| HarmonyOS SDK（系统镜像） | `C:\Users\18948\AppData\Local\Huawei\Sdk` | ✅ 存在（`system-image\HarmonyOS-7.0.0`，`apiVersion 26`） |
-| 模拟器 | `C:\Users\18948\AppData\Local\Huawei\Emulator\deployed` | ✅ 已部署 **Mate 90 Pro**、**Mate X7**、MatePad Pro 13、MateBook Pro |
-| 命令行工具 | `C:\Users\18948\Downloads\command-line-tools` | ✅ 存在（hvigorw 6.26.8 / ohpm / codelinter / arktsdoc / Emulator.bat） |
-| 插件 | `C:\Users\18948\Downloads\codegenie-plugin` | ✅ 存在（codebase_feature_ask / embedding_model / lancedb_server） |
-| DevEco Testing | `C:\Program Files\DevEco Testing\bin\DevEco Testing.exe` | ✅ 存在（168 KB）— 你给的第一版路径（与 DevEco 同路径）是错的 |
+| 项 | 典型路径（按本机实际替换） |
+|---|---|
+| DevEco Studio | `C:\Program Files\Huawei\DevEco Studio\bin\devecostudio64.exe` |
+| OpenHarmony SDK | `%LOCALAPPDATA%\OpenHarmony\Sdk`（版本串如 `26.0.0`，含 ets/native/toolchains） |
+| HarmonyOS SDK（系统镜像） | `%LOCALAPPDATA%\Huawei\Sdk`（`system-image\HarmonyOS-<版本>`） |
+| 模拟器 | `%LOCALAPPDATA%\Huawei\Emulator\deployed`（需先在 DevEco 里创建并部署设备） |
+| 命令行工具 | 解压后的 `command-line-tools` 目录（hvigorw / ohpm / codelinter / Emulator.bat） |
+| DevEco Testing | `C:\Program Files\DevEco Testing\bin\DevEco Testing.exe` |
 
 补充：`@ohos/hvigor` 与 `@ohos/hvigor-ohos-plugin` **不在公共 ohpm 仓库**（404），
 只随 DevEco Studio 提供；因此纯命令行构建需把 `hvigor-config.json5` 的 `dependencies`
@@ -129,16 +128,19 @@ File → Project Structure → Signing Configs 生成证书，写回 `build-prof
 
 ## 6. 编译 / 运行 / 验证步骤
 
-### 6.1 命令行编译（本次已验证：BUILD SUCCESSFUL，33 tasks）
+### 6.1 命令行编译
+
+先把下面三个环境变量改成你机器上的真实位置（`OHOS_CLI_TOOLS` 指向 `command-line-tools` 根目录）：
 
 ```bat
-cd /d C:\Users\18948\Documents\GitHub\Knowledge-Debt-Astral-Path\src\AstralPath.Harmony
-set OHOS_SDK_HOME=C:\Users\18948\AppData\Local\OpenHarmony\Sdk\26.0.0
-set HOS_SDK_HOME=C:\Users\18948\AppData\Local\Huawei\Sdk
+cd /d <仓库根>\src\AstralPath.Harmony
+set OHOS_CLI_TOOLS=<你的 command-line-tools 目录>
+set OHOS_SDK_HOME=%LOCALAPPDATA%\OpenHarmony\Sdk\26.0.0
+set HOS_SDK_HOME=%LOCALAPPDATA%\Huawei\Sdk
 set PATH=%PATH%;C:\Program Files\Huawei\DevEco Studio\tools\node
 
 REM 1) 安装三方依赖（hypium / hamock）
-"C:\Users\18948\Downloads\command-line-tools\bin\ohpm.bat" install
+"%OHOS_CLI_TOOLS%\bin\ohpm.bat" install
 
 REM 2) 命令行模式下把 hvigor 指向 IDE 内置目录（仓库里建议保持为注释说明，按需启用）
 REM    hvigor/hvigor-config.json5 → dependencies:
@@ -146,27 +148,26 @@ REM      "@ohos/hvigor": "file:C:/Program Files/Huawei/DevEco Studio/tools/hvigo
 REM      "@ohos/hvigor-ohos-plugin": "file:C:/Program Files/Huawei/DevEco Studio/tools/hvigor/hvigor-ohos-plugin"
 
 REM 3) 打 HAP
-"C:\Users\18948\Downloads\command-line-tools\bin\hvigorw.bat" assembleHap --mode module -p product=default --no-daemon
+"%OHOS_CLI_TOOLS%\bin\hvigorw.bat" assembleHap --mode module -p product=default --no-daemon
 ```
 
-产物：`entry\build\default\outputs\default\entry-default-unsigned.hap`（本次约 366 KB）。
+产物：`entry\build\default\outputs\default\entry-default-unsigned.hap`。
 未配置签名时会警告 `Will skip sign 'hos_hap'`，属预期。
 
-排错要点（本次实际踩过）：
+排错要点（实际踩过）：
 - `00302013 root node is not yet available`：hvigor-config 里声明了 hvigor 依赖，或有重复副本 → 去掉依赖、删掉 `node_modules/@ohos`。
 - `api version parameter is illegal`：API 26 的版本串必须写成 `"26.0.0"`（10–25 才用 `'5.0.0(12)'` 形式）。
 - `Schema validate failed`：根 `build-profile.json5` 顶层只能是 `app` 与 `modules`。
 - `arkts-no-*` 系列：ArkTS 严格语法，按第 3 节风险 2 改写。
 
-### 6.2 在模拟器上运行（Mate X7 / Mate 90 Pro）
+### 6.2 在模拟器上运行
 
 ```bat
-REM 启动模拟器（折叠屏）
-start "" "C:\Users\18948\Downloads\command-line-tools\bin\Emulator.bat" -name "Mate X7"
-REM 或直板旗舰
-start "" "C:\Users\18948\Downloads\command-line-tools\bin\Emulator.bat" -name "Mate 90 Pro"
+set OHOS_CLI_TOOLS=<你的 command-line-tools 目录>
+REM 启动模拟器（设备名按你本地已部署的来）
+start "" "%OHOS_CLI_TOOLS%\bin\Emulator.bat" -name "Mate X7"
 
-set HDC=C:\Users\18948\AppData\Local\OpenHarmony\Sdk\26.0.0\toolchains\hdc.exe
+set HDC=%LOCALAPPDATA%\OpenHarmony\Sdk\26.0.0\toolchains\hdc.exe
 "%HDC%" list targets                       REM 应出现 127.0.0.1:5555 之类
 "%HDC%" install entry\build\default\outputs\default\entry-default-unsigned.hap
 "%HDC%" shell aa start -a EntryAbility -b com.astralpath.harmony

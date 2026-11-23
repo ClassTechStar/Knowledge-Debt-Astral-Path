@@ -178,6 +178,11 @@ if (Test-Path scripts/cat_diagnosis_runner.js) {
     Step "cat-diagnosis-golden" { node scripts/cat_diagnosis_runner.js }
 }
 
+# 6k-4) 计划导出日历用例（shared/plan-ics.js，RFC 5545）
+if (Test-Path scripts/plan_ics_runner.js) {
+    Step "plan-ics-golden" { node scripts/plan_ics_runner.js }
+}
+
 # 6g) 单文件内联 JS 规模上限（手写行数与页面副本数）
 if (Test-Path scripts/verify_inline_js.py) {
     Step "inline-js" { python scripts/verify_inline_js.py --check }

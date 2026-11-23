@@ -9,6 +9,7 @@
   python tools/run_project_ocr_bench.py [--mode standard] [--books 子串]
 """
 from __future__ import annotations
+import os
 
 import argparse
 import json
@@ -19,7 +20,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PDF_DIR = Path(r"C:\Users\18948\Downloads\PDF TEST")
+PDF_DIR = Path(os.environ.get("ASTRALPATH_PDF_DIR", str(Path(__file__).resolve().parent.parent / "materials" / "pdf")))
 OUT = ROOT / "ocr-bench" / "project"
 OUT.mkdir(parents=True, exist_ok=True)
 

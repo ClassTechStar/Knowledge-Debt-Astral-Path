@@ -2,13 +2,19 @@
 
 ## 本地启动
 
+在**仓库根目录**执行（路径全部相对仓库，不写死机器位置）：
+
 ```powershell
-$env:DOTNET_ROOT = "C:\Program Files\dotnet"
-$env:NUGET_PACKAGES = "C:\Temp\ngp"
-$env:ASTRALPATH_GRAPH_PACK = "C:\Users\18948\XiaomiMiMoProjects\Knowledge Debt Astral Path\graph-packs\accounting-v1"
-Set-Location "C:\Users\18948\XiaomiMiMoProjects\Knowledge Debt Astral Path"
+# 可选：NuGet 缓存位置（默认 %USERPROFILE%\.nuget\packages，一般不用改）
+# $env:NUGET_PACKAGES = "$env:TEMP\ngp"
+
+# 图包目录：默认就是仓库内的 graph-packs/accounting-v1，一般无需设置
+# $env:ASTRALPATH_GRAPH_PACK = "$PWD\graph-packs\accounting-v1"
+
 dotnet run --project src/AstralPath.Api -c Release --urls http://127.0.0.1:5190
 ```
+
+> 从其他目录启动时，先把 `ASTRALPATH_GRAPH_PACK` 指到 `<仓库根>/graph-packs/accounting-v1`。
 
 ## 健康检查
 

@@ -1,0 +1,48 @@
+{
+ "data": {
+  "text": "示例课程·数据结构基础",
+  "expand": true
+ },
+ "children": [
+  {
+   "data": { "text": "线性结构", "expand": true },
+   "children": [
+    { "data": { "text": "数组", "expand": true }, "children": [] },
+    { "data": { "text": "链表", "expand": true }, "children": [] },
+    { "data": { "text": "栈", "expand": true }, "children": [] },
+    { "data": { "text": "队列", "expand": true }, "children": [] },
+    { "data": { "text": "双端队列", "expand": true }, "children": [] }
+   ]
+  },
+  {
+   "data": { "text": "树结构", "expand": true },
+   "children": [
+    { "data": { "text": "二叉树", "expand": true }, "children": [] },
+    { "data": { "text": "二叉搜索树", "expand": true }, "children": [] },
+    { "data": { "text": "平衡树", "expand": true }, "children": [] },
+    { "data": { "text": "堆", "expand": true }, "children": [] },
+    { "data": { "text": "并查集", "expand": true }, "children": [] }
+   ]
+  },
+  {
+   "data": { "text": "图结构", "expand": true },
+   "children": [
+    { "data": { "text": "邻接表", "expand": true }, "children": [] },
+    { "data": { "text": "邻接矩阵", "expand": true }, "children": [] },
+    { "data": { "text": "拓扑排序", "expand": true }, "children": [] },
+    { "data": { "text": "最短路径", "expand": true }, "children": [] },
+    { "data": { "text": "最小生成树", "expand": true }, "children": [] }
+   ]
+  },
+  {
+   "data": { "text": "算法分析", "expand": true },
+   "children": [
+    { "data": { "text": "时间复杂度", "expand": true }, "children": [] },
+    { "data": { "text": "空间复杂度", "expand": true }, "children": [] },
+    { "data": { "text": "递归", "expand": true }, "children": [] },
+    { "data": { "text": "分治", "expand": true }, "children": [] },
+    { "data": { "text": "动态规划", "expand": true }, "children": [] }
+   ]
+  }
+ ]
+}

@@ -50,8 +50,8 @@ POST /v1/materials/seed-samples
 ## 使用
 
 ```powershell
-$env:ASTRALPATH_OCR_PYTHON = "C:\Users\18948\XiaomiMiMoProjects\Knowledge Debt Astral Path\tools\ocr-venv\Scripts\python.exe"
-Set-Location "C:\Users\18948\XiaomiMiMoProjects\Knowledge Debt Astral Path"
+$env:ASTRALPATH_OCR_PYTHON = "$PWD\tools\ocr-venv\Scripts\python.exe"
+Set-Location $PWD
 dotnet run --project src/AstralPath.Api -c Release --urls http://127.0.0.1:5190
 ```
 

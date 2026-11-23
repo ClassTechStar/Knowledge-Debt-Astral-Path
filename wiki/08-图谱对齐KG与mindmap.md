@@ -2,7 +2,7 @@
 
 参考仓库：
 - `C:\Users\18948\Documents\GitHub\KnowledgeGraph`（三元组 / RDF / 属性图 → Neo4j）
-- `C:\Users\18948\Documents\GitHub\mind-map`（simple-mind-map 逻辑结构图 / Markdown 大纲）
+- `%USERPROFILE%\Documents\GitHub\mind-map`（simple-mind-map 逻辑结构图 / Markdown 大纲；按实际位置替换）
 
 ## 对齐成果
 

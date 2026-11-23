@@ -13,8 +13,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from ocr_pipeline_umi import detect_needs_ocr, extract_document  # noqa: E402
 from kg_builder import build_graph, graph_stats  # noqa: E402
 
-PDF_DIR = Path(r"C:\Users\18948\Downloads\PDF TEST")
-OUT = Path(r"C:\Users\18948\Documents\GitHub\-Knowledge-Debt-Astral-Path\docs")
+PDF_DIR = Path(os.environ.get("ASTRALPATH_PDF_DIR", str(Path(__file__).resolve().parent.parent / "materials" / "pdf")))
+OUT = Path(__file__).resolve().parent.parent / "docs"
 WORD = re.compile(r"[A-Za-z0-9一-鿿]")
 
 BOOKS = [

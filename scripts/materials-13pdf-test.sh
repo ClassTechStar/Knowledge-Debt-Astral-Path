@@ -31,7 +31,7 @@ export NUGET_PACKAGES="C:/Temp/ngp"
 export ASTRALPATH_GRAPH_PACK="$REPO_WIN\\graph-packs\\accounting-v1"
 export ASTRALPATH_TESSERACT="C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
 export ASTRALPATH_TESSDATA="$REPO_WIN\\tools\\tessdata"
-export ASTRALPATH_OCR_PYTHON="C:\\Users\\18948\\XiaomiMiMoProjects\\Knowledge Debt Astral Path\\tools\\ocr-venv\\Scripts\\python.exe"
+export ASTRALPATH_OCR_PYTHON="${ASTRALPATH_OCR_PYTHON:-$PWD/tools/ocr-venv/Scripts/python.exe}"
 
 # 13 份测试用教材（文件名即材料标题）
 FILES=(

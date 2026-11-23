@@ -13,13 +13,17 @@
   - 用 fontTools.pyftsubset，无需 brotli（不用 WOFF2）；
   - 字符变化后重跑本脚本，并重建单文件。
 """
+import os
 import re
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC_FONT = Path(r"C:\Users\18948\Downloads\MiSans\MiSans\ttf\MiSans-Normal.ttf")
+SRC_FONT = Path(os.environ.get(
+    "ASTRALPATH_SRC_FONT",
+    str(ROOT / "assets" / "src" / "MiSans-Normal.ttf"),
+))
 OUT = ROOT / "assets" / "MiSans-subset.ttf"
 CHARSET = ROOT / "assets" / "font-charset.txt"
 

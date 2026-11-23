@@ -63,8 +63,17 @@ def collect() -> dict:
         "crisisWords": n_crisis,
         "tests": per_project,
         "testsTotal": sum(per_project.values()),
+        "gateSteps": count_gate_steps(),
     }
     return metrics
+
+
+def count_gate_steps() -> int:
+    """统计 verify_all.ps1 实际登记的 Step 数（README 口径与脚本同步，防止再次漂移）。"""
+    script = ROOT / "scripts" / "verify_all.ps1"
+    if not script.exists():
+        return 0
+    return len(re.findall(r'^\s*Step\s+"', script.read_text(encoding="utf-8", errors="replace"), re.M))
 
 
 def rewrite_readme(metrics: dict, check_only: bool) -> list:
@@ -74,6 +83,7 @@ def rewrite_readme(metrics: dict, check_only: bool) -> list:
     values["tests-Total"] = metrics["testsTotal"]
     values["agent-intents"] = metrics["agentIntents"]
     values["crisis-words"] = metrics["crisisWords"]
+    values["gate-steps"] = metrics["gateSteps"]
     drift = []
     pattern = re.compile(r"(<!-- metrics:([a-zA-Z0-9-]+) -->)(\d+)(<!-- /metrics:\2 -->)")
 
@@ -107,7 +117,7 @@ def main() -> int:
     )
     print(
         f"[metrics] 意图 {metrics['agentIntents']} · 危机词 {metrics['crisisWords']} · "
-        f"测试 {metrics['testsTotal']}（{test_parts}）"
+        f"测试 {metrics['testsTotal']}（{test_parts}）· 门禁 {metrics['gateSteps']} 步"
     )
     missing = [k for k, _ in [("tests-Total", 0)] if f"<!-- metrics:{k} -->" not in README.read_text(encoding="utf-8")]
     if missing:

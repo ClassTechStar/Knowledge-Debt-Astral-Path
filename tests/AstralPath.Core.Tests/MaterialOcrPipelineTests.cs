@@ -11,7 +11,6 @@ public class MaterialOcrPipelineTests
         {
             var candidates = new[]
             {
-                @"C:\Users\18948\XiaomiMiMoProjects\Knowledge Debt Astral Path",
                 Path.Combine(Directory.GetCurrentDirectory()),
                 Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..")
             };
@@ -19,6 +18,13 @@ public class MaterialOcrPipelineTests
             {
                 var full = Path.GetFullPath(c);
                 if (File.Exists(Path.Combine(full, "tools", "ocr_pipeline.py"))) return full;
+            }
+            // 兜底：从测试输出目录逐级上溯（不写死机器路径）
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            while (dir is not null)
+            {
+                if (File.Exists(Path.Combine(dir.FullName, "tools", "ocr_pipeline.py"))) return dir.FullName;
+                dir = dir.Parent;
             }
             throw new DirectoryNotFoundException("repo root with tools/ocr_pipeline.py not found");
         }
@@ -37,13 +43,15 @@ public class MaterialOcrPipelineTests
 
     private static string? FirstSamplePdf()
     {
-        var candidates = new[]
-        {
-            @"C:\Users\18948\Downloads\Kotlin编程实践：Kotlin从入门到实战\Kotlin编程实践：Kotlin从入门到实战.pdf",
-            @"C:\Users\18948\Downloads\Go语言从入门到精通.pdf",
-            @"C:\Users\18948\Downloads\C#从入门到精通（第7版）+(明日科技)+.pdf"
-        };
-        return candidates.FirstOrDefault(File.Exists);
+        // 样例 PDF 由本机提供：默认 <仓库>/materials/pdf，可用 ASTRALPATH_PDF_DIR 覆盖。
+        // 不在代码里写死某台机器的下载目录与具体书名（可移植性 + 版权书目不外泄）。
+        var dir = Environment.GetEnvironmentVariable("ASTRALPATH_PDF_DIR");
+        if (string.IsNullOrWhiteSpace(dir))
+            dir = Path.Combine(RepoRoot, "materials", "pdf");
+        if (!Directory.Exists(dir)) return null;
+        return Directory.EnumerateFiles(dir, "*.pdf", SearchOption.TopDirectoryOnly)
+            .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault();
     }
 
     [Fact]

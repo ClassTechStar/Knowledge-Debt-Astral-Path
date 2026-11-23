@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""修复 kg-deep-test 思维导图里退化的「段落 N」标题。
+"""修复思维导图产物里退化的「段落 N」标题。
 背景：kg_builder 的兜底分章在章节标题识别失败时，用段落首行或「段落 N」充当
-章节名，导致思维导图二级节点大面积退化为「段落 1 / 段落 2 / …」（13 份产物
-共 1,036 个节点中 383 个退化，其中 267 个还是空壳）。
+章节名，导致思维导图二级节点大面积退化为「段落 1 / 段落 2 / …」。
+
+数据来源：默认处理仓库内置的合成样例 `eval/kg-fixtures/`；真实教材产物用
+`ASTRALPATH_KG_DIR` 指到仓库外目录（不入库，见 DATA_SOURCES.md）。
 
 本脚本做三件事（幂等，可重复运行）：
   1. 有子节点的退化节点：改用「子树最大 + 名称最长」的子节点命名，
@@ -19,12 +21,13 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DIR = ROOT / "kg-deep-test"
+DIR = Path(os.environ.get("ASTRALPATH_KG_DIR", str(ROOT / "eval" / "kg-fixtures")))
 
 DEGRADED = re.compile(r"^(段落\s*\d+|第\s*\d+\s*页)$")
 

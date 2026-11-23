@@ -8,5 +8,6 @@
     "tests-Api": 72,
     "tests-Eval": 10
   },
-  "testsTotal": 276
+  "testsTotal": 276,
+  "gateSteps": 61
 }

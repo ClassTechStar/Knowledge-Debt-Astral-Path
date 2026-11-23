@@ -107,11 +107,20 @@ function Get-CanvasOrigin {
 $connected = ((Invoke-Hdc @('list', 'targets')) -join '') -match '5555'
 if (-not $connected -and $Boot) {
     Say '模拟器未连接，按软件渲染 + 无窗口配方拉起…'
+    # 模拟器启动器位置因机器而异：用 OHOS_CLI_TOOLS 指到 command-line-tools\bin
+    $cliDir = if ($env:OHOS_CLI_TOOLS) { $env:OHOS_CLI_TOOLS } else {
+        Join-Path $env:LOCALAPPDATA 'OpenHarmony\command-line-tools\bin'
+    }
+    $emulator = Join-Path $cliDir 'Emulator.bat'
+    if (-not (Test-Path $emulator)) {
+        Say "未找到模拟器启动器：$emulator（设 OHOS_CLI_TOOLS 指向 command-line-tools\bin 后重试）"
+        exit 1
+    }
     taskkill /F /IM Emulator.exe 2>$null | Out-Null
     Start-Sleep -Seconds 2
-    Start-Process -FilePath 'C:\Users\18948\Downloads\command-line-tools\bin\Emulator.bat' `
+    Start-Process -FilePath $emulator `
         -ArgumentList '-start', '"Mate X7"', '-noWindow' `
-        -WorkingDirectory 'C:\Users\18948\Downloads\command-line-tools\bin' | Out-Null
+        -WorkingDirectory $cliDir | Out-Null
     for ($i = 0; $i -lt 15; $i++) {
         Start-Sleep -Seconds 8
         if (((Invoke-Hdc @('list', 'targets')) -join '') -match '5555') { $connected = $true; Say "已连接（第 $i 次）"; break }
