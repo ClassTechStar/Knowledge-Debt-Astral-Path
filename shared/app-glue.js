@@ -10,11 +10,32 @@
   "use strict";
   function $(id) { return document.getElementById(id); }
 
+  /* ── 存储告警横幅：save() 的配额预警与各失败分支共用；挂 window 让页面直接调用。
+     首次调用最早发生在用户交互/异步 init 内（await 之后），此时本装配层已执行 ── */
+  window.setStoreWarn = function (msg) {
+    var el = $("mode");
+    if (!el) return;
+    if (msg) { el.textContent = "⚠ " + msg; el.style.color = "var(--danger)"; }
+    else { el.textContent = "单体 · 本机数据"; el.style.color = ""; }
+  };
+
   /* ── 通知装配：免打扰跟随 S.dnd（演示模式）── */
   if (window.APNotify) {
     APNotify.setDndProvider(function () { return !!S.dnd; });
     APNotify.mount();
   }
+
+  /* ── 练习键盘作答（D5）：题卡就绪时 1-4 直选选项；输入控件聚焦 / 组合键不拦截 ── */
+  document.addEventListener("keydown", function (ev) {
+    if (ev.ctrlKey || ev.altKey || ev.metaKey) return;
+    var tgt = ev.target && ev.target.tagName ? ev.target.tagName.toLowerCase() : "";
+    if (tgt === "input" || tgt === "textarea" || tgt === "select") return;
+    var n = "1234".indexOf(ev.key);
+    if (n < 0) return;
+    var box = $("quizBox");
+    var opts = box ? box.querySelectorAll('button[role="radio"]') : [];
+    if (opts[n]) { opts[n].click(); ev.preventDefault(); }
+  });
 
   /* ── 存储版本与自愈（store.js T1）：版本标记 + 损坏分片修复 ── */
   try {

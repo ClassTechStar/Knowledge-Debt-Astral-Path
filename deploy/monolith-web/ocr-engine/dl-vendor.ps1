@@ -1,4 +1,4 @@
-﻿# 下载/复制 OCR WASM 引擎离线资源到 deploy\monolith-web\ocr-engine\（后台运行）
+﻿﻿# 下载/复制 OCR WASM 引擎离线资源到 deploy\monolith-web\ocr-engine\（后台运行）
 # 资源落点就是脚本所在目录，tessdata 默认取仓库 tools\tessdata（可用 ASTRALPATH_TESSDATA 覆盖）
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'

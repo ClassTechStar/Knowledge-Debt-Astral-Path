@@ -167,6 +167,12 @@ if (Test-Path scripts/notify_runner.js) {
 if (Test-Path scripts/plan_runtime_runner.js) {
     Step "plan-runtime-golden" { node scripts/plan_runtime_runner.js }
 }
+if (Test-Path scripts/graph_cache_runner.js) {
+    Step "graph-cache-golden" { node scripts/graph_cache_runner.js }
+}
+if (Test-Path scripts/learn_report_runner.js) {
+    Step "learn-report-golden" { node scripts/learn_report_runner.js }
+}
 
 # 6k-2) 题目曝光控制与降温用例（shared/question-exposure.js）
 if (Test-Path scripts/question_exposure_runner.js) {

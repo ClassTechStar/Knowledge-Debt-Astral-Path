@@ -25,7 +25,9 @@ REPORT = ROOT / "eval" / "inline-js-report.md"
 
 # 行数上限：只许往下调。目标 3,000。
 # 2026-10-25 搬完 kg-text 后 7309；10-26 搬完智能体路由 + 计划调度后 7072，上限跟着下调。
-CEILING = 7100
+# 2026-11-28 D1 图谱缓存进 shared/graph-cache.js、setStoreWarn 进 app-glue 后 7097，上限跟着下调。
+# 同日 D2-D6：sampleBook 抽出 shared/sample-book.js、scanDebts 并入 graph-cache、新增 learn-report 后 6955。
+CEILING = 6955
 TARGET = 3000
 MAX_COPIES = 3
 

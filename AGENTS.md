@@ -109,6 +109,9 @@ python scripts/build-single.py                    # 重建 17MB 单文件产物�
 | `APStore` 分片存储 | `shared/store.js` | 五分片 + schema 版本 + 旧键迁移留底 |
 | `APExposure` 曝光控制 | `shared/question-exposure.js` | 选题降温 + 冷却防重复；曝光计数挂状态 `exposure`（answers 分片） |
 | `APCat` 冷启动诊断 | `shared/cat-diagnosis.js` | CAT 式信息量选题 + 停测；知识态从作答日志推导，零新增状态 |
+| `APGraphCache` 图谱查询缓存 | `shared/graph-cache.js` | 按修订号缓存邻接表/标题/先修/得分/下游量，scanDebts 在此组装（公式件由页面注入）；`save() → invalidateDebts() → invalidate()` 统一失效，金样 GC-01…09 |
+| 示例教材数据 | `shared/sample-book.js` | 演示链路唯一数据源；纯数据模块（省内联棘轮预算），经 `window.APSampleBook.book()` 供页面调用 |
+| `APReport` 学习轨迹 | `shared/learn-report.js` | 近 7 天作答统计纯函数（从 S.logs 推导，零新增状态），金样 LR-01…05 |
 | `APPlanIcs` 日历导出 | `shared/plan-ics.js` | 14 天计划 → .ics（RFC 5545，浮动本地时间 + 75 字节折行） |
 | `DEFAULTS` / `withDefaults()` | `shared/store.js` | 状态默认值**单一来源**；新增状态字段只改此处，不写逐字段迁移脚本 |
 | `CRISIS` 词表 / 意图路由 | `shared/core.js`、`shared/agent-router.js` | 危机最高优先级、授权前置、负例拦截 |
